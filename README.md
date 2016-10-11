@@ -8,9 +8,9 @@ The current somatic SNV and InDel discovery pipeline was created based upon the 
 ### Features to be added
 - [x] Update COSMIC, CGC, GATK Bundle, oncotator db, and dbSNP databases, list of "pathogenic" and/or "drugresponse" dbSNP entries
 - [x] Update tools GATK, oncotator, samtools, PICARD
+- [x] Update Germnline parsing
 - [ ] Update CNV-calling (keep ExomeCNV atm) - for.loh.pl, admix. rate, logR, seg. annot. 
       also add TheTa (n=2) results to final integration
-- [ ] Update Germnline parsing
 - [ ] Automate QC table creation
 - [ ] Create and integrate PoN
 - [ ] Integrate ConTest or a similar method for contamination estimation
