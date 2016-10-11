@@ -1,0 +1,97 @@
+############################################################
+#                NeuroOncology Technologies                #
+#             Whole-Exome Sequencing Pipeline              #
+#                    ExomeCNV Analysis                     #
+#                   Ege Ulgen, Oct 2016                    #
+############################################################
+
+# Get inputs & set working dir and create output dir ----------------------
+require(ExomeCNV)
+require(DNAcopy)
+
+# arguments from bash
+args <- commandArgs(trailingOnly = T)
+currentdir <- args[1]
+patientID <- args[2]
+
+# set workdir to currentdir/ExomeCNV
+setwd(paste0(currentdir,"/ExomeCNV/"))
+
+# LOH Calling -------------------------------------------------------------
+normal_BAF <- read.delim("./baf/normal_baf.txt", header=F)
+tumor_BAF <- read.delim("./baf/tumor_baf.txt", header=F)
+colnames(normal_BAF) <- c("chr", "position", "coverage", "baf")
+colnames(tumor_BAF) <- c("chr", "position", "coverage", "baf")
+
+## exclude sites where less than 10 alt. allele is seen in normal
+normal_BAF <- normal_BAF[normal_BAF$baf >= 10, ]
+
+## keep only sites annotated in both
+n_ids <- paste0(normal_BAF$chr, normal_BAF$position)
+t_ids <- paste0(tumor_BAF$chr, tumor_BAF$position)
+normal_BAF <- normal_BAF[n_ids %in% intersect(n_ids, t_ids),]
+tumor_BAF <- tumor_BAF[t_ids %in% intersect(n_ids, t_ids),]
+rm(n_ids, t_ids)
+
+### Calling LOH on each heterozygous position
+eLOH <- LOH.analyze(normal = normal_BAF, tumor = tumor_BAF, alpha=0.05, method="two.sample.fisher")
+
+###Combine multiple positions into LOH segments
+the.loh <- multi.LOH.analyze(normal = normal_BAF, tumor = tumor_BAF, 
+                             all.loh.ls = list(eLOH), 
+                             test.alpha=0.001, method="variance.f", 
+                             sdundo=c(0,0), alpha=c(0.05,0.01))
+
+pdf(paste0(patientID,"_LOH.pdf"), width = 15, height = 8)
+do.plot.loh(the.loh, normal_BAF, tumor_BAF, "two.sample.fisher", plot.style="dev")
+dev.off()
+
+LOH.regions <- the.loh[the.loh$LOH, ]
+write.csv(LOH.regions, paste0(patientID,"_LOH_regions.csv"), row.names = F)
+
+expanded.loh <- expand.loh(the.loh, normal_BAF)
+write.csv(expanded.loh, paste0(patientID,"_LOH_all_sites.csv"), row.names = F)
+
+############################# CNV Calling
+chr.list <- c("chr1", "chr2", "chr3", "chr4", "chr5", "chr6", 
+              "chr7", "chr8", "chr9", "chr10", "chr11", "chr12", 
+              "chr13", "chr14", "chr15", "chr16", "chr17", "chr18",
+              "chr19", "chr20", "chr21", "chr22", "chrX", "chrY")
+
+###### Load in read coverages
+normal <- read.coverage.gatk("./DepthOfCoverage/normal.coverage.sample_interval_summary")
+tumor <- read.coverage.gatk("./DepthOfCoverage/tumor.coverage.sample_interval_summary")
+###### Fix "chrchr#" issue
+normal$chr <- gsub("chrchr", "chr", normal$chr)
+tumor$chr <- gsub("chrchr", "chr", tumor$chr)
+
+###### Calculate log coverage ratio
+patient.logR <- calculate.logR(normal, tumor)
+
+admix_rate <- 1-2*mean(sapply(LOH.regions$tumor.baf/LOH.regions$tumor.coverage, function(x) abs(x - 0.5)))
+
+###### Call CNV for each exon
+### Call CNV on each exon (using classify.eCNV), one chromosome at a time. We recommend high min.spec (0.9999) 
+### and option="spec" to be conservative against false positive. This is because whatever is called 
+### at exon level will persist through merging step
+patient.eCNV <- c()
+for (i in 1:length(chr.list)) {
+  idx <- (normal$chr == chr.list[i])
+  ecnv <- classify.eCNV(normal = normal[idx, ], tumor = tumor[idx, ], logR=patient.logR[idx], 
+                        min.spec = 0.9999, min.sens = 0.9999, option="spec", admix = admix_rate, read.len = 76)
+  patient.eCNV <- rbind(patient.eCNV, ecnv)
+}
+
+###### Combine exonic CNV into larger segments
+###Here, we use lower min.spec and min.sens and option="auc" to be less conservative and allow for more discovery.
+patient.cnv <- multi.CNV.analyze(normal, tumor, logR = patient.logR, all.cnv.ls = list(patient.eCNV), 
+                                 min.spec = 0.99, min.sens = 0.99, option = "auc", 
+                                 coverage.cutoff = 20, admix = admix_rate, read.len = 76)
+
+###### plot the results and export outputs.
+pdf(paste(patientID,"_CNV.pdf",sep = ""), width = 15, height = 8)
+do.plot.eCNV(patient.eCNV, style = "bp")
+do.plot.eCNV(patient.cnv, style = "bp", bg.cnv = patient.eCNV, line.plot = T)
+dev.off()
+
+write.output(patient.eCNV, patient.cnv, paste(patientID,"_CNV",sep = ""))
