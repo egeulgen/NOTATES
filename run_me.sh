@@ -7,7 +7,7 @@
 
 ### Set main_dir to the directory where this script is located
 main_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-source "$main_dir"/configurations.cfg verbose
+source "$main_dir"/configurations.cfg "verbose"
 
 ##########################################################################################
 ################################### Checkpoint for backup ################################ 
@@ -72,7 +72,7 @@ bash "$scripts_dir"/merge_fastqs.sh $tumor_name
 ##########################################################################################
 ############################# Examine Sequence Read Quality ##############################
 ##########################################################################################
-echo "FASTQC"
+echo "FASTQC    " $(date)
 ####### Merge Seperate Files for normal
 bash "$scripts_dir"/fastqc.sh $normal_name
 
@@ -94,13 +94,13 @@ bash "$scripts_dir"/mapping_preprocessing.sh $main_dir $tumor_name "tumor"
 ##########################################################################################
 
 ########################################## HC ############################################
-echo "############################################# Running Haplotype Caller for Germline Variants"
+echo "############################################# Running Haplotype Caller for Germline Variants    " $(date)
 mkdir ./Germline/
 $JAVA $GATK -T HaplotypeCaller -R $genome -I normal.final.bam --dbsnp $dbSNP -stand_call_conf 30 -stand_emit_conf 10 -L $Capture -o ./Germline/raw.snps.indels.vcf -nct 8
 clear
 
 ######################################## MuTect ##########################################
-echo "############################################# Running MuTect2"
+echo "############################################# Running MuTect2    " $(date)
 mkdir ./MuTect
 $JAVA $GATK -T MuTect2 -R $genome -I:tumor tumor.final.bam -I:normal normal.final.bam --dbsnp $dbSNP --cosmic $COSMIC -L $Capture -o ./MuTect/mutect_calls.vcf -nct 8
 clear
@@ -117,11 +117,11 @@ bash "$scripts_dir"/Germline/germline_filter.sh $main_dir
 ##########################################################################################
 source "$oncotator_activate"
 mkdir ./Oncotator
-Data_sources
-echo "############################################# Annotating Somatic variants"
+
+echo "############################################# Annotating Somatic variants    " $(date)
 oncotator -v --input_format=VCF --db-dir "$oncotator_ds" --tx-mode CANONICAL -c "$oncotator_ds"/tx_exact_uniprot_matches.AKT1_CRLF2_FGFR1.txt ./MuTect/mutect_calls.vcf ./Oncotator/annotated.sSNVs.tsv hg19
 
-echo "############################################# Annotating Germline Variants"
+echo "############################################# Annotating Germline Variants    " $(date)
 oncotator -v --input_format=VCF --db-dir "$oncotator_ds" --tx-mode CANONICAL -c "$oncotator_ds"/tx_exact_uniprot_matches.AKT1_CRLF2_FGFR1.txt ./Germline/filtered_germline_variants.vcf ./Oncotator/annotated.germline_SNVs.tsv hg19
 
 deactivate
@@ -130,7 +130,7 @@ deactivate
 ################################ Germline Report #########################################
 ##########################################################################################
 
-echo "############################################# Running R script for Germline Report"
+echo "############################################# Running R script for Germline Report    " $(date)
 Rscript "$scripts_dir"/Germline/Germline.R $(pwd) $main_dir
 
 ##########################################################################################
@@ -139,5 +139,16 @@ Rscript "$scripts_dir"/Germline/Germline.R $(pwd) $main_dir
 
 bash "$scripts_dir"/ExomeCNV/ExomeCNV.sh $main_dir $normal_name
 
+##########################################################################################
+####################################### THetA ############################################
+##########################################################################################
+mkdir -p ./THetA/output
+
+echo "############################################# Preparing input for THetA     " $(date)
+## ExomeCNV output to THetA input
+bash "$THetA"/bin/CreateExomeInput -s ./ExomeCNV/CNV.segment.copynumber.txt -t tumor.final.bam -n normal.final.bam --FA $genome --EXON_FILE $Capture --QUALITY 30 --DIR ./THetA
+
+echo "############################################# Running THetA    " $(date)
+bash "$THetA"/bin/RunTHetA THetA/CNV.input --TUMOR_FILE THetA/tumor_SNP.txt --NORMAL_FILE THetA/normal_SNP.txt --DIR ./THetA/output --NUM_PROCESSES 8
 
 exit 0

@@ -8,7 +8,7 @@ echo "$lanes" >> lanes.txt
 
 for i in $lanes
 do
-	echo "Merging fastq files for: "$name" lane: "$i
+	echo "Merging fastq files for: "$name" lane: "$i "    " $(date)
 	ls | grep $i"_R1_"|xargs cat >> $i'_R1.fastq.gz'
 	ls | grep $i"_R2_"|xargs cat >> $i'_R2.fastq.gz'
 

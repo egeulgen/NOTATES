@@ -1,7 +1,7 @@
 #!/bin/bash
 name=$1
 
-echo "FASTQC for ""$name"
+echo "FASTQC for ""$name    " $(date)
 cd ./"$name"
 mkdir QC
 
