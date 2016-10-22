@@ -9,29 +9,13 @@
 require(ExomeCNV)
 require(DNAcopy)
 
-# arguments from bash
-args <- commandArgs(trailingOnly = T)
-currentdir <- args[1]
-patientID <- args[2]
+currentdir <- getwd()
 
 # set workdir to currentdir/ExomeCNV
 setwd(paste0(currentdir,"/ExomeCNV/"))
 
 # LOH Calling -------------------------------------------------------------
-normal_BAF <- read.delim("./baf/normal_baf.txt", header=F)
-tumor_BAF <- read.delim("./baf/tumor_baf.txt", header=F)
-colnames(normal_BAF) <- c("chr", "position", "coverage", "baf")
-colnames(tumor_BAF) <- c("chr", "position", "coverage", "baf")
-
-## exclude sites where less than 10 alt. allele is seen in normal
-normal_BAF <- normal_BAF[normal_BAF$baf >= 10, ]
-
-## keep only sites annotated in both
-n_ids <- paste0(normal_BAF$chr, normal_BAF$position)
-t_ids <- paste0(tumor_BAF$chr, tumor_BAF$position)
-normal_BAF <- normal_BAF[n_ids %in% intersect(n_ids, t_ids),]
-tumor_BAF <- tumor_BAF[t_ids %in% intersect(n_ids, t_ids),]
-rm(n_ids, t_ids)
+load("./baf/BAF_data.Rdata")
 
 ### Calling LOH on each heterozygous position
 eLOH <- LOH.analyze(normal = normal_BAF, tumor = tumor_BAF, alpha=0.05, method="two.sample.fisher")
@@ -42,17 +26,23 @@ the.loh <- multi.LOH.analyze(normal = normal_BAF, tumor = tumor_BAF,
                              test.alpha=0.001, method="variance.f", 
                              sdundo=c(0,0), alpha=c(0.05,0.01))
 
-pdf(paste0(patientID,"_LOH.pdf"), width = 15, height = 8)
+pdf("LOH.pdf", width = 15, height = 8)
 do.plot.loh(the.loh, normal_BAF, tumor_BAF, "two.sample.fisher", plot.style="dev")
 dev.off()
 
 LOH.regions <- the.loh[the.loh$LOH, ]
-write.csv(LOH.regions, paste0(patientID,"_LOH_regions.csv"), row.names = F)
+write.csv(LOH.regions, file = "LOH_regions.csv", row.names = F)
 
-expanded.loh <- expand.loh(the.loh, normal_BAF)
-write.csv(expanded.loh, paste0(patientID,"_LOH_all_sites.csv"), row.names = F)
+tumor_loh_sites <- expand.loh(the.loh, tumor_BAF)
+tumor_loh_sites <- tumor_loh_sites[tumor_loh_sites$LOH, ]
 
-############################# CNV Calling
+normal_loh_sites <- expand.loh(the.loh, normal_BAF)
+normal_loh_sites <- normal_loh_sites[normal_loh_sites$LOH, ]
+
+write.csv(tumor_loh_sites, "tumor_LOH_all_sites.csv", row.names = F)
+write.csv(normal_loh_sites, "normal_LOH_all_sites.csv", row.names = F)
+
+# CNV Calling -------------------------------------------------------------
 chr.list <- c("chr1", "chr2", "chr3", "chr4", "chr5", "chr6", 
               "chr7", "chr8", "chr9", "chr10", "chr11", "chr12", 
               "chr13", "chr14", "chr15", "chr16", "chr17", "chr18",
@@ -68,7 +58,8 @@ tumor$chr <- gsub("chrchr", "chr", tumor$chr)
 ###### Calculate log coverage ratio
 patient.logR <- calculate.logR(normal, tumor)
 
-admix_rate <- 1-2*mean(sapply(LOH.regions$tumor.baf/LOH.regions$tumor.coverage, function(x) abs(x - 0.5)))
+admix_rate <- 1 - 2*mean(sapply(LOH.regions$tumor.baf/LOH.regions$tumor.coverage, function(x) abs(x - 0.5)))
+print(admix_rate)
 
 ###### Call CNV for each exon
 ### Call CNV on each exon (using classify.eCNV), one chromosome at a time. We recommend high min.spec (0.9999) 
@@ -89,9 +80,9 @@ patient.cnv <- multi.CNV.analyze(normal, tumor, logR = patient.logR, all.cnv.ls 
                                  coverage.cutoff = 20, admix = admix_rate, read.len = 76)
 
 ###### plot the results and export outputs.
-pdf(paste(patientID,"_CNV.pdf",sep = ""), width = 15, height = 8)
+pdf("CNV.pdf", width = 15, height = 8)
 do.plot.eCNV(patient.eCNV, style = "bp")
 do.plot.eCNV(patient.cnv, style = "bp", bg.cnv = patient.eCNV, line.plot = T)
 dev.off()
 
-write.output(patient.eCNV, patient.cnv, paste(patientID,"_CNV",sep = ""))
+write.output(patient.eCNV, patient.cnv, "CNV")

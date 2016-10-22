@@ -5,12 +5,13 @@
 #                   Ege Ulgen, Oct 2016                    #
 ############################################################
 
-# Get inputs & set working dir and create output dir ----------------------
-# arguments from bash
-args <- commandArgs(trailingOnly = T)
-currentdir <- args[1]
-main_dir <- args[2]
-
+# Locate directory for data sources Set working dir and create output dir ----------------------
+currentdir <- getwd()
+# dir for data sources (same as the directory where script is located)
+initial.options <- commandArgs(trailingOnly = FALSE)
+script.name <- sub("--file=", "", initial.options[grep("--file=", initial.options)])
+script_dir <- dirname(script.name)
+  
 # set working directory
 setwd(paste(currentdir, "/Germline", sep = ""))
 dir.create("output")
@@ -20,7 +21,7 @@ dir.create("output")
 germline <- read.delim("../Oncotator/annotated.germline_SNVs.tsv", comment.char = "#", stringsAsFactors = F)
 
 # load gCCV table
-common_vars <- read.csv(paste0(main_dir, "/Scripts/Germline/common_variants_list.csv"), stringsAsFactors = F)
+common_vars <- read.csv(paste0(script_dir, "/common_variants_list.csv"), stringsAsFactors = F)
 
 # Create df for variants that predispose to glioma in the sample
 idx <- which(germline$id %in% common_vars$rs_ID)
@@ -43,7 +44,7 @@ common_variant_df$gCCV_Ancestral_allele <- common_vars$Ancestral_allele[idx]
 common_variant_df$gCCV_MAF_1000G <- common_vars$MAF_1kG[idx]
 
 write.csv(common_variant_df, "./output/common_variant_report.csv", row.names = F)
-rm(list=setdiff(ls(), c("germline","main_dir")))
+rm(list=setdiff(ls(), c("germline","script_dir")))
 
 # Preprocess --------------------------------------------------------------
 # discard if alt. allele not seen
@@ -62,7 +63,7 @@ rejects <- c("Silent", "3'UTR", "3'Flank", "5'UTR", "5'Flank", "IGR",
 germline <- subset(germline, !(Variant_Classification %in% rejects))
 
 # I. Extract relevant genes with preset filter groups ---------------------
-filter_df <- read.csv(paste0(main_dir, "/Scripts/Germline/Germline_filter_list.csv"), stringsAsFactors = F)
+filter_df <- read.csv(paste0(script_dir, "/Germline_filter_list.csv"), stringsAsFactors = F)
 
 # lookup indices of genes/variants to be filtered
 idx <- which(germline$Hugo_Symbol %in% filter_df$Gene.Name)
@@ -86,12 +87,12 @@ for (i in 1:nrow(germline_final)) {
   germline_final$Filter_Comment[i] <- paste(tmp_comment, collapse = ", ")
 }
 germline_final <- germline_final[order(germline_final$Rank), ]
-rm(list = setdiff(ls(), c("main_dir", "germline_final")))
+rm(list = setdiff(ls(), c("script_dir", "germline_final")))
 
 write.csv(germline_final,"./output/germline_variant_NO_RS_FILTER.csv", row.names = F)
 
 # II. Evaluate Variants ---------------------------------------------------
-pathogenic_rs_ids <- read.delim(paste0(main_dir, "/Scripts/Germline/dbSNP_list.txt"), stringsAsFactors = F, header = F)
+pathogenic_rs_ids <- read.delim(paste0(script_dir, "/dbSNP_list.txt"), stringsAsFactors = F, header = F)
 pathogenic_rs_ids <- pathogenic_rs_ids$V1
 
 keep <- germline_final$id %in% pathogenic_rs_ids

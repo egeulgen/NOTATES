@@ -30,3 +30,5 @@ Scripts/Germline/curation_not_final/snp_result.txt
 Resources/Data_sources_prep/HapMap/b37_population_stratified_af_hapmap_3.3.vcf
 
 Scripts/ExomeCNV/GC_correction_etc.sh
+
+Scripts/PoN.sh
