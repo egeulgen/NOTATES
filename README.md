@@ -23,6 +23,7 @@ Should be located in bin directory:
 - [bam-readcount](https://github.com/genome/bam-readcount)
 
 The path/to/tool should be specified in the configuration file:
+- [FastQC](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/)
 - [Picard](http://broadinstitute.github.io/picard/index.html)
 - [GATK](https://software.broadinstitute.org/gatk/)
 - [Oncotator](https://github.com/broadinstitute/oncotator/releases)
