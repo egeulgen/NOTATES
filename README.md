@@ -49,13 +49,13 @@ The pipeline utilizes the following resources (path/to/resource can be altered i
 - [x] ~~Update tools GATK, oncotator, samtools, PICARD~~
 - [x] ~~Update Germline Script~~
 - [x] ~~Update BAF creation algorithm script~~
+- [x] ~~Integrate a method for contamination estimation~~
 - [ ] Update ExomeCNV - logR, seg. annot. 
 - [ ] Add TheTa (n=2) results to final integration
 - [ ] Automate QC table creation
 - [ ] Create and integrate PoN (prompt user for the option)
 - [ ] Check and install required R packages, if necessary
-- [ ] Integrate ConTest or a similar method for contamination estimation
-- [ ] Add a tool for SV discovery
 - [ ] HTML report generation
 - [ ] Drug targets
 - [ ] Create Wiki
+- [ ] Add a tool for SV discovery
