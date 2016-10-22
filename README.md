@@ -23,7 +23,6 @@ Should be located in bin directory:
 - [bam-readcount](https://github.com/genome/bam-readcount)
 
 The path/to/tool should be specified in the configuration file:
-- [FastQC](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/)
 - [Picard](http://broadinstitute.github.io/picard/index.html)
 - [GATK](https://software.broadinstitute.org/gatk/)
 - [Oncotator](https://github.com/broadinstitute/oncotator/releases)
@@ -54,9 +53,10 @@ The pipeline utilizes the following resources (path/to/resource can be altered i
 - [ ] Update ExomeCNV - logR, seg. annot. 
 - [ ] Add TheTa (n=2) results to final integration
 - [ ] Automate QC table creation
+- [ ] Detect alterations in actionable genes
 - [ ] Create and integrate PoN (prompt user for the option)
 - [ ] Check and install required R packages, if necessary
 - [ ] HTML report generation
-- [ ] Drug targets
 - [ ] Create Wiki
-- [ ] Add a tool for SV discovery
+- [ ] Implement other tools for SCNA detection, intersection of all
+- [ ] Implement a tool for SV discovery
