@@ -135,7 +135,7 @@ echo "############## Running Haplotype Caller for Germline Variants    " $(date)
 mkdir ./Germline/
 $JAVA $GATK -T HaplotypeCaller -R $genome -I normal.final.bam --dbsnp $dbSNP \
 	-stand_call_conf 30 -stand_emit_conf 10 \
-	--intervals $Capture --interval_padding 100 \
+	--intervals $Bait_Intervals --interval_padding 100 \
 	-o ./Germline/raw.snps.indels.vcf -nct 8
 
 ################################### MuTect #####################################
@@ -145,7 +145,7 @@ $JAVA $GATK -T MuTect2 -R $genome \
 	-I:tumor tumor.final.bam -I:normal normal.final.bam \
 	--dbsnp $dbSNP --cosmic $COSMIC \
 	-contaminationFile contamination.txt \
-	--intervals $Capture --interval_padding 100 \
+	--intervals $Bait_Intervals --interval_padding 100 \
 	-o ./MuTect/MuTect_calls.vcf -nct 8
 
 ################################################################################
@@ -183,7 +183,7 @@ Rscript "$scripts_dir"/Germline/Germline.R
 ################################################################################
 ################################# ExomeCNV #####################################
 ################################################################################
-bash "$scripts_dir"/ExomeCNV/ExomeCNV.sh $normal_name
+bash "$scripts_dir"/ExomeCNV/ExomeCNV.sh $normal_name $tumor_name
 
 ################################################################################
 ################################## THetA #######################################
@@ -194,7 +194,7 @@ echo "################################## Preparing input for THetA     " $(date)
 ## ExomeCNV output to THetA input
 bash "$THetA"/bin/CreateExomeInput -s ./ExomeCNV/CNV.segment.copynumber.txt \
 	-t tumor.final.bam -n normal.final.bam \
-	--FA $genome --EXON_FILE $Capture --QUALITY 30 --DIR ./THetA
+	--FA $genome --EXON_FILE $Bait_Intervals --QUALITY 30 --DIR ./THetA
 
 echo "############################################### Running THetA    " $(date)
 bash "$THetA"/bin/RunTHetA THetA/CNV.input --TUMOR_FILE THetA/tumor_SNP.txt \

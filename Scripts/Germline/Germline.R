@@ -6,14 +6,14 @@
 ############################################################
 
 # Locate directory for data sources Set working dir and create output dir ----------------------
-currentdir <- getwd()
+
 # dir for data sources (same as the directory where script is located)
 initial.options <- commandArgs(trailingOnly = FALSE)
 script.name <- sub("--file=", "", initial.options[grep("--file=", initial.options)])
 script_dir <- dirname(script.name)
   
 # set working directory
-setwd(paste(currentdir, "/Germline", sep = ""))
+setwd("./Germline")
 dir.create("output")
 
 # 0. Seperate Report for Common variants with low penetrance --------------

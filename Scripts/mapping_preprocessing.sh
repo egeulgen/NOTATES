@@ -82,7 +82,7 @@ rm lanes.txt
 ################################### Quality score recalibration
 echo '##############################################'"$name"': BQSR    ' $(date)
 $JAVA $GATK -T BaseRecalibrator -R $genome \
-	--intervals $Capture --interval_padding 100 \
+	--intervals $Bait_Intervals --interval_padding 100 \
 	-I "$sample"'.marked.bam' \
 	-knownSites $dbSNP -knownSites $Mills_1kG -knownSites $ThousandG \
 	-o '../'"$sample"'.recal_data.table'  -nct 8 

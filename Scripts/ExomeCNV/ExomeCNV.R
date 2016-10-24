@@ -5,14 +5,11 @@
 #                   Ege Ulgen, Oct 2016                    #
 ############################################################
 
-# Get inputs & set working dir and create output dir ----------------------
 require(ExomeCNV)
 require(DNAcopy)
 
-currentdir <- getwd()
-
 # set workdir to currentdir/ExomeCNV
-setwd(paste0(currentdir,"/ExomeCNV/"))
+setwd("./ExomeCNV/")
 
 # LOH Calling -------------------------------------------------------------
 load("./baf/BAF_data.Rdata")
@@ -27,7 +24,7 @@ the.loh <- multi.LOH.analyze(normal = normal_BAF, tumor = tumor_BAF,
                              sdundo=c(0,0), alpha=c(0.05,0.01))
 
 pdf("LOH.pdf", width = 15, height = 8)
-do.plot.loh(the.loh, normal_BAF, tumor_BAF, "two.sample.fisher", plot.style="dev")
+do.plot.loh(the.loh, normal_BAF, tumor_BAF, "two.sample.fisher", plot.style="baf")
 dev.off()
 
 LOH.regions <- the.loh[the.loh$LOH, ]
@@ -39,8 +36,13 @@ tumor_loh_sites <- tumor_loh_sites[tumor_loh_sites$LOH, ]
 normal_loh_sites <- expand.loh(the.loh, normal_BAF)
 normal_loh_sites <- normal_loh_sites[normal_loh_sites$LOH, ]
 
-write.csv(tumor_loh_sites, "tumor_LOH_all_sites.csv", row.names = F)
-write.csv(normal_loh_sites, "normal_LOH_all_sites.csv", row.names = F)
+LOH.sites <- merge(normal_loh_sites, tumor_loh_sites, by=c("chr","position"), sort = F)
+cnames <- colnames(LOH.sites)
+cnames <- sub(".x", "_normal", cnames)
+cnames <- sub(".y", "_tumor", cnames)
+colnames(LOH.sites) <- cnames
+LOH.sites <- LOH.sites[,!(grepl("LOH", colnames(LOH.sites)))]
+write.csv(LOH.sites, "LOH_sites.csv", row.names = F)
 
 # CNV Calling -------------------------------------------------------------
 chr.list <- c("chr1", "chr2", "chr3", "chr4", "chr5", "chr6", 
@@ -48,18 +50,35 @@ chr.list <- c("chr1", "chr2", "chr3", "chr4", "chr5", "chr6",
               "chr13", "chr14", "chr15", "chr16", "chr17", "chr18",
               "chr19", "chr20", "chr21", "chr22", "chrX", "chrY")
 
-###### Load in read coverages
-normal <- read.coverage.gatk("./DepthOfCoverage/normal.coverage.sample_interval_summary")
-tumor <- read.coverage.gatk("./DepthOfCoverage/tumor.coverage.sample_interval_summary")
-###### Fix "chrchr#" issue
-normal$chr <- gsub("chrchr", "chr", normal$chr)
-tumor$chr <- gsub("chrchr", "chr", tumor$chr)
+###### Load in coverage files
+read.coverage.gatk.fix <- function(file){
+  gatk = read.table(file, header = TRUE)
+  gatk <- gatk[grepl("-", gatk$Target), ]
+  
+  chrpos = matrix(unlist(strsplit(as.character(gatk$Target), 
+                                  ":")), ncol = 2, byrow = TRUE)
+  chr = factor(chrpos[, 1])
+  pos = matrix(as.integer(unlist(strsplit(chrpos[, 2], "-"))), 
+               ncol = 2, byrow = TRUE)
+  start = pos[, 1]
+  end = pos[, 2]
+  
+  return(data.frame(probe = gatk$Target, chr = chr, probe_start = start, 
+                    probe_end = end, targeted.base = end - start + 1, sequenced.base = NA, 
+                    coverage = as.numeric(gatk$total_coverage), average.coverage = as.numeric(gatk$average_coverage), 
+                    base.with..10.coverage = NA))
+}
+normal <- read.coverage.gatk.fix("./DepthOfCoverage/normal.coverage.sample_interval_summary")
+tumor <- read.coverage.gatk.fix("./DepthOfCoverage/tumor.coverage.sample_interval_summary")
 
 ###### Calculate log coverage ratio
 patient.logR <- calculate.logR(normal, tumor)
 
-admix_rate <- 1 - 2*mean(sapply(LOH.regions$tumor.baf/LOH.regions$tumor.coverage, function(x) abs(x - 0.5)))
+# admix_rate <- 1 - 2*mean(sapply(LOH.regions$tumor.baf/LOH.regions$tumor.coverage, function(x) abs(x - 0.5)))
+# print(admix_rate)
+admix_rate <- 1 - 2*mean(sapply(LOH.sites$baf_tumor/LOH.sites$coverage_tumor, function(x) abs(x - 0.5)))
 print(admix_rate)
+
 
 ###### Call CNV for each exon
 ### Call CNV on each exon (using classify.eCNV), one chromosome at a time. We recommend high min.spec (0.9999) 
@@ -77,11 +96,10 @@ for (i in 1:length(chr.list)) {
 ###Here, we use lower min.spec and min.sens and option="auc" to be less conservative and allow for more discovery.
 patient.cnv <- multi.CNV.analyze(normal, tumor, logR = patient.logR, all.cnv.ls = list(patient.eCNV), 
                                  min.spec = 0.99, min.sens = 0.99, option = "auc", 
-                                 coverage.cutoff = 20, admix = admix_rate, read.len = 76)
+                                 coverage.cutoff = 5, admix = admix_rate, read.len = 76)
 
 ###### plot the results and export outputs.
 pdf("CNV.pdf", width = 15, height = 8)
-do.plot.eCNV(patient.eCNV, style = "bp")
 do.plot.eCNV(patient.cnv, style = "bp", bg.cnv = patient.eCNV, line.plot = T)
 dev.off()
 
