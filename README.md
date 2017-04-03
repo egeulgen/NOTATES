@@ -49,8 +49,8 @@ The pipeline utilizes the following resources (path/to/resource can be altered i
 - [x] ~~Update Germline Script~~
 - [x] ~~Update BAF creation algorithm script~~
 - [x] ~~Integrate a method for contamination estimation~~
-- [x] Update ExomeCNV - logR, seg. annot. 
-- [x] Add TheTa (n=2) results to final integration
+- [x] ~~Update ExomeCNV - logR, seg. annot. ~~
+- [x] ~~Add TheTa (n=2) results to final integration~~
 - [ ] Automate QC table creation
 - [ ] Detect actionable variants
 - [ ] Create and integrate PoN (prompt user for the option)
