@@ -32,3 +32,5 @@ Resources/Data_sources_prep/HapMap/b37_population_stratified_af_hapmap_3.3.vcf
 Scripts/ExomeCNV/GC_correction_etc.sh
 
 Scripts/PoN.sh
+
+Scripts/NOTATESv3.2/TCGA_feb21_16/.Rhistory
