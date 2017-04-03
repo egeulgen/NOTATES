@@ -6,9 +6,9 @@ The pipeline consists of several bash and R scripts, and a wrapper bash script. 
 
 The somatic Single Nucleotide Variant(SNV) and Insertion/Deletion(InDel) discovery pipeline was created based upon the GATK Best Practices workflow. Germline SNV and InDels are called using GATK HaplotypeCaller. Both germline and somatic variants are annotated Oncotator.
 
-Loss of heterozygosity(LOH) and Somatic copy number alterations (SCNA) are called using ExomeCNV.
+Loss of heterozygosity (LOH) and Somatic copy number alterations (SCNA) are called using ExomeCNV.
 
-Tumor purity and clonal/subclonal copy number aberrations are estimated using THetA2
+Tumor purity and clonal/subclonal copy number aberrations are estimated using THetA2.
 
 Germline variant reporting and integration of detected alterations are achieved with custom scripts and curated resources.
 For details about the pipeline, see [here](add documentation)
@@ -20,7 +20,6 @@ Should be located in bin directory:
 - [FastQC](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/)
 - [SAMTools](http://samtools.sourceforge.net/)
 - [BWA](http://bio-bwa.sourceforge.net/)
-- [bam-readcount](https://github.com/genome/bam-readcount)
 
 The path/to/tool should be specified in the configuration file:
 - [Picard](http://broadinstitute.github.io/picard/index.html)
@@ -28,12 +27,12 @@ The path/to/tool should be specified in the configuration file:
 - [Oncotator](https://github.com/broadinstitute/oncotator/releases)
 - [THetA2](http://compbio.cs.brown.edu/projects/theta/)
 - [Oncotator](https://github.com/broadinstitute/oncotator/releases)
-
+- [Conpair](https://github.com/nygenome/Conpair)
 
 ### Resources
 Note that **only hg19 reference and resources with hg19 coordinates are supported** as this is the only reference genome build compatible with oncotator data sources.
 
-The pipeline utilizes the following resources (path/to/resource can be altered in the configuration file configurations.cfg):
+The pipeline utilizes the following resources (path/to/resource can be altered in the configuration file _configurations.cfg_):
 - Reference sequence, prepared for use with BWA and GATK(see [here](http://gatkforums.broadinstitute.org/gatk/discussion/2798/howto-prepare-a-reference-for-use-with-bwa-and-gatk))
 - Exome capture kit target intervals (check with your capture kit provider or your sequencing facility)
 - dbSNP VCF (can be found in the [GATK bundle])
@@ -50,10 +49,10 @@ The pipeline utilizes the following resources (path/to/resource can be altered i
 - [x] ~~Update Germline Script~~
 - [x] ~~Update BAF creation algorithm script~~
 - [x] ~~Integrate a method for contamination estimation~~
-- [ ] Update ExomeCNV - logR, seg. annot. 
-- [ ] Add TheTa (n=2) results to final integration
+- [x] Update ExomeCNV - logR, seg. annot. 
+- [x] Add TheTa (n=2) results to final integration
 - [ ] Automate QC table creation
-- [ ] Detect alterations in actionable genes
+- [ ] Detect actionable variants
 - [ ] Create and integrate PoN (prompt user for the option)
 - [ ] Check and install required R packages, if necessary
 - [ ] HTML report generation
