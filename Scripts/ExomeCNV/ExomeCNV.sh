@@ -32,7 +32,7 @@ $JAVA $GATK -T SelectVariants -R $genome \
 	--excludeFiltered -restrictAllelesTo BIALLELIC \
 	-o ./ExomeCNV/baf/normal_HQ_SNPs.vcf
 
-## Get the same HQ-filtered Het SNP sites in Tumor
+## Call variants at the same HQ-filtered Het SNP sites in Tumor
 # HC
 $JAVA $GATK -T HaplotypeCaller -R $genome -I tumor.final.bam \
 	-stand_call_conf 30 -stand_emit_conf 10 \
@@ -61,6 +61,6 @@ Rscript "$scripts_dir"'/ExomeCNV/VCF_parser_BAF.R'
 
 ####### ExomeCNV
 echo "############################################# Running R script for ExomeCNV    " $(date)
-Rscript "$scripts_dir"'/ExomeCNV/ExomeCNV.R'
+Rscript "$scripts_dir"'/ExomeCNV/ExomeCNV.R' $read_length
 
 exit 0

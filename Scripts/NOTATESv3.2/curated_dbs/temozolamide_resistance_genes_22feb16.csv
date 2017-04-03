@@ -1,0 +1,11 @@
+gene,name,mechanism,correlation w temozolamide response,reference(PMID),cons
+MGMT,,,negative,,
+MSH6,,MMR proteins recognize O6-MeG adducts not removed by MGMT and initiate an apoptotic response that leads to cell death ,positive,16618716; 17404084; 19584161; 26025730; 25078279; 19584161; 17404084,18676759
+MSH2,,,positive,26025730,
+MLH1,,,positive,25646660; 24259277,
+PMS2,,,positive,24259277,
+NBN,nibrin,Nijmegen breakage syndrome protein,positive,20729302,
+AKT3,,induces DNA repair,positive,25737557,
+ATM,,,positive,25646660,
+ATR,,,positive,25646660,
+KDM5A,,histone demethylase,positive,26566863,

@@ -9,12 +9,11 @@ lanes=$(cat ./lanes.txt)
 ####### Alignment, Clean SAM, SAM to BAM conversion, Fix Mate Information, and 
 ####### Mark Duplicates - by lane
 
-flowcell=$(sed '2q;d' SampleSheet.csv | cut -f1 -d",")
 for lane in $lanes
 do
 	## Read Group Information
 	RG='@RG'
-	RG=$RG'\tID:'$flowcell'.'$lane
+	RG=$RG'\tID:'$sample
 	RG=$RG'\tSM:'$name
 	RG=$RG'\tPL:ILLUMINA\tLB:library'
 

@@ -11,6 +11,11 @@ require(DNAcopy)
 # set workdir to currentdir/ExomeCNV
 setwd("./ExomeCNV/")
 
+# set read length
+args <- commandArgs(trailingOnly=TRUE)
+read_length <- as.numeric(args[1])
+
+
 # LOH Calling -------------------------------------------------------------
 load("./baf/BAF_data.Rdata")
 
@@ -88,7 +93,7 @@ patient.eCNV <- c()
 for (i in 1:length(chr.list)) {
   idx <- (normal$chr == chr.list[i])
   ecnv <- classify.eCNV(normal = normal[idx, ], tumor = tumor[idx, ], logR=patient.logR[idx], 
-                        min.spec = 0.9999, min.sens = 0.9999, option="spec", admix = admix_rate, read.len = 76)
+                        min.spec = 0.9999, min.sens = 0.9999, option="spec", admix = admix_rate, read.len = read_length)
   patient.eCNV <- rbind(patient.eCNV, ecnv)
 }
 
@@ -96,7 +101,7 @@ for (i in 1:length(chr.list)) {
 ###Here, we use lower min.spec and min.sens and option="auc" to be less conservative and allow for more discovery.
 patient.cnv <- multi.CNV.analyze(normal, tumor, logR = patient.logR, all.cnv.ls = list(patient.eCNV), 
                                  min.spec = 0.99, min.sens = 0.99, option = "auc", 
-                                 coverage.cutoff = 5, admix = admix_rate, read.len = 76)
+                                 coverage.cutoff = 5, admix = admix_rate, read.len = read_length)
 
 ###### plot the results and export outputs.
 pdf("CNV.pdf", width = 15, height = 8)

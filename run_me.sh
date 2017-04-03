@@ -2,7 +2,7 @@
 ################################################################################
 ######################### NeuroOncology Technologies ###########################
 ###################### Whole-Exome Sequencing Pipeline #########################
-########################## Ege Ulgen, July 2016 ################################
+########################### Ege Ulgen, March 2017 ##############################
 ################################################################################
 
 ### Set main_dir to the directory where this script is located
@@ -23,7 +23,7 @@ fi
 
 ################################################################################
 ############################ Check Patient ID ##################################
-######################### Normal ID and Tumor ID################################
+######################## Normal ID and Tumor ID ################################
 ################################################################################
 patientID=$1
 if [ ${#patientID} == 0 ]
@@ -34,7 +34,8 @@ fi
 path_to_patient=$(find . -type d -name $patientID -print)
 if [ ${#path_to_patient} == 0 ]
 	then 
-	printf "FOLDER NOT FOUND! :\n  Make sure that the patient ID is correct\n"
+	printf "FOLDER NOT FOUND! :\n  Make sure that you are in the correct 
+	directory\nand the patient ID is correct\n"
 	exit 2
 fi
 cd $path_to_patient
@@ -62,6 +63,7 @@ if [ ! -d "$tumor_name" ]
 fi
 
 #### Display the chosen patient ID and Normal ID, Tumor ID
+echo ""
 echo "The chosen patient ID is: ""$patientID"
 echo "The germline sample ID is: ""$normal_name"
 echo "The tumor sample ID  is: ""$tumor_name"
@@ -199,5 +201,74 @@ bash "$THetA"/bin/CreateExomeInput -s ./ExomeCNV/CNV.segment.copynumber.txt \
 echo "############################################### Running THetA    " $(date)
 bash "$THetA"/bin/RunTHetA THetA/CNV.input --TUMOR_FILE THetA/tumor_SNP.txt \
 	--NORMAL_FILE THetA/normal_SNP.txt --DIR ./THetA/output --NUM_PROCESSES 8
+
+################################################################################
+############################### Integration ####################################
+################################################################################
+
+echo "######################## Running R script for NOTATES v3.2       " $(date)
+Rscript "$scripts_dir"/NOTATESv3.2/run_integration.R
+
+################################################################################
+#################################### QC ########################################
+################################################################################
+## Insert-size Metrics
+$JAVA $PICARD CollectInsertSizeMetrics \
+	HISTOGRAM_FILE=$normal_name/QC/insert_size_histogram.pdf \
+	INPUT=normal.final.bam OUTPUT=$normal_name/QC/insert_size_metrics.txt
+
+$JAVA $PICARD CollectInsertSizeMetrics \
+	HISTOGRAM_FILE=$tumor_name/QC/insert_size_histogram.pdf \
+	INPUT=tumor.final.bam OUTPUT=$tumor_name/QC/insert_size_metrics.txt
+
+## Depth of coverage over target intervals
+$JAVA $GATK -T DepthOfCoverage -R $genome -I normal.final.bam \
+	-o $normal_name/QC/primary_target_coverage \
+	--intervals $Bait_Intervals --interval_padding 100 \
+	-ct 1 -ct 5 -ct 10 -ct 25 -ct 50 -ct 100
+
+$JAVA $GATK -T DepthOfCoverage -R $genome -I tumor.final.bam \
+	-o $tumor_name/QC/primary_target_coverage \
+	--intervals $Bait_Intervals --interval_padding 100 \
+	-ct 1 -ct 5 -ct 10 -ct 25 -ct 50 -ct 100
+
+
+## Alignment Summary Metrics
+$JAVA $PICARD CollectAlignmentSummaryMetrics \
+	METRIC_ACCUMULATION_LEVEL=ALL_READS REFERENCE_SEQUENCE=$genome \
+	INPUT=normal.final.bam OUTPUT=$normal_name/QC/alignment_summary_metrics.txt
+
+$JAVA $PICARD CollectAlignmentSummaryMetrics \
+	METRIC_ACCUMULATION_LEVEL=ALL_READS REFERENCE_SEQUENCE=$genome \
+	INPUT=tumor.final.bam OUTPUT=$tumor_name/QC/alignment_summary_metrics.txt
+
+## FlagStat
+samtools flagstat normal.final.bam > $normal_name/QC/flagstat_metrics.txt
+
+samtools flagstat tumor.final.bam > $tumor_name/QC/flagstat_metrics.txt
+
+## Before and after plots for BQSR
+$JAVA $GATK -T BaseRecalibrator -R $genome -I ./$normal_name/normal.marked.bam \
+	-knownSites $dbSNP -knownSites $Mills_1kG -knownSites $ThousandG \
+	-BQSR normal.recal_data.table -o normal.after_recal.table \
+	--intervals $Bait_Intervals --interval_padding 100
+
+$JAVA $GATK -T BaseRecalibrator -R $genome -I ./$tumor_name/tumor.marked.bam \
+	-knownSites $dbSNP -knownSites $Mills_1kG -knownSites $ThousandG \
+	-BQSR tumor.recal_data.table -o tumor.after_recal.table \
+	--intervals $Bait_Intervals --interval_padding 100
+
+rm ./$normal_name/normal.marked.bam 
+rm ./$normal_name/normal.marked.bai
+rm ./$tumor_name/tumor.marked.bam
+rm ./$tumor_name/tumor.marked.bai
+
+$JAVA $GATK -T AnalyzeCovariates -R $genome \
+	-before normal.recal_data.table -after normal.after_recal.table \
+	-plots ./$normal_name/BQSR_covariates.pdf
+
+$JAVA $GATK -T AnalyzeCovariates -R $genome \
+	-before tumor.recal_data.table -after tumor.after_recal.table \
+	-plots ./$tumor_name/BQSR_covariates.pdf
 
 exit 0

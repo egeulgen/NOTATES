@@ -2,7 +2,9 @@
 name=$1
 
 cd ./"$name"
-
+## Assuming Illumina fastq naming format
+## <sample name>_<barcode sequence>_L<lane (0-padded to 3 digits)>_R<read number>_<set number (0-padded to 3 digits)>.fastq.gz
+	
 export lanes=$(ls | grep 'L[0-9]*' -o | uniq)
 echo "$lanes" >> lanes.txt
 
