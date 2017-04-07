@@ -477,17 +477,20 @@ alteration_table$CNA_concordant_w_CGC <- F
 for(i in which(alteration_table$Hugo_Symbol %in% CGC_df$Gene.Symbol))
 {
   alteration_table$inCGC[i] <- T
-  tmp <- CGC_df[CGC_df$Gene.Symbol == alteration_table$Hugo_Symbol[i], ]
-  
-  # CGC molecular genetics
-  alteration_table$CGC_Genetics[i] <- tmp$Molecular.Genetics
-  
-  # CNA concordant with CGC molecular genetics?
-  tmp <- alteration_table$THetaCN[i]
-  cond1 <- (tmp < 2 && grepl("Rec", alteration_table$CGC_Genetics[i]))
-  cond2 <- (tmp > 2 && grepl("Dom", alteration_table$CGC_Genetics[i]))
-  if(cond1 || cond2)
-    alteration_table$CNA_concordant_w_CGC[i] = T
+  if(!is.na(alteration_table$THetaCN[i]))
+  {
+    tmp <- CGC_df[CGC_df$Gene.Symbol == alteration_table$Hugo_Symbol[i], ]
+    
+    # CGC molecular genetics
+    alteration_table$CGC_Genetics[i] <- tmp$Molecular.Genetics
+    
+    # CNA concordant with CGC molecular genetics?
+    tmp <- alteration_table$THetaCN[i]
+    cond1 <- (tmp < 2 && grepl("Rec", alteration_table$CGC_Genetics[i]))
+    cond2 <- (tmp > 2 && grepl("Dom", alteration_table$CGC_Genetics[i]))
+    if(cond1 || cond2)
+      alteration_table$CNA_concordant_w_CGC[i] = T
+  }
 }
 #### Clinical
 alteration_table$Clinical <- alteration_table$inCGC & alteration_table$CNA_concordant_w_CGC

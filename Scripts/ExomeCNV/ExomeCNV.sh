@@ -35,7 +35,7 @@ $JAVA $GATK -T SelectVariants -R $genome \
 ## Call variants at the same HQ-filtered Het SNP sites in Tumor
 # HC
 $JAVA $GATK -T HaplotypeCaller -R $genome -I tumor.final.bam \
-	-stand_call_conf 30 -stand_emit_conf 10 \
+	-stand_call_conf 30 \
 	--intervals ./ExomeCNV/baf/normal_HQ_SNPs.vcf \
 	-o ./ExomeCNV/baf/raw_tumor_HC.vcf -nct 8
 

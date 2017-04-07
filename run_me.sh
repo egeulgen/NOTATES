@@ -136,7 +136,7 @@ Rscript "$scripts_dir"'/conpair_parser.R' $normal_name $tumor_name
 echo "############## Running Haplotype Caller for Germline Variants    " $(date)
 mkdir ./Germline/
 $JAVA $GATK -T HaplotypeCaller -R $genome -I normal.final.bam --dbsnp $dbSNP \
-	-stand_call_conf 30 -stand_emit_conf 10 \
+	-stand_call_conf 30 \
 	--intervals $Bait_Intervals --interval_padding 100 \
 	-o ./Germline/raw.snps.indels.vcf -nct 8
 
@@ -271,4 +271,8 @@ $JAVA $GATK -T AnalyzeCovariates -R $genome \
 	-before tumor.recal_data.table -after tumor.after_recal.table \
 	-plots ./$tumor_name/BQSR_covariates.pdf
 
+## QC Wrapper
+Rscript "$scripts_dir"/QC.R $normal_name $tumor_name
+
+echo "######################## Finished 							   " $(date)
 exit 0
