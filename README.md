@@ -26,7 +26,6 @@ Should be located in bin directory:
 The path/to/tool should be specified in the configuration file:
 - [Picard](http://broadinstitute.github.io/picard/index.html)
 - [GATK](https://software.broadinstitute.org/gatk/)
-- [Oncotator](https://github.com/broadinstitute/oncotator/releases)
 - [THetA2](http://compbio.cs.brown.edu/projects/theta/)
 - [Oncotator](https://github.com/broadinstitute/oncotator/releases)
 - [Conpair](https://github.com/nygenome/Conpair)
