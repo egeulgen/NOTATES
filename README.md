@@ -43,20 +43,3 @@ The pipeline utilizes the following resources (path/to/resource can be altered i
 - Oncotator data sources (latest can be dowloaded from [here](https://personal.broadinstitute.org/lichtens/oncobeta/oncotator_v1_ds_Jan262015.tar.gz))
 
 [GATK bundle]: http://gatkforums.broadinstitute.org/gatk/discussion/1213/whats-in-the-resource-bundle-and-how-can-i-get-it
-
-### Features to be added
-- [x] ~~Update COSMIC, CGC, GATK Bundle, oncotator db, and dbSNP databases, list of "pathogenic" and/or "drugresponse" dbSNP entries~~
-- [x] ~~Update tools GATK, oncotator, samtools, PICARD~~
-- [x] ~~Update Germline Script~~
-- [x] ~~Update BAF creation algorithm script~~
-- [x] ~~Integrate a method for contamination estimation~~
-- [x] ~~Update ExomeCNV - logR, seg. annot.~~
-- [x] ~~Add TheTa (n=2) results to final integration~~
-- [x] ~~Automate QC table creation~~
-- [ ] Detect actionable variants
-- [ ] Create and integrate PoN (prompt user for the option)
-- [ ] Check and install required R packages, if necessary
-- [ ] HTML report generation
-- [ ] Create Wiki
-- [ ] Implement other tools for SCNA detection, intersection of all
-- [ ] Implement a tool for SV discovery
