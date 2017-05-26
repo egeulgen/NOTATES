@@ -44,6 +44,9 @@ The pipeline utilizes the following resources (path/to/resource can be altered i
 
 <<<<<<< HEAD
 [GATK bundle]: http://gatkforums.broadinstitute.org/gatk/discussion/1213/whats-in-the-resource-bundle-and-how-can-i-get-it
+<<<<<<< HEAD
 =======
 [GATK bundle]: http://gatkforums.broadinstitute.org/gatk/discussion/1213/whats-in-the-resource-bundle-and-how-can-i-get-it
+>>>>>>> origin/master
+=======
 >>>>>>> origin/master
