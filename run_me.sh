@@ -203,13 +203,6 @@ bash "$THetA"/bin/RunTHetA THetA/CNV.input --TUMOR_FILE THetA/tumor_SNP.txt \
 	--NORMAL_FILE THetA/normal_SNP.txt --DIR ./THetA/output --NUM_PROCESSES 8
 
 ################################################################################
-############################### Integration ####################################
-################################################################################
-
-echo "######################## Running R script for NOTATES v3.2       " $(date)
-Rscript "$scripts_dir"/NOTATESv3.2/run_integration.R
-
-################################################################################
 #################################### QC ########################################
 ################################################################################
 ## Insert-size Metrics
@@ -273,6 +266,17 @@ $JAVA $GATK -T AnalyzeCovariates -R $genome \
 
 ## QC Wrapper
 Rscript "$scripts_dir"/QC.R $normal_name $tumor_name
+
+################################################################################
+################################# NOTATES ######################################
+################################################################################
+
+echo "######################## Running R script for NOTATES v4         " $(date)
+Rscript "$scripts_dir"/NOTATESv4/run_NOTATES.R
+
+echo "######################## Running R script for DeConstructSigs    " $(date)
+Rscript "$scripts_dir"/DeConstructSigs.R
+
 
 echo "######################## Finished 							   " $(date)
 exit 0
