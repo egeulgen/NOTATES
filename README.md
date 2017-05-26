@@ -42,11 +42,4 @@ The pipeline utilizes the following resources (path/to/resource can be altered i
 - COSMIC VCF - coding and non-coding mutations (follow the instructions on [http://cancer.sanger.ac.uk/cosmic/download], then merge and liftover to hg19)
 - Oncotator data sources (latest can be dowloaded from [here](https://personal.broadinstitute.org/lichtens/oncobeta/oncotator_v1_ds_Jan262015.tar.gz))
 
-<<<<<<< HEAD
 [GATK bundle]: http://gatkforums.broadinstitute.org/gatk/discussion/1213/whats-in-the-resource-bundle-and-how-can-i-get-it
-<<<<<<< HEAD
-=======
-[GATK bundle]: http://gatkforums.broadinstitute.org/gatk/discussion/1213/whats-in-the-resource-bundle-and-how-can-i-get-it
->>>>>>> origin/master
-=======
->>>>>>> origin/master
