@@ -24,7 +24,7 @@ Should be located in bin directory:
 - [BWA](http://bio-bwa.sourceforge.net/)
 
 For the report, the following should be installed:
-- The R packages knitr, formatR 
+- The R packages knitr, markdown, formatR 
 - [pandoc]http://pandoc.org/
 - TeX (MacTeX on Mac OS, TeX Live on Linux)
 
