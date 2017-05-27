@@ -23,6 +23,11 @@ Should be located in bin directory:
 - [SAMTools](http://samtools.sourceforge.net/)
 - [BWA](http://bio-bwa.sourceforge.net/)
 
+For the report, the following should be installed:
+- The R packages knitr, formatR 
+- [pandoc]http://pandoc.org/
+- TeX (MacTeX on Mac OS, TeX Live on Linux)
+
 The path/to/tool should be specified in the configuration file:
 - [Picard](http://broadinstitute.github.io/picard/index.html)
 - [GATK](https://software.broadinstitute.org/gatk/)
