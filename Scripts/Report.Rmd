@@ -1,0 +1,347 @@
+---
+output: pdf_document
+params:
+  ID: ""
+---
+
+---
+title: `r paste("Whole Exome Sequencing Report for", params$ID)`
+author: "NeuroOncology Technologies(NOT)"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(knitr)
+library(pander)
+```
+
+# I. Quality Metrics
+```{r, echo = F}
+QC_df <- read.csv("./Quality_Metrics/QC_table.csv",stringsAsFactors = F, row.names = 1)
+pander(QC_df, align = "c", table.caption.prefix ="")
+```
+
+
+   > \* PF is defined as passing Illumina's filter
+
+   > \*\* The percentage of PF reads that aligned to the reference sequence
+
+   > \*\*\* The percentage of reads whose mate pair was also aligned to the reference
+
+# II. Germline Alterations
+
+### II. a. ACMG Incidental Findings
+```{r, ACMG, echo = F, comment=NA}
+if(file.exists("./NOTATES/Germline/ACMG.csv"))
+{
+  ACMG_df <- read.csv("./NOTATES/Germline/ACMG.csv",stringsAsFactors = F)
+  # tmp <- unlist(strsplit(ACMG_df$Disease.s., ", "))
+  # tmp <- setdiff(tmp, c("glioma predisposition gene","CGC_germline"))
+  # ACMG_df$Filter_Comment <- tmp
+  rownames(ACMG_df) <- ACMG_df$ID
+  ACMG_df <- ACMG_df[,-2]
+  pander(ACMG_df, align = "c",table.caption.prefix ="")
+}else
+{
+  cat("No variation to report.")
+}
+```
+
+### II. b. Variations in Cancer Gene Census genes
+```{r, CGC, echo = F, comment=NA}
+if(file.exists("./NOTATES/Germline/CGC.csv"))
+{
+  gCGC_df <- read.csv("./NOTATES/Germline/CGC.csv",stringsAsFactors = F)
+  pander(gCGC_df, align = "c",table.caption.prefix ="")
+}else
+{
+  cat("No variation to report.")
+}
+```
+
+### II. c. Variations in Cancer Predisposition Genes
+```{r, CPG, echo = F, comment=NA}
+if(file.exists("./NOTATES/Germline/CPG.csv"))
+{
+  CPG_df <- read.csv("./NOTATES/Germline/CPG.csv",stringsAsFactors = F)
+  pander(CPG_df, align = "c",table.caption.prefix ="")
+}else
+{
+  cat("No variation to report.")
+}
+```
+
+### II. d. Variations in Fanconi Anemia Pathway genes
+```{r, FAP, echo = F, comment=NA}
+if(file.exists("./NOTATES/Germline/FAP.csv"))
+{
+  FAP_df <- read.csv("./NOTATES/Germline/FAP.csv",stringsAsFactors = F)
+  pander(FAP_df, align = "c",table.caption.prefix ="")
+}else
+{
+  cat("No variation to report.")
+}
+```
+
+### II. e. Other important germline variations
+```{r, OTH, echo = F, comment=NA}
+if(file.exists("./NOTATES/Germline/OTHER.csv"))
+{
+  OTH_df <- read.csv("./NOTATES/Germline/OTHER.csv",stringsAsFactors = F)
+  pander(OTH_df, align = "c",table.caption.prefix ="")
+}else
+{
+  cat("No variation to report.")
+}
+```
+
+### II. f. Common Variants
+```{r, common, echo = F, comment=NA}
+if(file.exists("./NOTATES/Germline/common_var.csv"))
+{
+  common_df <- read.csv("./NOTATES/Germline/common_var.csv",stringsAsFactors = F)
+  pander(common_df, align = "c",table.caption.prefix ="")
+}else
+{
+  cat("No variation to report.")
+}
+```
+
+# III. Somatic Single Nucleotide Variations(SNVs)
+
+```{r mutload, echo=F}
+somatic_SNVs <- read.delim("./Oncotator/annotated.sSNVs.tsv", stringsAsFactors=F, comment.char="#")
+
+# Subsetting for (MuTect's default) HQ filters
+somatic_SNVs <- subset(somatic_SNVs, 
+                       alt_allele_seen=="True" & 
+                         alt_allele_in_normal=="PASS" & 
+                         clustered_events=="PASS" &
+                         germline_risk == "PASS" & 
+                         homologous_mapping_event=="PASS" &
+                         multi_event_alt_allele_in_normal=="PASS" &
+                         panel_of_normals=="PASS" & 
+                         str_contraction=="PASS" &
+                         t_lod_fstar=="PASS" &
+                         triallelic_site=="PASS" &
+                         short_tandem_repeat_membership=="False")
+mut_num <- nrow(somatic_SNVs)
+mut_load <- mut_num/51.740863 ## generalize this to other than xGen
+```
+
+Mutation load (Number of mutations per mb): `r mut_load`
+
+### III. a. Important SNVs in Glioma
+
+This is the intersection of SNVs in this case with a list of SNVs manually curated because of their importance in gliomas.
+
+```{r imp_snv, echo = F, comment=NA}
+if(file.exists("./NOTATES/Somatic_SNV/important_glioma_SNVs.csv"))
+{
+  imp_snv <- read.csv("./NOTATES/Somatic_SNV/important_glioma_SNVs.csv", stringsAsFactors = F)
+  imp_snv <- imp_snv[,setdiff(colnames(imp_snv),c("COSMIC_total_alterations_in_gene","DNA_repair","selected_KEGG"))]
+  colnames(imp_snv)<- c("Gene", "Effect", "Protein", "Genome","TumorF","Genotype", "COS_n_ov",
+                        "UniProt_Region", "Irino", "TMZ")
+  rownames(imp_snv) <- imp_snv$Gene
+  imp_snv <- imp_snv[,-1]
+  pander(imp_snv, align = "c",table.caption.prefix ="")
+}else
+{
+  cat("No variation to report.")
+}
+```
+
+### III. b. CGC gene + COSMIC hotspot
+
+These are the SNVs in this case in any CGC gene and COSMIC n overlapping mutation count >  0.
+
+```{r, hotspot, echo = F, comment=NA}
+if(file.exists("./NOTATES/Somatic_SNV/COSMIC_hotspot.csv"))
+{
+  hot_snv <- read.csv("./NOTATES/Somatic_SNV/COSMIC_hotspot.csv", stringsAsFactors = F)
+  hot_snv <- hot_snv[,setdiff(colnames(hot_snv),c("COSMIC_total_alterations_in_gene","DNA_repair","selected_KEGG"))]
+  colnames(hot_snv)<- c("Gene", "Effect", "Protein", "Genome","TumorF","Genotype", "COS_n_ov",
+                        "UniProt_Region", "Irino", "TMZ")
+  rownames(hot_snv) <- hot_snv$Gene
+  hot_snv <- hot_snv[,-1]
+  
+  pander(hot_snv, align = "c",table.caption.prefix ="")
+}else
+{
+  cat("No variation to report.")
+}
+```
+
+### III. c. CGC gene only
+
+These are the SNVs in this case in any CGC gene.
+
+```{r, cgc_snv, echo = F, comment=NA}
+if(file.exists("./NOTATES/Somatic_SNV/CGC_genes.csv"))
+{
+  cgc_snv <- read.csv("./NOTATES/Somatic_SNV/CGC_genes.csv", stringsAsFactors = F)
+  cgc_snv <- cgc_snv[,setdiff(colnames(cgc_snv),c("COSMIC_total_alterations_in_gene","DNA_repair","selected_KEGG"))]
+  colnames(cgc_snv)<- c("Gene", "Effect", "Protein", "Genome","TumorF","Genotype", "COS_n_ov",
+                        "UniProt_Region", "Irino", "TMZ")
+  rownames(cgc_snv) <- cgc_snv$Gene
+  cgc_snv <- cgc_snv[,-1]
+  pander(cgc_snv, align = "c",table.caption.prefix ="")
+}else
+{
+  cat("No variation to report.")
+}
+```
+
+### III. d. Other possibly important SNVs
+
+SNVs in DNA damage repair genes:
+
+```{r, DDR, echo = F, comment=NA}
+if(file.exists("./NOTATES/Somatic_SNV/DDR_related.csv"))
+{
+  ddr_snv <- read.csv("./NOTATES/Somatic_SNV/DDR_related.csv", stringsAsFactors = F)
+
+  ddr_snv <- ddr_snv[,setdiff(colnames(ddr_snv),c("COSMIC_total_alterations_in_gene","selected_KEGG"))]
+  colnames(ddr_snv) <- c("Gene", "Effect", "Protein", "Genome","TumorF","Genotype", "COS_n_ov",
+                        "UniProt_Region", "DNA_repair", "Irino", "TMZ")
+  rownames(ddr_snv) <- ddr_snv$Gene
+  ddr_snv <- ddr_snv[,-1]
+  
+  pander(ddr_snv, align = "c",table.caption.prefix ="")
+}else
+{
+  cat("No variation to report.")
+}
+```
+
+SNVs in important KEGG Pathway genes:
+
+```{r, kegg, echo = F, comment=NA}
+if(file.exists("./NOTATES/Somatic_SNV/KEGG_selected.csv"))
+{
+  kegg_snv <- read.csv("./NOTATES/Somatic_SNV/KEGG_selected.csv", stringsAsFactors = F)
+
+  colnames(kegg_snv) <- c("Gene", "Effect", "Protein", "Genome","TumorF","Genotype", "COS_n_ov",
+                          "COS_tot", "UniProt_Region", "DNA_repair", "Irino", "TMZ", "KEGG")
+  rownames(kegg_snv) <- kegg_snv$Gene
+  kegg_snv <- kegg_snv[,-1]
+  
+  pander(kegg_snv, align = "c",table.caption.prefix ="")
+}else
+{
+  cat("No variation to report.")
+}
+```
+
+SNVs in important Irinotecan response genes:
+
+```{r, irino, echo = F, comment=NA}
+if(file.exists("./NOTATES/Somatic_SNV/irinotecan.csv"))
+{
+  irino_snv <- read.csv("./NOTATES/Somatic_SNV/irinotecan.csv", stringsAsFactors = F)
+
+  colnames(irino_snv) <- c("Gene", "Effect", "Protein", "Genome","TumorF","Genotype", "COS_n_ov",
+                          "COS_tot", "UniProt_Region", "DNA_repair", "Irino", "TMZ", "KEGG")
+  rownames(irino_snv) <- irino_snv$Gene
+  irino_snv <- irino_snv[,-1]
+  
+  pander(irino_snv, align = "c", table.caption.prefix ="")
+}else
+{
+  cat("No variation to report.")
+}
+```
+
+SNVs in important Temozolomide resistance genes:
+
+```{r, tmz, echo = F, comment=NA}
+if(file.exists("./NOTATES/Somatic_SNV/tmz_res.csv"))
+{
+  tmz_snv <- read.csv("./NOTATES/Somatic_SNV/tmz_res.csv", stringsAsFactors = F)
+  
+  colnames(tmz_snv) <- c("Gene", "Effect", "Protein", "Genome","TumorF","Genotype", "COS_n_ov",
+                          "COS_tot", "UniProt_Region", "DNA_repair", "Irino", "TMZ", "KEGG")
+  rownames(tmz_snv) <- tmz_snv$Gene
+  tmz_snv <- tmz_snv[,-1]
+  
+  pander(tmz_snv, align = "c",table.caption.prefix ="")
+}else
+{
+  cat("No variation to report.")
+}
+```
+
+Other coding mutations and non-coding mutations are provided as attachments.
+
+# IV. Somatic Copy Number Alterations (SCNAs)
+
+### IV. a. Important SCNAs in glioma
+
+This is the intersection of SCNAs in this case with a list of SCNAs manually curated because of their importance in gliomas.
+
+```{r, imp_cna, echo = F, comment=NA}
+if(file.exists("./NOTATES/SCNA/important_CNVs.csv"))
+{
+  imp_cna <- read.csv("./NOTATES/SCNA/important_CNVs.csv", stringsAsFactors = F)
+  pander(imp_cna, align = "c",table.caption.prefix ="")
+}else
+{
+  cat("No variation to report.")
+}
+```
+
+### IV. b. SCNAs in Cancer Gene Census genes
+
+```{r, cgc_cna, echo = F, comment=NA}
+if(file.exists("./NOTATES/SCNA/CGC_CNVs.csv"))
+{
+  cgc_cna <- read.csv("./NOTATES/SCNA/CGC_CNVs.csv", stringsAsFactors = F)
+  pander(cgc_cna[,-c(2,3)], align = "c",table.caption.prefix ="")
+}else
+{
+  cat("No variation to report.")
+}
+```
+
+### IV. c. Broad SCNAs
+
+```{r, brod_cna, echo = F, comment=NA}
+if(file.exists("./NOTATES/SCNA/broad.csv"))
+{
+  broad_cna <- read.csv("./NOTATES/SCNA/broad.csv", stringsAsFactors = F)
+  pander(broad_cna, align = "c",table.caption.prefix ="")
+}else
+{
+  cat("No variation to report.")
+}
+```
+
+### IV. d. SCNA by Chromosome Plots
+
+\begin{center} 
+\includegraphics[width=400pt]{./ExomeCNV/CNV.cnv.png}
+\end{center}
+
+### V. Tumor Heterogeneity Analysis 
+
+THetA (Tumor Heterogeneity Analysis) is an algorithm that estimates the tumor purity and clonal/sublconal copy number aberrations directly from high-throughput DNA sequencing data.
+
+\begin{center} 
+\includegraphics[width=400pt]{`r ifelse(file.exists("./THetA/output/CNV.n3.graph.pdf"),"./THetA/output/CNV.n3.graph.pdf","./THetA/output/CNV.n2.graph.pdf")`}
+\end{center}
+
+### VI. Mutational Signatures
+
+\begin{center} 
+\includegraphics[width=500pt]{mut_signatures.pdf}
+\end{center}
+
+\begin{center} 
+\includegraphics[width=200pt]{mut_signatures_pie.pdf}
+\end{center}
+
+```{r, mut_sigs, echo = F, comment=NA}
+mut_sigs <- read.csv("./mut_signatures.csv", stringsAsFactors = F, row.names = 1)
+pander(mut_sigs, align = "c",table.caption.prefix ="")
+```

@@ -107,12 +107,5 @@ rownames(QC_table) <- c("Number of Lanes","Read Type", "Read Length",
                               "Total Number of Reads(in millions)",
                               "PF Reads* (%)", "Mapped** (%)", "PE Mapped*** (%)",
                               "Mean Coverage", "1X (%)", "5X (%)", "10X (%)", "25X (%)", "50X (%)", "100X (%)")
-#### Comments
-QC_table <- rbind(QC_table, "")
-rownames(QC_table)[nrow(QC_table)] <- "*PF is defined as passing Illumina's filter"
-QC_table <- rbind(QC_table, "")
-rownames(QC_table)[nrow(QC_table)] <- "**The percentage of PF reads that aligned to the reference sequence"
-QC_table <- rbind(QC_table, "")
-rownames(QC_table)[nrow(QC_table)] <- "***The percentage of reads whose mate pair was also aligned to the reference"
 
 write.csv(QC_table, "QC_table.csv", quote = F)

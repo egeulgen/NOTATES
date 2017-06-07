@@ -56,11 +56,11 @@ germline <- subset(germline, HQ_SNP_filter=="PASS" & HQ_InDel_filter=="PASS" & L
 # Further subsetting 
 germline <- subset(germline, read_depth>20) #### any other?????
 
-# Filter out non-coding variants
-rejects <- c("Silent", "3'UTR", "3'Flank", "5'UTR", "5'Flank", "IGR", 
-             "Intron","lincRNA", "RNA", "De_novo_Start_InFrame")
-
-germline <- subset(germline, !(Variant_Classification %in% rejects))
+# # Filter out non-coding variants
+# rejects <- c("Silent", "3'UTR", "3'Flank", "5'UTR", "5'Flank", "IGR", 
+#              "Intron","lincRNA", "RNA", "De_novo_Start_InFrame")
+# 
+# germline <- subset(germline, !(Variant_Classification %in% rejects))
 
 # I. Extract relevant genes with preset filter groups ---------------------
 filter_df <- read.csv(paste0(script_dir, "/Germline_filter_list.csv"), stringsAsFactors = F)
@@ -92,10 +92,9 @@ rm(list = setdiff(ls(), c("script_dir", "germline_final")))
 write.csv(germline_final,"./output/germline_variant_NO_RS_FILTER.csv", row.names = F)
 
 # II. Evaluate Variants ---------------------------------------------------
-pathogenic_rs_ids <- read.delim(paste0(script_dir, "/dbSNP_list.txt"), stringsAsFactors = F, header = F)
-pathogenic_rs_ids <- pathogenic_rs_ids$V1
+pathogenic_SNPs <- read.table(paste0(script_dir, "/dbSNP_table.txt"), stringsAsFactors = F, header = T)
 
-keep <- germline_final$id %in% pathogenic_rs_ids
+keep <- germline_final$id %in% pathogenic_SNPs$rs_id
 
 germline_final <- germline_final[keep, ]
 
@@ -103,9 +102,10 @@ germline_final <- germline_final[keep, ]
 cols_to_keep <- c("Hugo_Symbol", "Chromosome", "Start_position", "End_position", "Variant_Classification", 
                   "Reference_Allele", "Tumor_Seq_Allele1", "Tumor_Seq_Allele2", "id", 
                   "Filter_Group", "Filter_Comment",
-                  "allelic_depth", "allele_frequency", "HQ_SNP_filter", "HQ_InDel_filter", "LowQual")
+                  "allelic_depth", "allele_frequency")
 
 germline_final <- germline_final[, cols_to_keep]
 colnames(germline_final) <- gsub("Tumor", "Germline", colnames(germline_final))
+germline_final$minor_allele <- pathogenic_SNPs$Minor_allele[match(germline_final$id,pathogenic_SNPs$rs_id)]
 
 write.csv(germline_final,"./output/germline_variant_report.csv", row.names = F)

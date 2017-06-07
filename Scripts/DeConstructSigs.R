@@ -3,14 +3,18 @@ if(!require(deconstructSigs))
 {
   if(!require(devtools))
     install.packages("devtools")
-  if(!require(BSgenome.Hsapiens.UCSC.hg19))
-  {
-    source("https://bioconductor.org/biocLite.R")
-    biocLite("BSgenome.Hsapiens.UCSC.hg19")
-  }
   install_github("raerose01/deconstructSigs")
 }
+library(deconstructSigs)
+if(!require(BSgenome.Hsapiens.UCSC.hg19))
+{
+  source("https://bioconductor.org/biocLite.R")
+  biocLite("BSgenome.Hsapiens.UCSC.hg19")
+}
 library(BSgenome.Hsapiens.UCSC.hg19)
+
+arguments <- commandArgs(trailingOnly = T)
+script_dir <- arguments[1]
 
 # load somatic SNVs -------------------------------------------------------
 somatic_SNVs <- read.delim("./Oncotator/annotated.sSNVs.tsv", stringsAsFactors=F, comment.char="#")
@@ -46,11 +50,20 @@ signatures <- whichSignatures(tumor.ref = sigs.input,
                               contexts.needed = TRUE,
                               tri.counts.method = 'default')
 
-# Plot output
+# Plots of output
 pdf("mut_signatures.pdf")
 plotSignatures(signatures, sub = '')
+dev.off()
+pdf("mut_signatures_pie.pdf")
 nms <- names(signatures$weights)[signatures$weights!=0]
-barplot(as.matrix(signatures$weights[nms]), ylim = c(0,1))
+pie(as.matrix(signatures$weights[nms]))
 dev.off()
 
-write.csv(round(as.matrix(signatures$weights[nms]),2), "mut_signatures.csv", row.names = F)
+cosmic_sigs <- read.csv(paste0(script_dir,"/COSMIC_signatures.csv"), stringsAsFactors = F)
+
+sig_df <- t(round(as.matrix(signatures$weights[nms]),2))
+rownames(sig_df) <- gsub("\\.", " ",rownames(sig_df))
+colnames(sig_df) <- "freq"
+sig_df <- cbind(sig_df,cosmic_sigs[match(rownames(sig_df),cosmic_sigs$Signature),2:5])
+
+write.csv(sig_df, "mut_signatures.csv")

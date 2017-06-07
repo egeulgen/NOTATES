@@ -13,12 +13,12 @@ $JAVA $GATK -T VariantFiltration -R $genome -V ./raw_snps.vcf \
 rm ./raw_snps.vcf
 rm ./raw_snps.vcf.idx
 
-echo "############################# Selecting Germline non-SNP variants" $(date)
+echo "################################## Selecting Germline nonSNPs    " $(date)
 ### using --selectTypeToExclude SNP, in order to filter MIXED type with InDels
 $JAVA $GATK -T SelectVariants -R $genome -V ./raw.snps.indels.vcf \
 	--selectTypeToExclude SNP -o ./raw_indels.vcf
 
-echo "############################# Filtering Germline non-SNP variants" $(date)
+echo "################################## Filtering Germline nonSNPs    " $(date)
 $JAVA $GATK -T VariantFiltration -R $genome -V ./raw_indels.vcf \
 	--filterExpression "QD < 2.0 || ReadPosRankSum < -20.0 || FS > 200.0 || SOR > 10.0" \
 	--filterName "HQ_InDel_filter" -o ./germline_indels.vcf

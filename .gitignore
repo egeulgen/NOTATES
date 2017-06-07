@@ -34,3 +34,7 @@ Scripts/ExomeCNV/GC_correction_etc.sh
 Scripts/PoN.sh
 
 Scripts/NOTATESv3.2/TCGA_feb21_16/.Rhistory
+
+Scripts/NOTATESv4/curated_alterations/CIVIC_VariantSummaries_May25_17.tsv
+
+Scripts/NOTATESv4/TCGA_feb21_16/.Rhistory

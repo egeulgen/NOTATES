@@ -6,6 +6,7 @@
 ############################################################
 
 require(ExomeCNV)
+# install.packages("~/Downloads/ExomeCNV_1.4.tar.gz", repos = NULL, type = "source")
 require(DNAcopy)
 
 # set workdir to currentdir/ExomeCNV

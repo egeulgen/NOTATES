@@ -35,7 +35,9 @@ germline_mutations <- read.csv("../Germline/output/germline_variant_report.csv",
 if(any(grepl("ACMG",germline_mutations$Filter_Group)))
 {
   tmp <- germline_mutations[grepl("ACMG",germline_mutations$Filter_Group),]
-  tmp <- tmp[,c(1,9:11,13)]
+  tmp <- tmp[,c("Hugo_Symbol","id","Filter_Comment","Variant_Classification",
+                "minor_allele","Reference_Allele", "Germline_Seq_Allele2", "allele_frequency")]
+  colnames(tmp) <- c("Gene","ID","Disease(s)","Effect","Minor Allele", "Ref", "Var", "AF")
   germline_mutations <- germline_mutations[!grepl("ACMG",germline_mutations$Filter_Group),]
   
   write.csv(tmp, "./Germline/ACMG.csv", row.names = F)
@@ -44,7 +46,9 @@ if(any(grepl("ACMG",germline_mutations$Filter_Group)))
 if(any(grepl("CGC",germline_mutations$Filter_Group)))
 {
   tmp <- germline_mutations[grepl("CGC",germline_mutations$Filter_Group),]
-  tmp <- tmp[,c(1,9,10,13)]
+  tmp <- tmp[,c("Hugo_Symbol","id","Variant_Classification",
+                "minor_allele","Reference_Allele", "Germline_Seq_Allele2", "allele_frequency")]
+  colnames(tmp) <- c("Gene","ID","Effect","Minor Allele", "Ref", "Var", "AF")
   germline_mutations <- germline_mutations[!grepl("CGC",germline_mutations$Filter_Group),]
   
   write.csv(tmp, "./Germline/CGC.csv", row.names = F)
@@ -53,7 +57,9 @@ if(any(grepl("CGC",germline_mutations$Filter_Group)))
 if(any(grepl("CPG",germline_mutations$Filter_Group)))
 {
   tmp <- germline_mutations[grepl("CPG",germline_mutations$Filter_Group),]
-  tmp <- tmp[,c(1,9,10,13)]
+  tmp <- tmp[,c("Hugo_Symbol","id","Variant_Classification",
+                "minor_allele","Reference_Allele", "Germline_Seq_Allele2", "allele_frequency")]
+  colnames(tmp) <- c("Gene","ID","Effect","Minor Allele", "Ref", "Var", "AF")
   germline_mutations <- germline_mutations[!grepl("CPG",germline_mutations$Filter_Group),]
   
   write.csv(tmp, "./Germline/CPG.csv", row.names = F)
@@ -62,24 +68,30 @@ if(any(grepl("CPG",germline_mutations$Filter_Group)))
 if(any(grepl("FAP",germline_mutations$Filter_Group)))
 {
   tmp <- germline_mutations[grepl("FAP",germline_mutations$Filter_Group),]
-  tmp <- tmp[,c(1,9,10,13)]
+  tmp <- tmp[,c("Hugo_Symbol","id","Variant_Classification",
+                "minor_allele","Reference_Allele", "Germline_Seq_Allele2", "allele_frequency")]
+  colnames(tmp) <- c("Gene","ID","Effect","Minor Allele", "Ref", "Var", "AF")
   germline_mutations <- germline_mutations[!grepl("FAP",germline_mutations$Filter_Group),]
   
   write.csv(tmp, "./Germline/FAP.csv", row.names = F)
 }
 ### Other
-if(nrow(germline_mutations) > 0)
+if(nrow(germline_mutations) != 0)
 {
   tmp <- germline_mutations
-  tmp <- tmp[,c(1,9,10,13)]
+  tmp <- tmp[,c("Hugo_Symbol","id","Variant_Classification",
+                "minor_allele","Reference_Allele", "Germline_Seq_Allele2", "allele_frequency")]
+  colnames(tmp) <- c("Gene","ID","Effect","Minor Allele", "Ref", "Var", "AF")
   
   write.csv(tmp, "./Germline/OTHER.csv", row.names = F)
 }
 
 ### Common Variants
 common_var <- read.csv("../Germline/output/common_variant_report.csv", stringsAsFactors = F)
-common_var <- common_var[,c(1,2,12)]
-write.csv(tmp, "./Germline/common_var.csv", row.names = F)
+common_var <- common_var[,c("id","Hugo_Symbol","Variant_Classification",
+                            "gCCV_Risk_allele","Reference_Allele","Normal_Seq_Allele2","allele_frequency")]
+colnames(common_var) <-  c("ID","Gene","Effect","Risk Allele", "Ref", "Var", "AF")
+write.csv(common_var, "./Germline/common_var.csv", row.names = F)
 
 # Somatic Mutations -------------------------------------------------------
 dir.create("./Somatic_SNV")
@@ -117,10 +129,11 @@ write.csv(somatic_SNVs[, keep], "./Somatic_SNV/detailed_sSNV.csv", row.names = F
 
 somatic_SNVs <- somatic_SNVs[, c("Hugo_Symbol", "Variant_Classification", "Protein_Change", "Genome_Change",
                                  "tumor_f", "genotype", "COSMIC_n_overlapping_mutations",
-                                 "COSMIC_total_alterations_in_gene")]
+                                 "COSMIC_total_alterations_in_gene","UniProt_Region")]
 
 noncoding_SNVs <- somatic_SNVs[somatic_SNVs$Variant_Classification %in% c("Silent", "3'UTR", "3'Flank", "5'UTR", "5'Flank", 
                                                                           "IGR", "Intron", "lincRNA", "RNA"),]
+noncoding_SNVs <- noncoding_SNVs[,setdiff(colnames(noncoding_SNVs),c("Protein_Change","UniProt_Region"))]
 write.csv(noncoding_SNVs, "Somatic_SNV/noncoding_SNVs.csv", row.names = F)
 
 somatic_SNVs <- somatic_SNVs[!somatic_SNVs$Variant_Classification %in% c("Silent", "3'UTR", "3'Flank", "5'UTR", "5'Flank", 
