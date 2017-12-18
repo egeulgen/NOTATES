@@ -47,11 +47,13 @@ $JAVA $GATK -T VariantFiltration -R $genome -V ./ExomeCNV/baf/raw_tumor_HC.vcf \
 rm ./ExomeCNV/baf/raw_tumor_HC.vcf ./ExomeCNV/baf/raw_tumor_HC.vcf.idx
 
 # Select variants
-expr='vc.getGenotype("'"$tumor_name"'").getDP() >= 20'
+expr1='vc.getGenotype("'"$tumor_name"'").getPhredScaledQual() >= 30.0'
+expr2='vc.getGenotype("'"$tumor_name"'").getDP() >= 20'
 
 $JAVA $GATK -T SelectVariants -R $genome \
 	-V ./ExomeCNV/baf/filtered_tumor_HC.vcf -selectType SNP \
-	--selectexpressions "$expr" \
+	--selectexpressions "$expr1" \
+	--selectexpressions "$expr2" \
 	--excludeFiltered -restrictAllelesTo BIALLELIC \
 	-o ./ExomeCNV/baf/tumor_HQ_SNPs.vcf
 

@@ -2,12 +2,21 @@
 #                NeuroOncology Technologies                #
 #             Whole-Exome Sequencing Pipeline              #
 #                    ExomeCNV Analysis                     #
-#                   Ege Ulgen, Oct 2016                    #
+#                   Ege Ulgen, Dec 2017                    #
 ############################################################
 
+# Install required packages (if needed) -----------------------------------
+# the directory where ExomeCNV source is located
+initial.options <- commandArgs(trailingOnly = FALSE)
+script.name <- sub("--file=", "", initial.options[grep("--file=", initial.options)])
+script_dir <- dirname(script.name)
+
+if(!"ExomeCNV" %in% installed.packages())
+  install.packages(paste0(script_dir,"/ExomeCNV_1.4.tar.gz"), repos = NULL, type = "source")
+if(!"DNAcopy" %in% installed.packages())
+  install.packages("DNAcopy")
+
 require(ExomeCNV)
-# install.packages("~/Downloads/ExomeCNV_1.4.tar.gz", repos = NULL, type = "source")
-require(DNAcopy)
 
 # set workdir to currentdir/ExomeCNV
 setwd("./ExomeCNV/")
@@ -15,7 +24,6 @@ setwd("./ExomeCNV/")
 # set read length
 args <- commandArgs(trailingOnly=TRUE)
 read_length <- as.numeric(args[1])
-
 
 # LOH Calling -------------------------------------------------------------
 load("./baf/BAF_data.Rdata")
@@ -30,25 +38,15 @@ the.loh <- multi.LOH.analyze(normal = normal_BAF, tumor = tumor_BAF,
                              sdundo=c(0,0), alpha=c(0.05,0.01))
 
 pdf("LOH.pdf", width = 15, height = 8)
-do.plot.loh(the.loh, normal_BAF, tumor_BAF, "two.sample.fisher", plot.style="baf")
+do.plot.loh(the.loh, normal_BAF, tumor_BAF, "two.sample.fisher", plot.style="dev")
 dev.off()
 
 LOH.regions <- the.loh[the.loh$LOH, ]
+LOH.regions$tumor_b <- LOH.regions$tumor.baf/LOH.regions$tumor.coverage
+LOH.regions$normal_b <- LOH.regions$normal.baf/LOH.regions$normal.coverage
+LOH.regions$difference <- abs(LOH.regions$tumor_b - LOH.regions$normal_b)
+# LOH.regions <- LOH.regions[LOH.regions$difference > 0.4,]
 write.csv(LOH.regions, file = "LOH_regions.csv", row.names = F)
-
-tumor_loh_sites <- expand.loh(the.loh, tumor_BAF)
-tumor_loh_sites <- tumor_loh_sites[tumor_loh_sites$LOH, ]
-
-normal_loh_sites <- expand.loh(the.loh, normal_BAF)
-normal_loh_sites <- normal_loh_sites[normal_loh_sites$LOH, ]
-
-LOH.sites <- merge(normal_loh_sites, tumor_loh_sites, by=c("chr","position"), sort = F)
-cnames <- colnames(LOH.sites)
-cnames <- sub(".x", "_normal", cnames)
-cnames <- sub(".y", "_tumor", cnames)
-colnames(LOH.sites) <- cnames
-LOH.sites <- LOH.sites[,!(grepl("LOH", colnames(LOH.sites)))]
-write.csv(LOH.sites, "LOH_sites.csv", row.names = F)
 
 # CNV Calling -------------------------------------------------------------
 chr.list <- c("chr1", "chr2", "chr3", "chr4", "chr5", "chr6", 
@@ -80,11 +78,10 @@ tumor <- read.coverage.gatk.fix("./DepthOfCoverage/tumor.coverage.sample_interva
 ###### Calculate log coverage ratio
 patient.logR <- calculate.logR(normal, tumor)
 
-# admix_rate <- 1 - 2*mean(sapply(LOH.regions$tumor.baf/LOH.regions$tumor.coverage, function(x) abs(x - 0.5)))
+# admix_rate <- 1 - 2*mean(sapply(LOH.sites$baf_tumor/LOH.sites$coverage_tumor, function(x) abs(x - 0.5)))
 # print(admix_rate)
-admix_rate <- 1 - 2*mean(sapply(LOH.sites$baf_tumor/LOH.sites$coverage_tumor, function(x) abs(x - 0.5)))
-print(admix_rate)
-
+admix_rate <- read.delim("../contamination.txt", header = F, stringsAsFactors = F)
+admix_rate <- admix_rate[2,2]
 
 ###### Call CNV for each exon
 ### Call CNV on each exon (using classify.eCNV), one chromosome at a time. We recommend high min.spec (0.9999) 

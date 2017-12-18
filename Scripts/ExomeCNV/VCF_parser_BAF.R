@@ -3,7 +3,7 @@
 #             Whole-Exome Sequencing Pipeline              #
 #                    ExomeCNV Analysis                     #
 #             GATK pileup files to baf files               #
-#                   Ege Ulgen, Oct 2016                    #
+#                   Ege Ulgen, Dec 2017                    #
 ############################################################
 
 setwd("./ExomeCNV/baf")
@@ -32,8 +32,7 @@ tumor_AD <- setNames(do.call(rbind.data.frame, tumor_AD), c("ref","baf"))
 normal_BAF <- cbind(normal_BAF, normal_AD)
 tumor_BAF <- cbind(tumor_BAF, tumor_AD)
 
-# Process BAF dfs --------------------------------------
-
+# Process BAF dfs ---------------------------------------------------------
 ## add coverage info
 normal_BAF$coverage <- normal_BAF$ref + normal_BAF$baf
 tumor_BAF$coverage <- tumor_BAF$ref + tumor_BAF$baf
@@ -72,4 +71,4 @@ colnames(normal_BAF) <- c("chr", "position", "coverage", "baf")
 colnames(tumor_BAF) <- c("chr", "position", "coverage", "baf")
 
 save(normal_BAF, tumor_BAF, file = "BAF_data.Rdata")
-print("baf files created!")
+cat("baf files created!\n")
