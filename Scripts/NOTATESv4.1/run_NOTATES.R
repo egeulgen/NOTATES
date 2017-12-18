@@ -1,7 +1,7 @@
 ############################################################
 #                NeuroOncology Technologies                #
 #             Whole-Exome Sequencing Pipeline              #
-#                Integration of Alterations                #
+#           Preparion of Alterations for Report            #
 #                   Ege Ulgen, Dec 2017                    #
 ############################################################
 
@@ -468,7 +468,8 @@ write.csv(broad, "SCNA/broad.csv", row.names = F)
 dir.create("LOH")
 # read in loh file
 loh <- read.csv("../ExomeCNV/LOH_regions.csv", header = T, stringsAsFactors = F)
-loh$LOH <- NULL
+loh <- loh[loh$difference > 0.4,]
+loh <- loh[,c("chr", "position.start", "position.end", "normal_b", "tumor_b", "difference")]
 
 #find genes that are overlapped by segment and segments that overlap genes
 loh_genes_overlap <- find_feat_in_seg(loh, HS_genes)
@@ -498,3 +499,4 @@ if(any(loh_by_gene$Gene %in% CGC_df$Gene.Symbol))
   tmp <- loh_by_gene[loh_by_gene$Gene %in% CGC_df$Gene.Symbol,]
   write.csv(tmp, "LOH/CGC_loh.csv", row.names = F)
 }
+
