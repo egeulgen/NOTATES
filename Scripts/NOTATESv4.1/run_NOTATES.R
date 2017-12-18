@@ -2,7 +2,7 @@
 #                NeuroOncology Technologies                #
 #             Whole-Exome Sequencing Pipeline              #
 #                Integration of Alterations                #
-#                   Ege Ulgen, May 2017                    #
+#                   Ege Ulgen, Dec 2017                    #
 ############################################################
 
 dir.create("./NOTATES/")
@@ -15,7 +15,7 @@ script_dir <- dirname(script_name)
 
 # Necessary resources -----------------------------------------------------
 # CGC
-CGC_df <- read.csv(paste0(script_dir, "/CGC_may25_17.csv"), stringsAsFactors = F)
+CGC_df <- read.csv(paste0(script_dir, "/CGC_dec15_17.csv"), stringsAsFactors = F)
 
 # Curated Databases
 dna_repair_df <- read.csv(paste0(script_dir, "/curated_dbs/DNA_damage_repair_22feb16.csv"), stringsAsFactors = F)
@@ -121,7 +121,7 @@ somatic_SNVs$Protein_Change[somatic_SNVs$Protein_Change == ""] <- NA
 keep <- c("Hugo_Symbol", "Chromosome", "Start_position", "End_position", "Variant_Classification", "Variant_Type", 
           "Reference_Allele", "Tumor_Seq_Allele1", "Tumor_Seq_Allele2", "tumor_f", "genotype", "dbSNP_RS", "Genome_Change", "Codon_Change",
           "Protein_Change", "UniProt_AApos", "DNARepairGenes_Role", "FamilialCancerDatabase_Syndromes",
-          "COSMIC_n_overlapping_mutations", "COSMIC_total_alterations_in_gene", 
+          "COSMIC_n_overlapping_mutations", "COSMIC_total_alterations_in_gene", "dbNSFP_SIFT_pred", 
           colnames(somatic_SNVs)[grepl("^GO_", colnames(somatic_SNVs))], 
           colnames(somatic_SNVs)[grepl("^CGC_", colnames(somatic_SNVs))])
 
@@ -129,7 +129,7 @@ write.csv(somatic_SNVs[, keep], "./Somatic_SNV/detailed_sSNV.csv", row.names = F
 
 somatic_SNVs <- somatic_SNVs[, c("Hugo_Symbol", "Variant_Classification", "Protein_Change", "Genome_Change",
                                  "tumor_f", "genotype", "COSMIC_n_overlapping_mutations",
-                                 "COSMIC_total_alterations_in_gene","UniProt_Region")]
+                                 "COSMIC_total_alterations_in_gene","UniProt_Region","dbNSFP_SIFT_pred")]
 
 noncoding_SNVs <- somatic_SNVs[somatic_SNVs$Variant_Classification %in% c("Silent", "3'UTR", "3'Flank", "5'UTR", "5'Flank", 
                                                                           "IGR", "Intron", "lincRNA", "RNA"),]
@@ -183,11 +183,10 @@ if(any(somatic_SNVs$Hugo_Symbol %in% curated_SNV$Gene))
     else
       keep <- c(keep, i)
   }
+  tmp <- somatic_SNVs[keep,]
+  somatic_SNVs <- somatic_SNVs[-keep,]
+  write.csv(tmp, "Somatic_SNV/important_glioma_SNVs.csv",row.names = F)
 }
-
-tmp <- somatic_SNVs[keep,]
-somatic_SNVs <- somatic_SNVs[-keep,]
-write.csv(tmp, "Somatic_SNV/important_glioma_SNVs.csv",row.names = F)
 
 ### in CGC and COSMIC hotspot
 if(any(somatic_SNVs$Hugo_Symbol %in% CGC_df$Gene.Symbol))
@@ -349,28 +348,29 @@ cytobands$V4 <- paste0(cytobands$V1, cytobands$V4)
 dir.create("./SCNA")
 # read in cnv file
 cnv <- read.delim("../ExomeCNV/CNV.cnv.txt", header = T, stringsAsFactors = F)
-# discard rows with NA copy.number
-cnv <- subset(cnv, !is.na(copy.number))
+# discard rows with NA spec
+cnv <- subset(cnv, !is.na(spec))
 # discard rows with NA sens
 cnv <- subset(cnv, !is.na(sens))
 
-# mean and sem for cutoff
-cutoff <- c()
-cutoff$mean <- mean(cnv$ratio)
-cutoff$sem <- sd(cnv$ratio)/sqrt(length(cnv$ratio))
+# -0.25 and 0.2 for cut-off
+#The inner cutoffs of +0.2 and -0.25 are sensitive 
+#enough to detect a single-copy gain or loss in a 
+#diploid tumor with purity (or subclone cellularity) as low as 30%. 
 
-copy_num_call <- function(ratio, cutoff){
-  if( ( ratio >= (cutoff$mean -3*cutoff$sem) ) & ( ratio <= (cutoff$mean + 3*cutoff$sem) ) )
-    return(2)
-  else if( ratio < cutoff$mean - 3*cutoff$sem & ratio >= 0.5 )
-    return(1)
-  else if( ratio < 0.5 )
+cnv <- cnv[cnv$logR <= -0.25 | cnv$logR >= 0.2,]
+# cnv <- cnv[cnv$ratio <= 0.5 | cnv$ratio >= 1.5,]
+
+copy_num_call <- function(ratio){
+  if( ratio < 0.5 )
     return(0)
+  else if( ratio < 1 )
+    return(1)
   else
-    return(ceiling(ratio*2))
+    return(round(ratio*2))
 }
 
-cnv$copy.number <- sapply(cnv$ratio, function(x) copy_num_call(x, cutoff))
+cnv$copy.number <- sapply(cnv$ratio, copy_num_call)
 
 #find genes that are overlapped by segment and segments that overlap genes
 cnv_genes_overlap <- find_feat_in_seg(cnv, HS_genes)
@@ -383,26 +383,45 @@ cnv$cytoband <- sapply(cnv_cytb_overlap[["Segment_feats"]], function(cyt) cyt_fu
 cnv <- cnv[, c("genes", "length", "cytoband", setdiff(colnames(cnv), c("genes", "cytoband", "length")))]
 write.csv(cnv, "SCNA/exomeCNV.csv", row.names = F)
 
-cnv_by_gene <- data.frame(Gene=names(cnv_genes_overlap[["Feat_segments"]]), 
-                          num_segments = NA,
-                          Segments = NA, 
+cnv_by_gene <- data.frame(Gene=names(cnv_genes_overlap[["Feat_segments"]]),
+                          Segment = NA, 
                           ratio = NA, CN = NA, av_cov = NA, stringsAsFactors = F)
 cnv$id <- paste0(cnv$chr,":", cnv$probe_start, "-", cnv$probe_end)
 gene_segs <- cnv_genes_overlap[["Feat_segments"]]
-for(i in 1:length(gene_segs))
+N <- length(gene_segs)
+for(i in 1:N)
 {
   gene <- gene_segs[[i]]
   idx <- match(names(gene), cnv$id)
+  
   tmp_ratio <- cnv$ratio[idx]
   tmp_av_cov <- cnv$average.coverage[idx]
   
-  cnv_by_gene$num_segments[i] <- length(gene)
-  
-  cnv_by_gene$ratio[i] <- sum(tmp_ratio * gene)/sum(gene)
-  cnv_by_gene$av_cov[i] <- paste(round(tmp_av_cov,2), collapse = ", ") 
-  cnv_by_gene$Segments[i] <- paste(names(gene), collapse = ", ")
+  if(length(gene) == 1)
+  {
+    cnv_by_gene$ratio[i] <- cnv$ratio[idx]
+    cnv_by_gene$av_cov[i] <- cnv$average.coverage[idx]
+    cnv_by_gene$Segment[i] <- names(gene)
+  }else
+  {
+    cnv_by_gene$ratio[i] <- cnv$ratio[idx[1]]
+    cnv_by_gene$av_cov[i] <- cnv$average.coverage[idx[1]]
+    cnv_by_gene$Segment[i] <- names(gene)[1]
+    for(j in 2:length(gene))
+    {
+      cnv_by_gene <- rbind(cnv_by_gene, c(names(gene_segs)[i], 
+                                          names(gene)[j],
+                                          cnv$ratio[idx[j]],
+                                          NA,
+                                          cnv$average.coverage[idx[j]]))
+    }
+  }
 }
-cnv_by_gene$CN <- sapply(cnv_by_gene$ratio, function(x) copy_num_call(x, cutoff))
+cnv_by_gene$av_cov <- as.numeric(cnv_by_gene$av_cov)
+cnv_by_gene$ratio <- as.numeric(cnv_by_gene$ratio)
+cnv_by_gene$CN <- sapply(cnv_by_gene$ratio, copy_num_call)
+
+write.csv(cnv_by_gene, "SCNA/all_genes.csv", row.names = F)
 
 ### Glioma important SCNAs
 if(any(cnv_by_gene$Gene %in% curated_CNA$Gene))

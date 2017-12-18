@@ -55,8 +55,9 @@ pdf("mut_signatures.pdf")
 plotSignatures(signatures, sub = '')
 dev.off()
 pdf("mut_signatures_pie.pdf")
+makePie(signatures)
 nms <- names(signatures$weights)[signatures$weights!=0]
-pie(as.matrix(signatures$weights[nms]))
+# pie(as.matrix(signatures$weights[nms]))
 dev.off()
 
 cosmic_sigs <- read.csv(paste0(script_dir,"/COSMIC_signatures.csv"), stringsAsFactors = F)

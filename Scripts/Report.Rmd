@@ -2,6 +2,11 @@
 output: pdf_document
 params:
   ID: ""
+  script_dir: ""
+header-includes:
+- \usepackage{pdflscape}
+- \newcommand{\blandscape}{\begin{landscape}}
+- \newcommand{\elandscape}{\end{landscape}}
 ---
 
 ---
@@ -17,9 +22,9 @@ library(pander)
 ```
 
 # I. Quality Metrics
-```{r, echo = F}
+```{r QC, echo = F}
 QC_df <- read.csv("./Quality_Metrics/QC_table.csv",stringsAsFactors = F, row.names = 1)
-pander(QC_df, align = "c", table.caption.prefix ="")
+kable(QC_df, align = "c")
 ```
 
 
@@ -28,6 +33,9 @@ pander(QC_df, align = "c", table.caption.prefix ="")
    > \*\* The percentage of PF reads that aligned to the reference sequence
 
    > \*\*\* The percentage of reads whose mate pair was also aligned to the reference
+
+\newpage
+\blandscape
 
 # II. Germline Alterations
 
@@ -108,9 +116,11 @@ if(file.exists("./NOTATES/Germline/common_var.csv"))
 }
 ```
 
+\newpage
+
 # III. Somatic Single Nucleotide Variations(SNVs)
 
-```{r mutload, echo=F}
+```{r mutload, echo=F, fig.width=12, fig.height=2.5}
 somatic_SNVs <- read.delim("./Oncotator/annotated.sSNVs.tsv", stringsAsFactors=F, comment.char="#")
 
 # Subsetting for (MuTect's default) HQ filters
@@ -127,10 +137,38 @@ somatic_SNVs <- subset(somatic_SNVs,
                          triallelic_site=="PASS" &
                          short_tandem_repeat_membership=="False")
 mut_num <- nrow(somatic_SNVs)
-mut_load <- mut_num/51.740863 ## generalize this to other than xGen
+mut_load <- mut_num/51.740863 ## xGen
+
+mut_load_df <- read.delim(paste0(params$script_dir, "/mut_loads.txt"), stringsAsFactors = F, sep = " ") 
+
+if(!params$ID %in% mut_load_df$Patient)
+{
+  mut_load_df <- rbind(mut_load_df, data.frame(Patient = params$ID, mutational_load = mut_load, stringsAsFactors = F))
+  write.table(mut_load_df, paste0(params$script_dir, "/mut_loads.txt"), row.names = F, quote = F)
+}
+
+mut_load_df <- mut_load_df[order(mut_load_df$mutational_load),]
+mut_load_df$x_val <- 1:nrow(mut_load_df)
+
+if(!"ggplot2" %in% installed.packages())
+  install.packages("ggplot2")
+suppressPackageStartupMessages(library(ggplot2))
+
+p <- ggplot(mut_load_df, aes(x=x_val, y=mutational_load))
+p <- p + geom_point(size=2, shape=20)
+p <- p + geom_segment(aes(x = median(mut_load_df$x_val)-6, y = median(mut_load_df$mutational_load), 
+                          xend = median(mut_load_df$x_val)+6, yend = median(mut_load_df$mutational_load), colour = "segment"))
+p <- p + coord_flip()
+p <- p + theme(axis.title.y=element_blank(),
+          axis.text.y=element_blank(),
+          axis.ticks.y=element_blank())
+p <- p + theme(legend.position="none")
+p <- p + xlab("Mutational Load")
+p <- p + geom_point(data=mut_load_df[mut_load_df$Patient == params$ID, ], aes(x=x_val, y=mutational_load), colour="red", size=4, shape = 1)
+p
 ```
 
-Mutation load (Number of mutations per mb): `r mut_load`
+Mutation load (Number of mutations per Mb): `r mut_load`
 
 ### III. a. Important SNVs in Glioma
 
@@ -139,12 +177,12 @@ This is the intersection of SNVs in this case with a list of SNVs manually curat
 ```{r imp_snv, echo = F, comment=NA}
 if(file.exists("./NOTATES/Somatic_SNV/important_glioma_SNVs.csv"))
 {
-  imp_snv <- read.csv("./NOTATES/Somatic_SNV/important_glioma_SNVs.csv", stringsAsFactors = F)
+  imp_snv <- read.csv("./NOTATES/Somatic_SNV/important_glioma_SNVs.csv", stringsAsFactors = F, colClasses = c("character"))
   imp_snv <- imp_snv[,setdiff(colnames(imp_snv),c("COSMIC_total_alterations_in_gene","DNA_repair","selected_KEGG"))]
-  colnames(imp_snv)<- c("Gene", "Effect", "Protein", "Genome","TumorF","Genotype", "COS_n_ov",
-                        "UniProt_Region", "Irino", "TMZ")
-  rownames(imp_snv) <- imp_snv$Gene
-  imp_snv <- imp_snv[,-1]
+  colnames(imp_snv) <- c("Gene", "Effect", "Protein", "Genome","TumorF","Genotype", "COS_n_ov",
+                        "UniProt_Region", "SIFT","Irino", "TMZ")
+  # rownames(imp_snv) <- imp_snv$Gene
+  # imp_snv <- imp_snv[,-1]
   pander(imp_snv, align = "c",table.caption.prefix ="")
 }else
 {
@@ -159,12 +197,12 @@ These are the SNVs in this case in any CGC gene and COSMIC n overlapping mutatio
 ```{r, hotspot, echo = F, comment=NA}
 if(file.exists("./NOTATES/Somatic_SNV/COSMIC_hotspot.csv"))
 {
-  hot_snv <- read.csv("./NOTATES/Somatic_SNV/COSMIC_hotspot.csv", stringsAsFactors = F)
+  hot_snv <- read.csv("./NOTATES/Somatic_SNV/COSMIC_hotspot.csv", stringsAsFactors = F, colClasses = c("character"))
   hot_snv <- hot_snv[,setdiff(colnames(hot_snv),c("COSMIC_total_alterations_in_gene","DNA_repair","selected_KEGG"))]
-  colnames(hot_snv)<- c("Gene", "Effect", "Protein", "Genome","TumorF","Genotype", "COS_n_ov",
-                        "UniProt_Region", "Irino", "TMZ")
-  rownames(hot_snv) <- hot_snv$Gene
-  hot_snv <- hot_snv[,-1]
+  colnames(hot_snv) <- c("Gene", "Effect", "Protein", "Genome","TumorF","Genotype", "COS_n_ov",
+                        "UniProt_Region", "SIFT", "Irino", "TMZ")
+  # rownames(hot_snv) <- hot_snv$Gene
+  # hot_snv <- hot_snv[,-1]
   
   pander(hot_snv, align = "c",table.caption.prefix ="")
 }else
@@ -180,12 +218,12 @@ These are the SNVs in this case in any CGC gene.
 ```{r, cgc_snv, echo = F, comment=NA}
 if(file.exists("./NOTATES/Somatic_SNV/CGC_genes.csv"))
 {
-  cgc_snv <- read.csv("./NOTATES/Somatic_SNV/CGC_genes.csv", stringsAsFactors = F)
+  cgc_snv <- read.csv("./NOTATES/Somatic_SNV/CGC_genes.csv", stringsAsFactors = F, colClasses = c("character"))
   cgc_snv <- cgc_snv[,setdiff(colnames(cgc_snv),c("COSMIC_total_alterations_in_gene","DNA_repair","selected_KEGG"))]
-  colnames(cgc_snv)<- c("Gene", "Effect", "Protein", "Genome","TumorF","Genotype", "COS_n_ov",
-                        "UniProt_Region", "Irino", "TMZ")
-  rownames(cgc_snv) <- cgc_snv$Gene
-  cgc_snv <- cgc_snv[,-1]
+  colnames(cgc_snv) <- c("Gene", "Effect", "Protein", "Genome","TumorF","Genotype", "COS_n_ov",
+                        "UniProt_Region", "SIFT", "Irino", "TMZ")
+  # rownames(cgc_snv) <- cgc_snv$Gene
+  # cgc_snv <- cgc_snv[,-1]
   pander(cgc_snv, align = "c",table.caption.prefix ="")
 }else
 {
@@ -200,13 +238,13 @@ SNVs in DNA damage repair genes:
 ```{r, DDR, echo = F, comment=NA}
 if(file.exists("./NOTATES/Somatic_SNV/DDR_related.csv"))
 {
-  ddr_snv <- read.csv("./NOTATES/Somatic_SNV/DDR_related.csv", stringsAsFactors = F)
+  ddr_snv <- read.csv("./NOTATES/Somatic_SNV/DDR_related.csv", stringsAsFactors = F, colClasses = c("character"))
 
   ddr_snv <- ddr_snv[,setdiff(colnames(ddr_snv),c("COSMIC_total_alterations_in_gene","selected_KEGG"))]
   colnames(ddr_snv) <- c("Gene", "Effect", "Protein", "Genome","TumorF","Genotype", "COS_n_ov",
-                        "UniProt_Region", "DNA_repair", "Irino", "TMZ")
-  rownames(ddr_snv) <- ddr_snv$Gene
-  ddr_snv <- ddr_snv[,-1]
+                        "UniProt_Region", "SIFT", "DNA_repair", "Irino", "TMZ")
+  # rownames(ddr_snv) <- ddr_snv$Gene
+  # ddr_snv <- ddr_snv[,-1]
   
   pander(ddr_snv, align = "c",table.caption.prefix ="")
 }else
@@ -220,12 +258,12 @@ SNVs in important KEGG Pathway genes:
 ```{r, kegg, echo = F, comment=NA}
 if(file.exists("./NOTATES/Somatic_SNV/KEGG_selected.csv"))
 {
-  kegg_snv <- read.csv("./NOTATES/Somatic_SNV/KEGG_selected.csv", stringsAsFactors = F)
+  kegg_snv <- read.csv("./NOTATES/Somatic_SNV/KEGG_selected.csv", stringsAsFactors = F, colClasses = c("character"))
 
   colnames(kegg_snv) <- c("Gene", "Effect", "Protein", "Genome","TumorF","Genotype", "COS_n_ov",
-                          "COS_tot", "UniProt_Region", "DNA_repair", "Irino", "TMZ", "KEGG")
-  rownames(kegg_snv) <- kegg_snv$Gene
-  kegg_snv <- kegg_snv[,-1]
+                          "COS_tot", "UniProt_Region", "SIFT", "DNA_repair", "Irino", "TMZ", "KEGG")
+  # rownames(kegg_snv) <- kegg_snv$Gene
+  # kegg_snv <- kegg_snv[,-1]
   
   pander(kegg_snv, align = "c",table.caption.prefix ="")
 }else
@@ -239,12 +277,12 @@ SNVs in important Irinotecan response genes:
 ```{r, irino, echo = F, comment=NA}
 if(file.exists("./NOTATES/Somatic_SNV/irinotecan.csv"))
 {
-  irino_snv <- read.csv("./NOTATES/Somatic_SNV/irinotecan.csv", stringsAsFactors = F)
+  irino_snv <- read.csv("./NOTATES/Somatic_SNV/irinotecan.csv", stringsAsFactors = F, colClasses = c("character"))
 
   colnames(irino_snv) <- c("Gene", "Effect", "Protein", "Genome","TumorF","Genotype", "COS_n_ov",
-                          "COS_tot", "UniProt_Region", "DNA_repair", "Irino", "TMZ", "KEGG")
-  rownames(irino_snv) <- irino_snv$Gene
-  irino_snv <- irino_snv[,-1]
+                          "COS_tot", "UniProt_Region", "SIFT", "DNA_repair", "Irino", "TMZ", "KEGG")
+  # rownames(irino_snv) <- irino_snv$Gene
+  # irino_snv <- irino_snv[,-1]
   
   pander(irino_snv, align = "c", table.caption.prefix ="")
 }else
@@ -258,12 +296,12 @@ SNVs in important Temozolomide resistance genes:
 ```{r, tmz, echo = F, comment=NA}
 if(file.exists("./NOTATES/Somatic_SNV/tmz_res.csv"))
 {
-  tmz_snv <- read.csv("./NOTATES/Somatic_SNV/tmz_res.csv", stringsAsFactors = F)
+  tmz_snv <- read.csv("./NOTATES/Somatic_SNV/tmz_res.csv", stringsAsFactors = F, colClasses = c("character"))
   
   colnames(tmz_snv) <- c("Gene", "Effect", "Protein", "Genome","TumorF","Genotype", "COS_n_ov",
-                          "COS_tot", "UniProt_Region", "DNA_repair", "Irino", "TMZ", "KEGG")
-  rownames(tmz_snv) <- tmz_snv$Gene
-  tmz_snv <- tmz_snv[,-1]
+                          "COS_tot", "UniProt_Region", "SIFT", "DNA_repair", "Irino", "TMZ", "KEGG")
+  # rownames(tmz_snv) <- tmz_snv$Gene
+  # tmz_snv <- tmz_snv[,-1]
   
   pander(tmz_snv, align = "c",table.caption.prefix ="")
 }else
@@ -274,7 +312,11 @@ if(file.exists("./NOTATES/Somatic_SNV/tmz_res.csv"))
 
 Other coding mutations and non-coding mutations are provided as attachments.
 
+\newpage
+
 # IV. Somatic Copy Number Alterations (SCNAs)
+
+Only SCNAs with a $log_2(Tumor/Normal)$ ratio $\le$ -0.25 or $\ge$ 0.2 are reported in the tables.
 
 ### IV. a. Important SCNAs in glioma
 
@@ -320,28 +362,68 @@ if(file.exists("./NOTATES/SCNA/broad.csv"))
 ### IV. d. SCNA by Chromosome Plots
 
 \begin{center} 
-\includegraphics[width=400pt]{./ExomeCNV/CNV.cnv.png}
+\includegraphics[width=600pt]{./ExomeCNV/CNV.cnv.png}
 \end{center}
 
-### V. Tumor Heterogeneity Analysis 
+\newpage
+
+# V. Tumor Heterogeneity Analysis 
+```{r n3_or_n2, echo=F}
+if(!file.exists("./THetA/output/CNV.BEST.results")){
+   n3_chosen <- F
+}else{
+  theta_out <- read.delim("./THetA/output/CNV.BEST.results", stringsAsFactors = F)
+  n3_chosen <- ifelse(length(unlist(strsplit(theta_out[1,"mu"], ","))) == 2, F, T)
+}
+```
 
 THetA (Tumor Heterogeneity Analysis) is an algorithm that estimates the tumor purity and clonal/sublconal copy number aberrations directly from high-throughput DNA sequencing data.
 
 \begin{center} 
-\includegraphics[width=400pt]{`r ifelse(file.exists("./THetA/output/CNV.n3.graph.pdf"),"./THetA/output/CNV.n3.graph.pdf","./THetA/output/CNV.n2.graph.pdf")`}
+\includegraphics[width=500pt]{`r ifelse(n3_chosen,"./THetA/output/CNV.n3.graph.pdf","./THetA/output/CNV.n2.graph.pdf")`}
 \end{center}
 
-### VI. Mutational Signatures
+\elandscape
+\newpage
+
+# VI. Mutational Signatures
 
 \begin{center} 
 \includegraphics[width=500pt]{mut_signatures.pdf}
 \end{center}
 
 \begin{center} 
-\includegraphics[width=200pt]{mut_signatures_pie.pdf}
+\includegraphics[width=400pt]{mut_signatures_pie.pdf}
 \end{center}
+
+\newpage
+\blandscape
 
 ```{r, mut_sigs, echo = F, comment=NA}
 mut_sigs <- read.csv("./mut_signatures.csv", stringsAsFactors = F, row.names = 1)
 pander(mut_sigs, align = "c",table.caption.prefix ="")
 ```
+\elandscape
+
+\newpage
+\blandscape
+
+# VII. Pathway Enrichment Analysis
+
+Genes that harbor non-synonymous exonic mutations and/or homozygous deletion or multi-copy amplification (3+) are included in the enrichment analysis.
+
+### VII. a. KEGG - Pathways in Cancer
+\begin{center} 
+\includegraphics[width=500pt]{./pathways/hsa05200.CANCER.multi.png}
+\end{center}
+
+The right half of a gene indicates copy number ratio (scaled between -1 and 1) while the left half indicates somatic mutation status (1 if mutant).
+
+### VII. b. KEGG - Pathway Enrichment Results
+
+```{r, enr_res, echo = F, comment=NA}
+enr_res <- read.csv("pathways/enrichment_results.csv", stringsAsFactors = F, row.names = 1)
+enr_res <- enr_res[,c("Pathway", "adj_p", "Somatic_Mutation", "SCNA_down", "SCNA_up")]
+pander(enr_res, align = "c",table.caption.prefix ="")
+```
+\elandscape

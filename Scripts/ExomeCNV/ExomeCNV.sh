@@ -6,7 +6,7 @@ tumor_name=$2
 ####### Coverage files
 echo "########################## Prep for ExomeCNV - Coverage files    " $(date)
 mkdir -p ./ExomeCNV/DepthOfCoverage
-echo "############################### Normal: Creating overage file    " $(date)
+echo "############################### Normal: Creating coverage file    " $(date)
 $JAVA $GATK -T DepthOfCoverage -omitBaseOutput -omitLocusTable -R $genome \
 	-I normal.final.bam --intervals $Bait_Intervals \
 	-o ./ExomeCNV/DepthOfCoverage/normal.coverage

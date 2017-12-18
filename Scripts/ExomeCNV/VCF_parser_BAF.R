@@ -48,12 +48,21 @@ tumor_BAF <- tumor_BAF[t_ids %in% intersect(n_ids, t_ids), ]
 normal_Theta <- normal_BAF[, c("CHROM", "POS", "ref", "baf")]
 tumor_Theta <- tumor_BAF[, c("CHROM", "POS", "ref", "baf")]
 
-colnames(normal_Theta) <- c("chromosome", "position", "ref_allele", "mut_allele")
-colnames(tumor_Theta) <- c("chromosome", "position", "ref_allele", "mut_allele")
+colnames(normal_Theta) <- c("#Chrm", "Pos", "Ref_Allele", "Mut_Allele")
+colnames(tumor_Theta) <- c("#Chrm", "Pos", "Ref_Allele", "Mut_Allele")
+
+normal_Theta$`#Chrm` <- sub("chr", "", normal_Theta$`#Chrm`)
+tumor_Theta$`#Chrm` <- sub("chr", "", tumor_Theta$`#Chrm`)
+
+normal_Theta$`#Chrm`[normal_Theta$`#Chrm`=="X"] <- 23
+normal_Theta$`#Chrm`[normal_Theta$`#Chrm`=="Y"] <- 24
+
+tumor_Theta$`#Chrm`[tumor_Theta$`#Chrm`=="X"] <- 23
+tumor_Theta$`#Chrm`[tumor_Theta$`#Chrm`=="Y"] <- 24
 
 dir.create("../../THetA/")
-write.table(normal_Theta, file = "../../THetA/normal_SNP.txt", sep = "\t", row.names = F, quote = F, col.names = F)
-write.table(tumor_Theta, file = "../../THetA/tumor_SNP.txt", sep = "\t", row.names = F, quote = F, col.names = F)
+write.table(normal_Theta, file = "../../THetA/normal_SNP.txt", sep = "\t", row.names = F, quote = F, col.names = T)
+write.table(tumor_Theta, file = "../../THetA/tumor_SNP.txt", sep = "\t", row.names = F, quote = F, col.names = T)
 
 # Output for ExomeCNV -----------------------------------------------------
 normal_BAF <- normal_BAF[, c("CHROM", "POS", "coverage", "baf")]

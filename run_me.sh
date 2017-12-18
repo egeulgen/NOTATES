@@ -72,7 +72,7 @@ echo ""
 ################################################################################
 ############################## Merging fastq files #############################
 ################################################################################
-echo "Merging fastq files"
+echo "Merging fastq files (if necessary)"
 ####### Merge Seperate Files for normal
 bash "$scripts_dir"/merge_fastqs.sh $normal_name
 
@@ -197,7 +197,7 @@ echo "################################## Preparing input for THetA     " $(date)
 bash "$THetA"/bin/CreateExomeInput -s ./ExomeCNV/CNV.segment.copynumber.txt \
 	-t tumor.final.bam -n normal.final.bam \
 	--FA $genome --EXON_FILE $Bait_Intervals --QUALITY 30 --DIR ./THetA
-
+rm tumor.final.pileup normal.final.pileup
 echo "############################################### Running THetA    " $(date)
 bash "$THetA"/bin/RunTHetA THetA/CNV.input --TUMOR_FILE THetA/tumor_SNP.txt \
 	--NORMAL_FILE THetA/normal_SNP.txt --DIR ./THetA/output --NUM_PROCESSES 8
@@ -271,12 +271,20 @@ Rscript "$scripts_dir"/QC.R $normal_name $tumor_name
 ################################# NOTATES ######################################
 ################################################################################
 
-echo "######################## Running R script for NOTATES v4         " $(date)
-Rscript "$scripts_dir"/NOTATESv4/run_NOTATES.R
+echo "######################## Running R script for NOTATES v4.1       " $(date)
+Rscript "$scripts_dir"/NOTATESv4.1/run_NOTATES.R
+
+echo "######################## Running R script for Pathway Enrichment " $(date)
+Rscript "$scripts_dir"/pathway_enrichment.R
 
 echo "######################## Running R script for DeConstructSigs    " $(date)
-Rscript "$scripts_dir"/DeConstructSigs.R
+Rscript "$scripts_dir"/DeConstructSigs.R $scripts_dir
 
+echo "######################## Creating Report					       " $(date)
+cp $scripts_dir/Report.Rmd ./Report.Rmd
+Rscript "$scripts_dir"/create_report.R $patientID $scripts_dir
+rm Report.Rmd
+mv Report.pdf Report_"$patientID".pdf
 
 echo "######################## Finished 							   " $(date)
 exit 0

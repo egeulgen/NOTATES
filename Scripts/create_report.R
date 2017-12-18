@@ -11,5 +11,6 @@ library(rmarkdown)
 
 args <- commandArgs(trailingOnly=TRUE)
 patientID <- args[1]
-
-render("Report.Rmd", "pdf_document", params = list(ID=patientID))
+sdir <- args[2]
+  
+render("Report.Rmd", "pdf_document", params = list(ID=patientID, script_dir=sdir))

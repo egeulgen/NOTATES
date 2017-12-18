@@ -20,6 +20,12 @@ dir.create("output")
 # load annotated SNV file
 germline <- read.delim("../Oncotator/annotated.germline_SNVs.tsv", comment.char = "#", stringsAsFactors = F)
 
+# discard if alt. allele not seen
+germline <- subset(germline, alt_allele_seen == "True")
+
+# Subsetting for Germline HQ filters
+germline <- subset(germline, HQ_SNP_filter=="PASS" & HQ_InDel_filter=="PASS" & LowQual=="PASS")
+
 # load gCCV table
 common_vars <- read.csv(paste0(script_dir, "/common_variants_list.csv"), stringsAsFactors = F)
 
@@ -31,7 +37,7 @@ common_variant_df <- common_variant_df[common_variant_df$alt_allele_seen == "Tru
 
 cols <- c("id", "Hugo_Symbol", "Chromosome", "Start_position", "End_position", "Variant_Classification",
           "Reference_Allele", "Tumor_Seq_Allele1", "Tumor_Seq_Allele2", "read_depth", "allelic_depth", 
-          "allele_frequency", "HQ_SNP_filter", "HQ_InDel_filter", "LowQual")
+          "allele_frequency")
 
 common_variant_df <- common_variant_df[, cols]
 colnames(common_variant_df) <- gsub("Tumor", "Normal", colnames(common_variant_df))
@@ -47,12 +53,6 @@ write.csv(common_variant_df, "./output/common_variant_report.csv", row.names = F
 rm(list=setdiff(ls(), c("germline","script_dir")))
 
 # Preprocess --------------------------------------------------------------
-# discard if alt. allele not seen
-germline <- subset(germline, alt_allele_seen == "True")
-
-# Subsetting for Germline HQ filters
-germline <- subset(germline, HQ_SNP_filter=="PASS" & HQ_InDel_filter=="PASS" & LowQual=="PASS")
-
 # Further subsetting 
 germline <- subset(germline, read_depth>20) #### any other?????
 
@@ -64,6 +64,16 @@ germline <- subset(germline, read_depth>20) #### any other?????
 
 # I. Extract relevant genes with preset filter groups ---------------------
 filter_df <- read.csv(paste0(script_dir, "/Germline_filter_list.csv"), stringsAsFactors = F)
+
+cgc_df <- read.csv(paste0(script_dir,"/CGC_dec15_17.csv"), stringsAsFactors = F)
+cgc_df <- data.frame(Gene.Name = cgc_df$Gene.Symbol,
+                     Comment = "",
+                     Group = "Cancer Gene Census",
+                     Source = "COSMIC",
+                     Rank = 3,
+                     short_name = "CGC", stringsAsFactors = F)
+
+filter_df <- rbind(filter_df, cgc_df)
 
 # lookup indices of genes/variants to be filtered
 idx <- which(germline$Hugo_Symbol %in% filter_df$Gene.Name)
