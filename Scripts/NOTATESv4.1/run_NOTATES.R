@@ -15,7 +15,7 @@ script_dir <- dirname(script_name)
 
 # Necessary resources -----------------------------------------------------
 # CGC
-CGC_df <- read.csv(paste0(script_dir, "/CGC_dec15_17.csv"), stringsAsFactors = F)
+CGC_df <- read.csv(paste0(script_dir, "/../CGC_dec15_17.csv"), stringsAsFactors = F)
 
 # Curated Databases
 dna_repair_df <- read.csv(paste0(script_dir, "/curated_dbs/DNA_damage_repair_22feb16.csv"), stringsAsFactors = F)
