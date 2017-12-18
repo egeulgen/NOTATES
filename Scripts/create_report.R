@@ -1,11 +1,13 @@
-if(!require(rmarkdown))
+if(!"rmarkdown" %in% installed.packages())
   install.packages("rmarkdown")
-if(!require(markdown))
+if(!"markdown" %in% installed.packages())
   install.packages("markdown")
-if(!require(formatR))
+if(!"formatR" %in% installed.packages())
   install.packages("formatR")
-if(!require(knitr))
+if(!"knitr" %in% installed.packages())
   install.packages("knitr")
+if(!"pander" %in% installed.packages())
+  install.packages("pander")
 
 library(rmarkdown)
 
