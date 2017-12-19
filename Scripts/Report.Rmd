@@ -367,7 +367,35 @@ if(file.exists("./NOTATES/SCNA/broad.csv"))
 
 \newpage
 
-# V. Tumor Heterogeneity Analysis 
+# V. Loss of Heterozygosity (LOH) Events
+
+Only LOH events for which absolute difference of B-allele frequencies ($|BAF_{Tumor}-BAF_{Normal}|$) is larger than 0.4 are reported.
+
+### V. a. LOH Overview
+
+```{r, loh_regions, echo = F, comment=NA}
+loh <- read.csv("./NOTATES/LOH/LOH.csv", stringsAsFactors = F)
+loh$Position <- paste0(loh$Chr, ":", loh$Start, "-", loh$End)
+loh <- loh[,c("Genes", "Position", "N_BAF", "T_BAF", "Absolute_Diff")]
+pander(loh, align = "c",table.caption.prefix ="")
+```
+
+### V. b. LOH Events in CGC genes 
+
+```{r, loh_cgc, echo = F, comment=NA}
+if(file.exists("./NOTATES/LOH/CGC_loh.csv"))
+{
+  loh_cgc <- read.csv("./NOTATES/LOH/CGC_loh.csv", stringsAsFactors = F, row.names = F)
+  pander(loh_cgc, align = "c",table.caption.prefix ="")
+}else
+{
+  cat("No event to report.")
+}
+```
+
+\newpage
+
+# VI. Tumor Heterogeneity Analysis 
 ```{r n3_or_n2, echo=F}
 if(!file.exists("./THetA/output/CNV.BEST.results")){
    n3_chosen <- F
@@ -386,7 +414,7 @@ THetA (Tumor Heterogeneity Analysis) is an algorithm that estimates the tumor pu
 \elandscape
 \newpage
 
-# VI. Mutational Signatures
+# VII. Mutational Signatures
 
 \begin{center} 
 \includegraphics[width=500pt]{mut_signatures.pdf}
@@ -408,18 +436,18 @@ pander(mut_sigs, align = "c",table.caption.prefix ="")
 \newpage
 \blandscape
 
-# VII. Pathway Enrichment Analysis
+# VIII. Pathway Enrichment Analysis
 
 Genes that harbor non-synonymous exonic mutations and/or homozygous deletion or multi-copy amplification (3+) are included in the enrichment analysis.
 
-### VII. a. KEGG - Pathways in Cancer
+### VIII. a. KEGG - Pathways in Cancer
 \begin{center} 
 \includegraphics[width=500pt]{./pathways/hsa05200.CANCER.multi.png}
 \end{center}
 
 The right half of a gene indicates copy number ratio (scaled between -1 and 1) while the left half indicates somatic mutation status (1 if mutant).
 
-### VII. b. KEGG - Pathway Enrichment Results
+### VIII. b. KEGG - Pathway Enrichment Results
 
 ```{r, enr_res, echo = F, comment=NA}
 enr_res <- read.csv("pathways/enrichment_results.csv", stringsAsFactors = F, row.names = 1)
