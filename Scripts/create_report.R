@@ -1,18 +1,13 @@
-if(!"rmarkdown" %in% installed.packages())
+if(!require(rmarkdown))
   install.packages("rmarkdown")
-if(!"markdown" %in% installed.packages())
+if(!require(markdown))
   install.packages("markdown")
-if(!"formatR" %in% installed.packages())
+if(!require(formatR))
   install.packages("formatR")
-if(!"knitr" %in% installed.packages())
+if(!require(knitr))
   install.packages("knitr")
-if(!"pander" %in% installed.packages())
-  install.packages("pander")
 
 library(rmarkdown)
 
 args <- commandArgs(trailingOnly=TRUE)
-patientID <- args[1]
-sdir <- args[2]
-  
-render("Report.Rmd", "pdf_document", params = list(ID=patientID, script_dir=sdir))
+render("Report.Rmd", "pdf_document", params = list(ID=args[1], script_dir=args[2], exome_length=args[3]))

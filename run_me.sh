@@ -282,7 +282,7 @@ Rscript "$scripts_dir"/DeConstructSigs.R $scripts_dir
 
 echo "######################## Creating Report					       " $(date)
 cp $scripts_dir/Report.Rmd ./Report.Rmd
-Rscript "$scripts_dir"/create_report.R $patientID $scripts_dir
+Rscript "$scripts_dir"/create_report.R $patientID $scripts_dir $exome_length
 rm Report.Rmd
 mv Report.pdf Report_"$patientID".pdf
 

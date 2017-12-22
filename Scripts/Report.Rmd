@@ -3,6 +3,7 @@ output: pdf_document
 params:
   ID: ""
   script_dir: ""
+  exome_length: ""
 header-includes:
 - \usepackage{pdflscape}
 - \newcommand{\blandscape}{\begin{landscape}}
@@ -137,14 +138,21 @@ somatic_SNVs <- subset(somatic_SNVs,
                          triallelic_site=="PASS" &
                          short_tandem_repeat_membership=="False")
 mut_num <- nrow(somatic_SNVs)
-mut_load <- mut_num/51.740863 ## xGen
+mut_load <- mut_num/as.numeric(params$exome_length) ## xGen
 
-mut_load_df <- read.delim(paste0(params$script_dir, "/mut_loads.txt"), stringsAsFactors = F, sep = " ") 
+mut_load_df <- read.delim(paste0(params$script_dir, "/mut_loads.txt"), stringsAsFactors = F, sep = "\t") 
 
 if(!params$ID %in% mut_load_df$Patient)
 {
-  mut_load_df <- rbind(mut_load_df, data.frame(Patient = params$ID, mutational_load = mut_load, stringsAsFactors = F))
-  write.table(mut_load_df, paste0(params$script_dir, "/mut_loads.txt"), row.names = F, quote = F)
+  somatic_SNVs <- somatic_SNVs[! somatic_SNVs$Variant_Classification %in% c("Silent", "3'UTR", "3'Flank", "5'UTR", "5'Flank", 
+                                                                   "IGR", "Intron", "lincRNA", "RNA"),]
+  sset <- ifelse("H3F3A" %in% somatic_SNVs$Hugo_Symbol, "H3-mut",
+                 ifelse("IDH1" %in% somatic_SNVs$Hugo_Symbol | "IDH2" %in% somatic_SNVs$Hugo_Symbol, "IDH-mut", "IDH-WT"))
+
+  mut_load_df <- rbind(mut_load_df, data.frame(Patient = params$ID, 
+                                               mutational_load = mut_load, 
+                                               subset = sset, stringsAsFactors = F))
+  write.table(mut_load_df, paste0(params$script_dir, "/mut_loads.txt"), sep = "\t", row.names = F, quote = F)
 }
 
 mut_load_df <- mut_load_df[order(mut_load_df$mutational_load),]
@@ -154,21 +162,34 @@ if(!"ggplot2" %in% installed.packages())
   install.packages("ggplot2")
 suppressPackageStartupMessages(library(ggplot2))
 
-p <- ggplot(mut_load_df, aes(x=x_val, y=mutational_load))
-p <- p + geom_point(size=2, shape=20)
+p <- ggplot(mut_load_df, aes(x=x_val, y=mutational_load, group = subset))
+p <- p + geom_point(size=2, aes(shape=subset, color=subset))
+p <- p + scale_color_manual(values=c('#56B4E9','#E69F00', 'gray60'))
 p <- p + geom_segment(aes(x = median(mut_load_df$x_val)-6, y = median(mut_load_df$mutational_load), 
-                          xend = median(mut_load_df$x_val)+6, yend = median(mut_load_df$mutational_load), colour = "segment"))
+                          xend = median(mut_load_df$x_val)+6, yend = median(mut_load_df$mutational_load)), colour = "red")
 p <- p + coord_flip()
 p <- p + theme(axis.title.y=element_blank(),
-          axis.text.y=element_blank(),
-          axis.ticks.y=element_blank())
-p <- p + theme(legend.position="none")
+               axis.text.y=element_blank(),
+               axis.ticks.y=element_blank())
+# p <- p + theme(legend.position="none")
 p <- p + xlab("Mutational Load")
 p <- p + geom_point(data=mut_load_df[mut_load_df$Patient == params$ID, ], aes(x=x_val, y=mutational_load), colour="red", size=4, shape = 1)
 p
 ```
+Mutational loads (Numbers of mutations per Mb) for `r nrow(mut_load_df)` patients (including the current patient, circled in red) are represented in the above scatter plot. Red vertical line segment represents the overall median mutational load value.
 
-Mutation load (Number of mutations per Mb): `r mut_load`
+```{r load_table, echo = F, comment=NA}
+load_tbl <- tapply(mut_load_df$mutational_load, mut_load_df$subset, median)
+load_tbl <- as.data.frame(load_tbl)
+colnames(load_tbl) <- "Median Mut Load"
+
+load_tbl <- rbind(load_tbl, median(mut_load_df$mutational_load))
+rownames(load_tbl)[4] <- "Overall"
+
+pander(load_tbl, align = "c",table.caption.prefix ="")
+```
+
+Mutation load (Number of mutations per Mb) for the current patient is: `r mut_load`
 
 ### III. a. Important SNVs in Glioma
 
