@@ -121,6 +121,8 @@ if(file.exists("./NOTATES/Germline/common_var.csv"))
 
 # III. Somatic Single Nucleotide Variations(SNVs)
 
+### III. a. Mutational Load
+
 ```{r mutload, echo=F, fig.width=12, fig.height=2.5}
 somatic_SNVs <- read.delim("./Oncotator/annotated.sSNVs.tsv", stringsAsFactors=F, comment.char="#")
 
@@ -172,7 +174,7 @@ p <- p + theme(axis.title.y=element_blank(),
                axis.text.y=element_blank(),
                axis.ticks.y=element_blank())
 # p <- p + theme(legend.position="none")
-p <- p + xlab("Mutational Load")
+p <- p + ylab("Mutational Load")
 p <- p + geom_point(data=mut_load_df[mut_load_df$Patient == params$ID, ], aes(x=x_val, y=mutational_load), colour="red", size=4, shape = 1)
 p
 ```
@@ -181,7 +183,7 @@ Mutational loads (Numbers of mutations per Mb) for `r nrow(mut_load_df)` patient
 ```{r load_table, echo = F, comment=NA}
 load_tbl <- tapply(mut_load_df$mutational_load, mut_load_df$subset, median)
 load_tbl <- as.data.frame(load_tbl)
-colnames(load_tbl) <- "Median Mut Load"
+colnames(load_tbl) <- "Median Mutational Load"
 
 load_tbl <- rbind(load_tbl, median(mut_load_df$mutational_load))
 rownames(load_tbl)[4] <- "Overall"
@@ -191,7 +193,7 @@ pander(load_tbl, align = "c",table.caption.prefix ="")
 
 Mutation load (Number of mutations per Mb) for the current patient is: `r mut_load`
 
-### III. a. Important SNVs in Glioma
+### III. b. Important SNVs in Glioma
 
 This is the intersection of SNVs in this case with a list of SNVs manually curated because of their importance in gliomas.
 
@@ -211,9 +213,9 @@ if(file.exists("./NOTATES/Somatic_SNV/important_glioma_SNVs.csv"))
 }
 ```
 
-### III. b. CGC gene + COSMIC hotspot
+### III. c. CGC gene + COSMIC hotspot
 
-These are the SNVs in this case in any CGC gene and COSMIC n overlapping mutation count >  0.
+These are the SNVs in this case in a CGC gene, positioned at a site with at least one COSMIC overlapping mutation.
 
 ```{r, hotspot, echo = F, comment=NA}
 if(file.exists("./NOTATES/Somatic_SNV/COSMIC_hotspot.csv"))
@@ -232,9 +234,9 @@ if(file.exists("./NOTATES/Somatic_SNV/COSMIC_hotspot.csv"))
 }
 ```
 
-### III. c. CGC gene only
+### III. d. CGC gene only
 
-These are the SNVs in this case in any CGC gene.
+These are the SNVs in a CGC gene, not positioned at a site with any COSMIC overlapping mutations.
 
 ```{r, cgc_snv, echo = F, comment=NA}
 if(file.exists("./NOTATES/Somatic_SNV/CGC_genes.csv"))
@@ -252,7 +254,7 @@ if(file.exists("./NOTATES/Somatic_SNV/CGC_genes.csv"))
 }
 ```
 
-### III. d. Other possibly important SNVs
+### III. e. Other possibly important SNVs
 
 SNVs in DNA damage repair genes:
 
