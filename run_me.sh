@@ -5,9 +5,17 @@
 ########################## Ege Ulgen, December 2017 ############################
 ################################################################################
 
+cap_kit=$4
+if [ ${#cap_kit} == 0 ]
+	then
+	read -p "Enter the capture kit name: " cap_kit
+fi
+
 ### Set main_dir to the directory where this script is located
 main_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-source "$main_dir"/configurations.cfg "verbose"
+
+### Source the configuration file
+source "$main_dir"/configurations.cfg "verbose" $cap_kit
 
 ################################################################################
 ############################## Checkpoint for backup ###########################
