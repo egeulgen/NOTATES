@@ -91,6 +91,7 @@ genes_by_pathway <- sapply(pathway_codes, function(pwid){
   pw <- keggGet(pwid)
   pw <- pw[[1]]$GENE[c(F, T)]
   pw <- sub(";.+", "", pw)
+  pw <- pw[grepl("^[a-zA-Z0-9_-]*$", pw)] ## removing mistaken lines
   pw
 })
 
