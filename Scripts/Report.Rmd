@@ -474,7 +474,6 @@ The right half of a gene indicates copy number ratio (scaled between -1 and 1) w
 
 ```{r, enr_res, echo = F, comment=NA}
 enr_res <- read.csv("pathways/enrichment_results.csv", stringsAsFactors = F, row.names = 1)
-enr_res <- enr_res[,c("Pathway", "adj_p", "Somatic_Mutation", "SCNA_down", "SCNA_up")]
 pander(enr_res, align = "c",table.caption.prefix ="")
 ```
 \elandscape

@@ -6,24 +6,17 @@ if(!"KEGGREST" %in% installed.packages())
   biocLite("KEGGREST")
 }
 
-if(!"org.Hs.eg.db" %in% installed.packages())
-{
-  source("https://bioconductor.org/biocLite.R")
-  biocLite("org.Hs.eg.db")
-}
-
-if(!"Category" %in% installed.packages())
-{
-  source("https://bioconductor.org/biocLite.R")
-  biocLite("Category")
-}
-
-
 if(!"pathview" %in% installed.packages())
 {
   source("https://bioconductor.org/biocLite.R")
   biocLite("pathview")
 }
+
+# locate dir for HS genes -------------------------------------------------
+# dir for data source
+initial_options <- commandArgs(trailingOnly = FALSE)
+script_name <- sub("--file=", "", initial_options[grep("--file=", initial_options)])
+script_dir <- dirname(script_name)
 
 # Extract coding genes with mutations -------------------------------------
 somatic_SNVs <- read.delim("./Oncotator/annotated.sSNVs.tsv", stringsAsFactors=F, comment.char="#")
@@ -75,7 +68,6 @@ genes_of_interest <- unique(final_df$Gene)
 
 # Enrichment -----------------------------------
 suppressPackageStartupMessages(library(KEGGREST))
-suppressPackageStartupMessages(library(org.Hs.eg.db))
 
 # created named list, eg:  path:map00010: "Glycolysis / Gluconeogenesis"
 pathways_list <- keggList("pathway", "hsa")
@@ -95,35 +87,30 @@ genes_by_pathway <- sapply(pathway_codes, function(pwid){
   pw
 })
 
-all_genes <- keys(org.Hs.eg.db, "SYMBOL")
+all_genes <- read.csv(paste0(script_dir, "/NOTATESv4.1/homo_sapiens_genes.csv"), stringsAsFactors = F)
+all_genes <- all_genes$SYMBOL
 
-hyperg <- Category:::.doHyperGInternal
-hyperg_test <- function(pw_genes, chosen_genes, all_genes, over=TRUE)
-{
+hyperg_test <- function(pw_genes, chosen_genes, all_genes) {
   pw_genes_selected <- length(intersect(chosen_genes, pw_genes))
   pw_genes_in_pool <- length(pw_genes)
-  tol_genes_n_pool <- length(all_genes)
-  non_pw_genes_in_pool <- tol_genes_n_pool - pw_genes_in_pool
+  tot_genes_in_pool <- length(all_genes)
+  non_pw_genes_in_pool <- tot_genes_in_pool - pw_genes_in_pool
   num_selected_genes <- length(chosen_genes)
-  hyperg(pw_genes_in_pool, non_pw_genes_in_pool,
-         num_selected_genes, pw_genes_selected, over)
+  
+  stats::phyper(pw_genes_selected - 1, pw_genes_in_pool,
+                non_pw_genes_in_pool, num_selected_genes,
+                lower.tail = FALSE)
 }
 
-enrichment_res <- t(sapply(genes_by_pathway, hyperg_test, genes_of_interest, all_genes))
-enrichment_res <- as.data.frame(enrichment_res)
-enrichment_res$p <- unlist(enrichment_res$p)
-enrichment_res$odds <- unlist(enrichment_res$odds)
-enrichment_res$expected <- unlist(enrichment_res$expected)
-enrichment_res <- enrichment_res[order(enrichment_res$p),]
-enrichment_res$adj_p <- p.adjust(enrichment_res$p, method = "bonferroni")
+enrichment_res <- sapply(genes_by_pathway, hyperg_test, genes_of_interest, all_genes)
+enrichment_res <- data.frame(p = enrichment_res)
+enrichment_res <- enrichment_res[order(enrichment_res$p),, drop = F]
+enrichment_res <- enrichment_res[enrichment_res$p < 0.05,, drop = F]
 
-# sum(enrichment_res$adj_p < 0.05)
-enrichment_res <- enrichment_res[enrichment_res$adj_p < 0.05,]
-
-enrichment_res$Pathway <- pathways_list[match(paste0("path:",rownames(enrichment_res)), names(pathways_list))]
-enrichment_res <- enrichment_res[,c(5,1:4)]
+enrichment_res$Pathway <- pathways_list[match(paste0("path:", rownames(enrichment_res)), 
+                                              names(pathways_list))]
 enrichment_res$Pathway <- sub(" - Homo sapiens \\(human\\)", "", enrichment_res$Pathway)
-enrichment_res <- enrichment_res[order(enrichment_res$adj_p),]
+enrichment_res <- enrichment_res[,2:1]
 
 # Visualization -----------------------------------------------------------
 suppressPackageStartupMessages(library(pathview))
