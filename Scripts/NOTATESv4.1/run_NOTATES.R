@@ -2,7 +2,7 @@
 #                NeuroOncology Technologies                #
 #             Whole-Exome Sequencing Pipeline              #
 #           Preparion of Alterations for Report            #
-#                   Ege Ulgen, Dec 2017                    #
+#                   Ege Ulgen, Feb 2018                    #
 ############################################################
 
 dir.create("./NOTATES/")
@@ -100,19 +100,10 @@ somatic_SNVs <- read.delim("../Oncotator/annotated.sSNVs.tsv", stringsAsFactors=
 # Subsetting for (MuTect's default) HQ filters
 somatic_SNVs <- subset(somatic_SNVs, 
                        alt_allele_seen=="True" & 
-                         alt_allele_in_normal=="PASS" & 
-                         clustered_events=="PASS" &
-                         germline_risk == "PASS" & 
-                         homologous_mapping_event=="PASS" &
-                         multi_event_alt_allele_in_normal=="PASS" &
-                         panel_of_normals=="PASS" & 
-                         str_contraction=="PASS" &
-                         t_lod_fstar=="PASS" &
-                         triallelic_site=="PASS" &
-                         short_tandem_repeat_membership=="False")
+                       short_tandem_repeat_membership == "False")
 
-# Reject variants with "Unknown" Hugo Symbols
-somatic_SNVs <- subset(somatic_SNVs, Hugo_Symbol != "Unknown")
+# # Reject variants with "Unknown" Hugo Symbols
+# somatic_SNVs <- subset(somatic_SNVs, Hugo_Symbol != "Unknown")
 
 # Change "" protein changes to NA
 somatic_SNVs$Protein_Change[somatic_SNVs$Protein_Change == ""] <- NA

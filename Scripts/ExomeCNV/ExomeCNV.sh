@@ -7,12 +7,12 @@ tumor_name=$2
 echo "########################## Prep for ExomeCNV - Coverage files    " $(date)
 mkdir -p ./ExomeCNV/DepthOfCoverage
 echo "############################### Normal: Creating coverage file    " $(date)
-$JAVA $GATK -T DepthOfCoverage -omitBaseOutput -omitLocusTable -R $genome \
+$JAVA "$resources_dir""/Tools/GenomeAnalysisTK.jar" -T DepthOfCoverage -omitBaseOutput -omitLocusTable -R $genome \
 	-I normal.final.bam --intervals $Bait_Intervals \
 	-o ./ExomeCNV/DepthOfCoverage/normal.coverage
 
 echo "############################### Tumor: Creating coverage file    " $(date)
-$JAVA $GATK -T DepthOfCoverage -omitBaseOutput -omitLocusTable -R $genome \
+$JAVA "$resources_dir""/Tools/GenomeAnalysisTK.jar" -T DepthOfCoverage -omitBaseOutput -omitLocusTable -R $genome \
 	-I tumor.final.bam --intervals $Bait_Intervals \
 	-o ./ExomeCNV/DepthOfCoverage/tumor.coverage
 
@@ -22,27 +22,26 @@ mkdir -p ./ExomeCNV/baf
 
 ## Get HQ-filtered Het SNP sites in Normal
 expr1='vc.getGenotype("'"$normal_name"'").isHet()'
-expr2='vc.getGenotype("'"$normal_name"'").getPhredScaledQual() >= 30.0'
-expr3='vc.getGenotype("'"$normal_name"'").getDP() >= 20'
+expr2='vc.getGenotype("'"$normal_name"'").getPhredScaledQual()>=30.0'
+expr3='vc.getGenotype("'"$normal_name"'").getDP()>=20'
 
-$JAVA $GATK -T SelectVariants -R $genome \
-	-V ./Germline/filtered_germline_variants.vcf -selectType SNP \
-	--selectexpressions "$expr1" \
-	--selectexpressions "$expr2" --selectexpressions "$expr3" \
-	--excludeFiltered -restrictAllelesTo BIALLELIC \
-	-o ./ExomeCNV/baf/normal_HQ_SNPs.vcf
+$GATK SelectVariants -R $genome \
+	-V ./Germline/filtered_germline_variants.vcf -select-type SNP \
+	--selectExpressions "$expr1" \
+	--selectExpressions "$expr2" --selectExpressions "$expr3" \
+	--exclude-filtered --restrict-alleles-to BIALLELIC \
+	-O ./ExomeCNV/baf/normal_HQ_SNPs.vcf
 
 ## Call variants at the same HQ-filtered Het SNP sites in Tumor
 # HC
-$JAVA $GATK -T HaplotypeCaller -R $genome -I tumor.final.bam \
-	-stand_call_conf 30 \
+$GATK HaplotypeCaller -R $genome -I tumor.final.bam \
 	--intervals ./ExomeCNV/baf/normal_HQ_SNPs.vcf \
-	-o ./ExomeCNV/baf/raw_tumor_HC.vcf -nct 8
+	-O ./ExomeCNV/baf/raw_tumor_HC.vcf
 
 # Filter
-$JAVA $GATK -T VariantFiltration -R $genome -V ./ExomeCNV/baf/raw_tumor_HC.vcf \
-	--filterExpression "QD < 2.0 || MQ < 40.0 || FS > 60.0 || SOR > 4.0 || MQRankSum < -12.5 || ReadPosRankSum < -8.0" \
-	--filterName "HQ_SNP_filter" -o ./ExomeCNV/baf/filtered_tumor_HC.vcf
+$GATK VariantFiltration -R $genome -V ./ExomeCNV/baf/raw_tumor_HC.vcf \
+	--filter-expression "QD < 2.0 || MQ < 40.0 || FS > 60.0 || SOR > 4.0 || MQRankSum < -12.5 || ReadPosRankSum < -8.0" \
+	--filter-name "HQ_SNP_filter" -O ./ExomeCNV/baf/filtered_tumor_HC.vcf
 
 rm ./ExomeCNV/baf/raw_tumor_HC.vcf ./ExomeCNV/baf/raw_tumor_HC.vcf.idx
 
@@ -50,12 +49,12 @@ rm ./ExomeCNV/baf/raw_tumor_HC.vcf ./ExomeCNV/baf/raw_tumor_HC.vcf.idx
 expr1='vc.getGenotype("'"$tumor_name"'").getPhredScaledQual() >= 30.0'
 expr2='vc.getGenotype("'"$tumor_name"'").getDP() >= 20'
 
-$JAVA $GATK -T SelectVariants -R $genome \
-	-V ./ExomeCNV/baf/filtered_tumor_HC.vcf -selectType SNP \
-	--selectexpressions "$expr1" \
-	--selectexpressions "$expr2" \
-	--excludeFiltered -restrictAllelesTo BIALLELIC \
-	-o ./ExomeCNV/baf/tumor_HQ_SNPs.vcf
+$GATK SelectVariants -R $genome \
+	-V ./ExomeCNV/baf/filtered_tumor_HC.vcf -select-type SNP \
+	--selectExpressions "$expr1" \
+	--selectExpressions "$expr2" \
+	--exclude-filtered --restrict-alleles-to BIALLELIC \
+	-O ./ExomeCNV/baf/tumor_HQ_SNPs.vcf
 
 rm ./ExomeCNV/baf/filtered_tumor_HC.vcf ./ExomeCNV/baf/filtered_tumor_HC.vcf.idx
 

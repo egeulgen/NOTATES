@@ -6,7 +6,7 @@ cd ./"$name"
 ## <sample name>_<barcode sequence>_L<lane (0-padded to 3 digits)>_R<read number>_<set number (0-padded to 3 digits)>.fastq.gz
 	
 export lanes=$(ls | grep '_L[0-9]*' -o | uniq)
-lanes=${lanes/_/}
+lanes=${lanes//_}
 echo "$lanes" > lanes.txt
 
 for lane in $lanes

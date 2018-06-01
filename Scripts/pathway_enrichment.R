@@ -1,16 +1,16 @@
-
 # Install package(s) if necessary -----------------------------------------
 if(!"KEGGREST" %in% installed.packages())
 {
   source("https://bioconductor.org/biocLite.R")
   biocLite("KEGGREST")
 }
-
+library(KEGGREST)
 if(!"pathview" %in% installed.packages())
 {
   source("https://bioconductor.org/biocLite.R")
   biocLite("pathview")
 }
+library(pathview)
 
 # locate dir for HS genes -------------------------------------------------
 # dir for data source
@@ -23,20 +23,9 @@ somatic_SNVs <- read.delim("./Oncotator/annotated.sSNVs.tsv", stringsAsFactors=F
 
 # Subsetting for (MuTect's default) HQ filters
 somatic_SNVs <- subset(somatic_SNVs, 
-                       alt_allele_seen=="True" & 
-                         alt_allele_in_normal=="PASS" & 
-                         clustered_events=="PASS" &
-                         germline_risk == "PASS" & 
-                         homologous_mapping_event=="PASS" &
-                         multi_event_alt_allele_in_normal=="PASS" &
-                         panel_of_normals=="PASS" & 
-                         str_contraction=="PASS" &
-                         t_lod_fstar=="PASS" &
-                         triallelic_site=="PASS" &
-                         short_tandem_repeat_membership=="False")
+                       alt_allele_seen=="True" &
+                       short_tandem_repeat_membership == "False")
 
-# Reject variants with "Unknown" Hugo Symbols
-somatic_SNVs <- subset(somatic_SNVs, Hugo_Symbol != "Unknown")
 # Keep only coding mutations
 somatic_SNVs <- somatic_SNVs[!somatic_SNVs$Variant_Classification %in% c("Silent", "3'UTR", "3'Flank", "5'UTR", "5'Flank", 
                                                                          "IGR", "Intron", "lincRNA", "RNA"),]
@@ -137,19 +126,22 @@ cnv_down <- cnv_df$Gene[cnv_df$logR < 0 ]
 
 for(i in 1:nrow(enrichment_res))
 {
+  path_suffix <- gsub("\\/", "_", enrichment_res$Pathway[i])
   tmp <- pathview(gene.data = final_df, gene.idtype = "SYMBOL",
-                  pathway.id = rownames(enrichment_res)[i], species = "hsa", out.suffix = enrichment_res$Pathway[i], 
+                  pathway.id = rownames(enrichment_res)[i], species = "hsa", out.suffix = path_suffix, 
                   keys.align = "y", kegg.native = T, key.pos = "topright", same.layer = F)
-  
-  tmp <- tmp$plot.data.gene$all.mapped
-  tmp <- tmp[tmp!=""]
-  tmp <- unlist(strsplit(tmp, split = ","))
-  tmp <- unique(tmp)
-  tmp <- select(org.Hs.eg.db, tmp, "SYMBOL", "ENTREZID")[,2]
-  
-  enrichment_res$Somatic_Mutation[i] <- paste(tmp[tmp %in% genes_df$Gene], collapse = ", ")
-  enrichment_res$SCNA_down[i] <- paste(tmp[tmp %in% cnv_down], collapse = ", ")
-  enrichment_res$SCNA_up[i] <- paste(tmp[tmp %in% cnv_up], collapse = ", ")
+  if (is.list(tmp)) {
+    
+    tmp <- tmp$plot.data.gene$all.mapped
+    tmp <- tmp[tmp!=""]
+    tmp <- unlist(strsplit(tmp, split = ","))
+    tmp <- unique(tmp)
+    tmp <- select(org.Hs.eg.db, tmp, "SYMBOL", "ENTREZID")[,2]
+    
+    enrichment_res$Somatic_Mutation[i] <- paste(tmp[tmp %in% genes_df$Gene], collapse = ", ")
+    enrichment_res$SCNA_down[i] <- paste(tmp[tmp %in% cnv_down], collapse = ", ")
+    enrichment_res$SCNA_up[i] <- paste(tmp[tmp %in% cnv_up], collapse = ", ")
+  }
 }
 
 write.csv(enrichment_res, "enrichment_results.csv", row.names = T)

@@ -2,8 +2,9 @@
 ################################################################################
 ######################### NeuroOncology Technologies ###########################
 ###################### Whole-Exome Sequencing Pipeline #########################
-########################## Ege Ulgen, December 2017 ############################
+########################## Ege Ulgen, March 2018 ###############################
 ################################################################################
+#set -ueo pipefail
 
 cap_kit=$4
 if [ ${#cap_kit} == 0 ]
@@ -108,55 +109,24 @@ bash "$scripts_dir"/mapping_preprocessing.sh $normal_name "normal"
 bash "$scripts_dir"/mapping_preprocessing.sh $tumor_name "tumor"
 
 ################################################################################
-########################## Contamination Estimation ############################ 
-################################################################################
-echo "##################### Conpair: Creating pileup file for tumor    " $(date)
-${CONPAIR_DIR}/scripts/run_gatk_pileup_for_sample.py -B tumor.final.bam \
-	-O tumor.conpair.pileup --reference $genome \
-	--gatk $GATK --markers $conpair_markers_bed
-
-echo "#################### Conpair: Creating pileup file for normal    " $(date)
-${CONPAIR_DIR}/scripts/run_gatk_pileup_for_sample.py -B normal.final.bam \
-	-O normal.conpair.pileup --reference $genome \
-	--gatk $GATK --markers $conpair_markers_bed
-
-
-echo "################################# Conpair: Verify concordance    " $(date)
-${CONPAIR_DIR}/scripts/verify_concordance.py \
-	-T tumor.conpair.pileup -N normal.conpair.pileup \
-	--outfile conpair_concordance.txt --markers $conpair_markers_txt
-
-
-echo "############################# Conpair: Estimate contamination    " $(date)
-${CONPAIR_DIR}/scripts/estimate_tumor_normal_contamination.py \
-	-T tumor.conpair.pileup -N normal.conpair.pileup \
-	--outfile conpair_contam.txt --markers $conpair_markers_txt
-
-rm tumor.conpair.pileup normal.conpair.pileup
-
-Rscript "$scripts_dir"'/conpair_parser.R' $normal_name $tumor_name
-
-################################################################################
 ############################## Variant Calling #################################
 ################################################################################
 
 ########################################## HC ##################################
 echo "############## Running Haplotype Caller for Germline Variants    " $(date)
 mkdir ./Germline/
-$JAVA $GATK -T HaplotypeCaller -R $genome -I normal.final.bam --dbsnp $dbSNP \
-	-stand_call_conf 30 \
-	--intervals $Bait_Intervals --interval_padding 100 \
-	-o ./Germline/raw.snps.indels.vcf -nct 8
+$GATK HaplotypeCaller -R $genome -I normal.final.bam --dbsnp $dbSNP \
+	--intervals $Bait_Intervals --interval-padding 100 \
+	-O ./Germline/raw.snps.indels.vcf
 
-################################### MuTect #####################################
+################################### Mutect #####################################
 echo "############################################# Running MuTect2    " $(date)
-mkdir ./MuTect
-$JAVA $GATK -T MuTect2 -R $genome \
-	-I:tumor tumor.final.bam -I:normal normal.final.bam \
-	--dbsnp $dbSNP --cosmic $COSMIC \
-	-contaminationFile contamination.txt \
-	--intervals $Bait_Intervals --interval_padding 100 \
-	-o ./MuTect/MuTect_calls.vcf -nct 8
+mkdir ./Mutect
+$GATK Mutect2 -R $genome \
+	-I tumor.final.bam -tumor $tumor_name -I normal.final.bam -normal $normal_name \
+	--germline-resource $gnomad_vcf --af-of-alleles-not-in-resource 0.0000025 \
+	--intervals $Bait_Intervals --interval-padding 100 \
+	-O ./Mutect/Mutect_raw.vcf.gz -bamout tumor_normal_m2.bam 
 
 ################################################################################
 ############################ Variant Filtering #################################
@@ -164,6 +134,43 @@ $JAVA $GATK -T MuTect2 -R $genome \
 
 ##################### Germline Variant Filtering ###############################
 bash "$scripts_dir"/Germline/germline_filter.sh
+
+##################### Somatic Variant Filtering ###############################
+$GATK GetPileupSummaries \
+-I tumor.final.bam \
+-V $small_exac_common \
+-O tumor_getpileupsummaries.table
+
+$GATK GetPileupSummaries \
+-I normal.final.bam \
+-V $small_exac_common \
+-O normal_getpileupsummaries.table
+
+$GATK CalculateContamination \
+-I tumor_getpileupsummaries.table -matched normal_getpileupsummaries.table \
+-O tumor_calculatecontamination.table
+
+$GATK FilterMutectCalls \
+-V ./Mutect/Mutect_raw.vcf.gz \
+--contamination-table tumor_calculatecontamination.table \
+-O ./Mutect/Mutect_filt_once.vcf.gz
+
+$GATK CollectSequencingArtifactMetrics \
+-I tumor.final.bam \
+-O artifact_metrics \
+-R $genome
+
+$GATK FilterByOrientationBias \
+-AM 'G/T' \
+-AM 'C/T' \
+-V ./Mutect/Mutect_filt_once.vcf.gz \
+-P artifact_metrics.pre_adapter_detail_metrics \
+-O ./Mutect/Mutect_filt_twice.vcf.gz
+
+$GATK SelectVariants -R $genome \
+-V ./Mutect/Mutect_filt_twice.vcf.gz \
+--exclude-filtered \
+-O ./Mutect/Filtered_mutect.vcf.gz
 
 ################################################################################
 ############################ Variant Annoation #################################
@@ -174,7 +181,7 @@ mkdir ./Oncotator
 echo "################################# Annotating Somatic variants    " $(date)
 oncotator -v --input_format=VCF --db-dir "$oncotator_ds" --tx-mode CANONICAL \
 	-c "$oncotator_ds"/tx_exact_uniprot_matches.AKT1_CRLF2_FGFR1.txt \
-	./MuTect/mutect_calls.vcf ./Oncotator/annotated.sSNVs.tsv hg19
+	./Mutect/Filtered_mutect.vcf.gz ./Oncotator/annotated.sSNVs.tsv hg19
 
 echo "################################ Annotating Germline Variants    " $(date)
 oncotator -v --input_format=VCF --db-dir "$oncotator_ds" --tx-mode CANONICAL \
@@ -206,7 +213,10 @@ bash "$THetA"/bin/CreateExomeInput -s ./ExomeCNV/CNV.segment.copynumber.txt \
 	-t tumor.final.bam -n normal.final.bam \
 	--FA $genome --EXON_FILE $Bait_Intervals --QUALITY 30 --DIR ./THetA
 rm tumor.final.pileup normal.final.pileup
+
 echo "############################################### Running THetA    " $(date)
+# bash "$THetA"/bin/RunTHetA THetA/CNV.input \
+# 	--DIR ./THetA/output --NUM_PROCESSES 8
 bash "$THetA"/bin/RunTHetA THetA/CNV.input --TUMOR_FILE THetA/tumor_SNP.txt \
 	--NORMAL_FILE THetA/normal_SNP.txt --DIR ./THetA/output --NUM_PROCESSES 8
 
@@ -223,12 +233,12 @@ $JAVA $PICARD CollectInsertSizeMetrics \
 	INPUT=tumor.final.bam OUTPUT=$tumor_name/QC/insert_size_metrics.txt
 
 ## Depth of coverage over target intervals
-$JAVA $GATK -T DepthOfCoverage -R $genome -I normal.final.bam \
+$JAVA "$resources_dir""/Tools/GenomeAnalysisTK.jar" -T DepthOfCoverage -R $genome -I normal.final.bam \
 	-o $normal_name/QC/primary_target_coverage \
 	--intervals $Bait_Intervals --interval_padding 100 \
 	-ct 1 -ct 5 -ct 10 -ct 25 -ct 50 -ct 100
 
-$JAVA $GATK -T DepthOfCoverage -R $genome -I tumor.final.bam \
+$JAVA "$resources_dir""/Tools/GenomeAnalysisTK.jar" -T DepthOfCoverage -R $genome -I tumor.final.bam \
 	-o $tumor_name/QC/primary_target_coverage \
 	--intervals $Bait_Intervals --interval_padding 100 \
 	-ct 1 -ct 5 -ct 10 -ct 25 -ct 50 -ct 100
@@ -245,32 +255,7 @@ $JAVA $PICARD CollectAlignmentSummaryMetrics \
 
 ## FlagStat
 samtools flagstat normal.final.bam > $normal_name/QC/flagstat_metrics.txt
-
 samtools flagstat tumor.final.bam > $tumor_name/QC/flagstat_metrics.txt
-
-## Before and after plots for BQSR
-$JAVA $GATK -T BaseRecalibrator -R $genome -I ./$normal_name/normal.marked.bam \
-	-knownSites $dbSNP -knownSites $Mills_1kG -knownSites $ThousandG \
-	-BQSR normal.recal_data.table -o normal.after_recal.table \
-	--intervals $Bait_Intervals --interval_padding 100
-
-$JAVA $GATK -T BaseRecalibrator -R $genome -I ./$tumor_name/tumor.marked.bam \
-	-knownSites $dbSNP -knownSites $Mills_1kG -knownSites $ThousandG \
-	-BQSR tumor.recal_data.table -o tumor.after_recal.table \
-	--intervals $Bait_Intervals --interval_padding 100
-
-rm ./$normal_name/normal.marked.bam 
-rm ./$normal_name/normal.marked.bai
-rm ./$tumor_name/tumor.marked.bam
-rm ./$tumor_name/tumor.marked.bai
-
-$JAVA $GATK -T AnalyzeCovariates -R $genome \
-	-before normal.recal_data.table -after normal.after_recal.table \
-	-plots ./$normal_name/BQSR_covariates.pdf
-
-$JAVA $GATK -T AnalyzeCovariates -R $genome \
-	-before tumor.recal_data.table -after tumor.after_recal.table \
-	-plots ./$tumor_name/BQSR_covariates.pdf
 
 ## QC Wrapper
 Rscript "$scripts_dir"/QC.R $normal_name $tumor_name
@@ -287,6 +272,9 @@ Rscript "$scripts_dir"/pathway_enrichment.R
 
 echo "######################## Running R script for DeConstructSigs    " $(date)
 Rscript "$scripts_dir"/DeConstructSigs.R $scripts_dir
+
+echo "######################## Running R script for MSIseq             " $(date)
+Rscript "$scripts_dir"/MSIseq.R $patientID $exome_length $scripts_dir
 
 echo "######################## Creating Report					       " $(date)
 cp $scripts_dir/Report.Rmd ./Report.Rmd

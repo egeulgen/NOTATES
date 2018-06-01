@@ -129,23 +129,13 @@ somatic_SNVs <- read.delim("./Oncotator/annotated.sSNVs.tsv", stringsAsFactors=F
 # Subsetting for (MuTect's default) HQ filters
 somatic_SNVs <- subset(somatic_SNVs, 
                        alt_allele_seen=="True" & 
-                         alt_allele_in_normal=="PASS" & 
-                         clustered_events=="PASS" &
-                         germline_risk == "PASS" & 
-                         homologous_mapping_event=="PASS" &
-                         multi_event_alt_allele_in_normal=="PASS" &
-                         panel_of_normals=="PASS" & 
-                         str_contraction=="PASS" &
-                         t_lod_fstar=="PASS" &
-                         triallelic_site=="PASS" &
-                         short_tandem_repeat_membership=="False")
+                       short_tandem_repeat_membership == "False")
 mut_num <- nrow(somatic_SNVs)
-mut_load <- mut_num/as.numeric(params$exome_length) ## xGen
+mut_load <- mut_num/as.numeric(params$exome_length)
 
 mut_load_df <- read.delim(paste0(params$script_dir, "/mut_loads.txt"), stringsAsFactors = F, sep = "\t") 
 
-if(!params$ID %in% mut_load_df$Patient)
-{
+if(!params$ID %in% mut_load_df$Patient) {
   somatic_SNVs <- somatic_SNVs[! somatic_SNVs$Variant_Classification %in% c("Silent", "3'UTR", "3'Flank", "5'UTR", "5'Flank", 
                                                                    "IGR", "Intron", "lincRNA", "RNA"),]
   sset <- ifelse("H3F3A" %in% somatic_SNVs$Hugo_Symbol, "H3-mut",
@@ -160,8 +150,6 @@ if(!params$ID %in% mut_load_df$Patient)
 mut_load_df <- mut_load_df[order(mut_load_df$mutational_load),]
 mut_load_df$x_val <- 1:nrow(mut_load_df)
 
-if(!"ggplot2" %in% installed.packages())
-  install.packages("ggplot2")
 suppressPackageStartupMessages(library(ggplot2))
 
 p <- ggplot(mut_load_df, aes(x=x_val, y=mutational_load, group = subset))
@@ -186,14 +174,48 @@ load_tbl <- as.data.frame(load_tbl)
 colnames(load_tbl) <- "Median Mutational Load"
 
 load_tbl <- rbind(load_tbl, median(mut_load_df$mutational_load))
-rownames(load_tbl)[4] <- "Overall"
+rownames(load_tbl)[nrow(load_tbl)] <- "Overall"
 
 pander(load_tbl, align = "c",table.caption.prefix ="")
 ```
 
 Mutation load (Number of mutations per Mb) for the current patient is: `r mut_load`
 
-### III. b. Important SNVs in Glioma
+### III. b. Microsatellite Instability Status
+
+```{r variables, echo = F, comment=NA}
+var_tbl <- read.csv("MSIseq_out/Input_vars.csv", row.names = 1)
+rownames(var_tbl) <- ""
+var_tbl <- round(var_tbl, 2)
+pander(var_tbl, align = "c", table.caption.prefix ="")
+```
+
+- T.sns: total count of SNVs/Mb
+
+- S.sns: count of SNVs in simple sequence repeats/Mb
+
+- T.ind: total count of indels/Mb
+
+- S.ind: count of indels in simple sequence repeats/Mb
+
+- T: total mutation count/Mb
+
+- S: mutation count in simple sequence repeats/Mb
+
+- ratio.sns: S.sns/T.sns
+
+- ratio.ind: S.ind/T.ind
+
+- ratio: S/T
+
+```{r classification, echo = F, comment=NA}
+class_tbl <- read.csv("MSIseq_out/result.csv", row.names = 1)
+rownames(class_tbl) <- ""
+class_tbl$Tumor_Sample_Barcode <- NULL
+pander(class_tbl, align = "c", table.caption.prefix ="")
+```
+
+### III. c. Important SNVs in Glioma
 
 This is the intersection of SNVs in this case with a list of SNVs manually curated because of their importance in gliomas.
 
@@ -213,7 +235,7 @@ if(file.exists("./NOTATES/Somatic_SNV/important_glioma_SNVs.csv"))
 }
 ```
 
-### III. c. CGC gene + COSMIC hotspot
+### III. d. CGC gene + COSMIC hotspot
 
 These are the SNVs in this case in a CGC gene, positioned at a site with at least one COSMIC overlapping mutation.
 
@@ -234,7 +256,7 @@ if(file.exists("./NOTATES/Somatic_SNV/COSMIC_hotspot.csv"))
 }
 ```
 
-### III. d. CGC gene only
+### III. e. CGC gene only
 
 These are the SNVs in a CGC gene, not positioned at a site with any COSMIC overlapping mutations.
 
@@ -254,7 +276,7 @@ if(file.exists("./NOTATES/Somatic_SNV/CGC_genes.csv"))
 }
 ```
 
-### III. e. Other possibly important SNVs
+### III. f. Other possibly important SNVs
 
 SNVs in DNA damage repair genes:
 
@@ -408,7 +430,7 @@ pander(loh, align = "c",table.caption.prefix ="")
 ```{r, loh_cgc, echo = F, comment=NA}
 if(file.exists("./NOTATES/LOH/CGC_loh.csv"))
 {
-  loh_cgc <- read.csv("./NOTATES/LOH/CGC_loh.csv", stringsAsFactors = F, row.names = F)
+  loh_cgc <- read.csv("./NOTATES/LOH/CGC_loh.csv", stringsAsFactors = F)
   pander(loh_cgc, align = "c",table.caption.prefix ="")
 }else
 {

@@ -2,7 +2,7 @@
 #                NeuroOncology Technologies                #
 #             Whole-Exome Sequencing Pipeline              #
 #                    ExomeCNV Analysis                     #
-#                   Ege Ulgen, Dec 2017                    #
+#                   Ege Ulgen, Feb 2018                    #
 ############################################################
 
 # Install required packages (if needed) -----------------------------------
@@ -11,10 +11,12 @@ initial.options <- commandArgs(trailingOnly = FALSE)
 script.name <- sub("--file=", "", initial.options[grep("--file=", initial.options)])
 script_dir <- dirname(script.name)
 
+if(!"DNAcopy" %in% installed.packages()){
+  source("https://bioconductor.org/biocLite.R")
+  biocLite("DNAcopy")
+  }
 if(!"ExomeCNV" %in% installed.packages())
   install.packages(paste0(script_dir,"/ExomeCNV_1.4.tar.gz"), repos = NULL, type = "source")
-if(!"DNAcopy" %in% installed.packages())
-  install.packages("DNAcopy")
 
 require(ExomeCNV)
 
@@ -80,8 +82,8 @@ patient.logR <- calculate.logR(normal, tumor)
 
 # admix_rate <- 1 - 2*mean(sapply(LOH.sites$baf_tumor/LOH.sites$coverage_tumor, function(x) abs(x - 0.5)))
 # print(admix_rate)
-admix_rate <- read.delim("../contamination.txt", header = F, stringsAsFactors = F)
-admix_rate <- admix_rate[2,2]
+admix_rate <- read.delim("../tumor_calculatecontamination.table", stringsAsFactors = F)
+admix_rate <- admix_rate$contamination
 
 ###### Call CNV for each exon
 ### Call CNV on each exon (using classify.eCNV), one chromosome at a time. We recommend high min.spec (0.9999) 

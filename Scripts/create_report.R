@@ -6,7 +6,8 @@ if(!require(formatR))
   install.packages("formatR")
 if(!require(knitr))
   install.packages("knitr")
-
+if(!"ggplot2" %in% installed.packages())
+  install.packages("ggplot2")
 library(rmarkdown)
 
 args <- commandArgs(trailingOnly=TRUE)
