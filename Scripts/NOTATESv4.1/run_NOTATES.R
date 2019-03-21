@@ -2,7 +2,7 @@
 #                NeuroOncology Technologies                #
 #             Whole-Exome Sequencing Pipeline              #
 #           Preparion of Alterations for Report            #
-#                   Ege Ulgen, Feb 2018                    #
+#                   Ege Ulgen, Mar 2019                    #
 ############################################################
 
 dir.create("./NOTATES/")
@@ -13,19 +13,37 @@ initial_options <- commandArgs(trailingOnly = FALSE)
 script_name <- sub("--file=", "", initial_options[grep("--file=", initial_options)])
 script_dir <- dirname(script_name)
 
+## Argument for MB vs Glioma
+mb_arg <- commandArgs(trailingOnly=TRUE)
+if (length(mb_arg) == 0)
+  mb_arg[1] = 'glioma'
+
 # Necessary resources -----------------------------------------------------
 # CGC
-CGC_df <- read.csv(paste0(script_dir, "/../CGC_dec15_17.csv"), stringsAsFactors = F)
+CGC_df <- read.csv(paste0(script_dir, "/../CGC_latest.csv"), stringsAsFactors = F)
 
 # Curated Databases
 dna_repair_df <- read.csv(paste0(script_dir, "/curated_dbs/DNA_damage_repair_22feb16.csv"), stringsAsFactors = F)
 irinotecan_df <- read.csv(paste0(script_dir, "/curated_dbs/irinotecan_response_genes_22feb16.csv"),stringsAsFactors = F)
 tmz_df <- read.csv(paste0(script_dir, "/curated_dbs/temozolamide_resistance_genes_22feb16.csv"),stringsAsFactors = F)
-KEGG_df <- read.csv(paste0(script_dir, "/curated_dbs/important_KEGG_pws_3jan17.csv"),stringsAsFactors = F)
+if (mb_arg == 'glioma') {
+  KEGG_df <- read.csv(paste0(script_dir, "/curated_dbs/important_KEGG_pws_19mar19.csv"),stringsAsFactors = F)
+} else {
+  KEGG_df <- read.csv(paste0(script_dir, "/curated_dbs/important_KEGG_pws_MB_19mar19.csv"),stringsAsFactors = F)
+}
 
 # Curated Alterations
-curated_SNV <- read.csv(paste0(script_dir, "/curated_alterations/glioma_important_SNV_May25_17.csv"), stringsAsFactors = F)
-curated_CNA <- read.csv(paste0(script_dir, "/curated_alterations/glioma_important_CNA_May25_17.csv"), stringsAsFactors = F)
+if (mb_arg == 'glioma') {
+  curated_SNV <- read.csv(paste0(script_dir, "/curated_alterations/glioma_important_SNV_May25_17.csv"), stringsAsFactors = F)
+  curated_CNA <- read.csv(paste0(script_dir, "/curated_alterations/glioma_important_CNA_May25_17.csv"), stringsAsFactors = F)
+} else {
+  curated_SNV <- read.csv(paste0(script_dir, "/curated_alterations/MB_important_SNV_Mar19_19.csv"), stringsAsFactors = F)
+  curated_SNV$Genomic_Alt[is.na(curated_SNV$Genomic_Alt)] <- ""
+  curated_SNV$Protein_Alt[is.na(curated_SNV$Protein_Alt)] <- ""
+  # keep only >= 5 times affected
+  curated_SNV <- curated_SNV[curated_SNV$Note >= 5, ]
+  curated_CNA <- read.csv(paste0(script_dir, "/curated_alterations/MB_important_CNA_Mar19_19.csv"), stringsAsFactors = F)
+}
 
 # Germline Mutations ------------------------------------------------------
 dir.create("./Germline")
@@ -100,7 +118,7 @@ somatic_SNVs <- read.delim("../Oncotator/annotated.sSNVs.tsv", stringsAsFactors=
 # Subsetting for (MuTect's default) HQ filters
 somatic_SNVs <- subset(somatic_SNVs, 
                        alt_allele_seen=="True" & 
-                       short_tandem_repeat_membership == "False")
+                         short_tandem_repeat_membership == "False")
 
 # # Reject variants with "Unknown" Hugo Symbols
 # somatic_SNVs <- subset(somatic_SNVs, Hugo_Symbol != "Unknown")
@@ -128,7 +146,7 @@ noncoding_SNVs <- noncoding_SNVs[,setdiff(colnames(noncoding_SNVs),c("Protein_Ch
 write.csv(noncoding_SNVs, "Somatic_SNV/noncoding_SNVs.csv", row.names = F)
 
 somatic_SNVs <- somatic_SNVs[!somatic_SNVs$Variant_Classification %in% c("Silent", "3'UTR", "3'Flank", "5'UTR", "5'Flank", 
-                                                                        "IGR", "Intron", "lincRNA", "RNA"),]
+                                                                         "IGR", "Intron", "lincRNA", "RNA"),]
 #### Other annotations 
 somatic_SNVs$DNA_repair <- ifelse(somatic_SNVs$Hugo_Symbol %in% dna_repair_df$Gene.Name, "yes", "no")
 somatic_SNVs$DNA_repair[somatic_SNVs$DNA_repair == "yes"] <- dna_repair_df$FUNCTION[match(somatic_SNVs$Hugo_Symbol[somatic_SNVs$DNA_repair == "yes"],dna_repair_df$Gene.Name)]
@@ -147,7 +165,7 @@ if(any(somatic_SNVs$Hugo_Symbol %in% curated_SNV$Gene))
   keep <- c()
   for(i in idx)
   {
-    tmp <- somatic_SNVs[i,]
+    tmp <- somatic_SNVs[i, ]
     idx2 <- which(curated_SNV$Gene == tmp$Hugo_Symbol)
     
     if(any(curated_SNV$Genomic_Alt[idx2] != ""))
@@ -176,7 +194,7 @@ if(any(somatic_SNVs$Hugo_Symbol %in% curated_SNV$Gene))
   }
   tmp <- somatic_SNVs[keep,]
   somatic_SNVs <- somatic_SNVs[-keep,]
-  write.csv(tmp, "Somatic_SNV/important_glioma_SNVs.csv",row.names = F)
+  write.csv(tmp, "Somatic_SNV/important_SNVs.csv",row.names = F)
 }
 
 ### in CGC and COSMIC hotspot
@@ -342,7 +360,7 @@ if(any(cnv_by_gene$Gene %in% curated_CNA$Gene))
   }
   tmp <- tmp[tmp$keep,]
   cnv_by_gene <- cnv_by_gene[!cnv_by_gene$Segments %in% tmp$Segments,]
-    
+  
   write.csv(tmp[,-ncol(tmp)], "SCNA/important_CNVs.csv", row.names = F)
 }
 
@@ -381,7 +399,7 @@ loh_cytb_overlap <- find_feat_in_seg(loh, cytobands, threshold = 0)
 
 loh$length <- loh$position.end - loh$position.start + 1
 loh$genes <- sapply(loh_genes_overlap[["Segment_feats"]], function(x) ifelse(length(x) > 500, "500",
-                                                                                paste(x, collapse = ", ")))
+                                                                             paste(x, collapse = ", ")))
 loh$cytoband <- sapply(loh_cytb_overlap[["Segment_feats"]], function(x) cyt_func(x, cytobands))
 
 loh <- loh[, c("genes", "length", "cytoband", setdiff(colnames(loh), c("genes", "cytoband", "length")))]

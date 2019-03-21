@@ -65,7 +65,7 @@ germline <- subset(germline, read_depth>20) #### any other?????
 # I. Extract relevant genes with preset filter groups ---------------------
 filter_df <- read.csv(paste0(script_dir, "/Germline_filter_list.csv"), stringsAsFactors = F)
 
-cgc_df <- read.csv(paste0(script_dir,"/../CGC_dec15_17.csv"), stringsAsFactors = F)
+cgc_df <- read.csv(paste0(script_dir,"/../CGC_latest.csv"), stringsAsFactors = F)
 cgc_df <- data.frame(Gene.Name = cgc_df$Gene.Symbol,
                      Comment = "",
                      Group = "Cancer Gene Census",

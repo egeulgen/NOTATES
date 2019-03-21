@@ -11,4 +11,4 @@ if(!"ggplot2" %in% installed.packages())
 library(rmarkdown)
 
 args <- commandArgs(trailingOnly=TRUE)
-render("Report.Rmd", "pdf_document", params = list(ID=args[1], script_dir=args[2], exome_length=args[3]))
+render("Report.Rmd", "pdf_document", params = list(ID=args[1], script_dir=args[2], exome_length=args[3], type=args[4]))

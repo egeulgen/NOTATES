@@ -4,16 +4,19 @@ params:
   ID: ""
   script_dir: ""
   exome_length: ""
+  type: ""
 header-includes:
+- \usepackage{titling}
+- \pretitle{\begin{center}\LARGE\includegraphics[width=90pt]{`r paste0(params$script_dir, "/NOT_logo.png")`}\\[\bigskipamount]}
+- \posttitle{\end{center}}
 - \usepackage{pdflscape}
 - \newcommand{\blandscape}{\begin{landscape}}
 - \newcommand{\elandscape}{\end{landscape}}
 ---
 
 ---
-title: `r paste("Whole Exome Sequencing Report for", params$ID)`
-author: "NeuroOncology Technologies(NOT)"
-date: "`r format(Sys.time(), '%d %B, %Y')`"
+title: "NeuroOncology Technologies (NOT)"
+author: "Whole Exome Sequencing Report"
 ---
 
 ```{r setup, include=FALSE}
@@ -21,6 +24,19 @@ knitr::opts_chunk$set(echo = TRUE)
 library(knitr)
 library(pander)
 ```
+
+`r paste("**NOT ID: **", params$ID)`
+
+**Tumor sample:** Fresh tumor tissue, snap-frozen in liquid nitrogen
+
+**DNA sample:** Peripheral venous blood
+
+**DNA extraction method:** QIAGEN DNeasy Blood & Tissue kit
+
+**Report date:** `r format(Sys.time(), '%d %B, %Y')`
+
+\raggedright
+\clearpage
 
 # I. Quality Metrics
 ```{r QC, echo = F}
@@ -105,15 +121,18 @@ if(file.exists("./NOTATES/Germline/OTHER.csv"))
 }
 ```
 
-### II. f. Common Variants
+`r if(params$type == "glioma") {"### II. f. Common Variants"}`
+
 ```{r, common, echo = F, comment=NA}
-if(file.exists("./NOTATES/Germline/common_var.csv"))
-{
-  common_df <- read.csv("./NOTATES/Germline/common_var.csv",stringsAsFactors = F)
-  pander(common_df, align = "c",table.caption.prefix ="")
-}else
-{
-  cat("No variation to report.")
+if (params$type == "glioma") {
+  if(file.exists("./NOTATES/Germline/common_var.csv"))
+  {
+    common_df <- read.csv("./NOTATES/Germline/common_var.csv",stringsAsFactors = F)
+    pander(common_df, align = "c",table.caption.prefix ="")
+  }else
+  {
+    cat("No variation to report.")
+  }
 }
 ```
 
@@ -133,50 +152,55 @@ somatic_SNVs <- subset(somatic_SNVs,
 mut_num <- nrow(somatic_SNVs)
 mut_load <- mut_num/as.numeric(params$exome_length)
 
-mut_load_df <- read.delim(paste0(params$script_dir, "/mut_loads.txt"), stringsAsFactors = F, sep = "\t") 
-
-if(!params$ID %in% mut_load_df$Patient) {
-  somatic_SNVs <- somatic_SNVs[! somatic_SNVs$Variant_Classification %in% c("Silent", "3'UTR", "3'Flank", "5'UTR", "5'Flank", 
-                                                                   "IGR", "Intron", "lincRNA", "RNA"),]
-  sset <- ifelse("H3F3A" %in% somatic_SNVs$Hugo_Symbol, "H3-mut",
-                 ifelse("IDH1" %in% somatic_SNVs$Hugo_Symbol | "IDH2" %in% somatic_SNVs$Hugo_Symbol, "IDH-mut", "IDH-WT"))
-
-  mut_load_df <- rbind(mut_load_df, data.frame(Patient = params$ID, 
-                                               mutational_load = mut_load, 
-                                               subset = sset, stringsAsFactors = F))
-  write.table(mut_load_df, paste0(params$script_dir, "/mut_loads.txt"), sep = "\t", row.names = F, quote = F)
+if (params$type == "glioma") {
+  mut_load_df <- read.delim(paste0(params$script_dir, "/mut_loads.txt"), stringsAsFactors = F, sep = "\t") 
+  
+  if(!params$ID %in% mut_load_df$Patient) {
+    somatic_SNVs <- somatic_SNVs[! somatic_SNVs$Variant_Classification %in% c("Silent", "3'UTR", "3'Flank", "5'UTR", "5'Flank", 
+                                                                              "IGR", "Intron", "lincRNA", "RNA"),]
+    sset <- ifelse("H3F3A" %in% somatic_SNVs$Hugo_Symbol, "H3-mut",
+                   ifelse("IDH1" %in% somatic_SNVs$Hugo_Symbol | "IDH2" %in% somatic_SNVs$Hugo_Symbol, "IDH-mut", "IDH-WT"))
+    
+    mut_load_df <- rbind(mut_load_df, data.frame(Patient = params$ID, 
+                                                 mutational_load = mut_load, 
+                                                 subset = sset, stringsAsFactors = F))
+    write.table(mut_load_df, paste0(params$script_dir, "/mut_loads.txt"), sep = "\t", row.names = F, quote = F)
+  }
+  
+  mut_load_df <- mut_load_df[order(mut_load_df$mutational_load),]
+  mut_load_df$x_val <- 1:nrow(mut_load_df)
+  
+  suppressPackageStartupMessages(library(ggplot2))
+  
+  p <- ggplot(mut_load_df, aes(x=x_val, y=mutational_load, group = subset))
+  p <- p + geom_point(size=2, aes(shape=subset, color=subset))
+  p <- p + scale_color_manual(values=c('#56B4E9','#E69F00', 'gray60'))
+  p <- p + geom_segment(aes(x = median(mut_load_df$x_val)-6, y = median(mut_load_df$mutational_load), 
+                            xend = median(mut_load_df$x_val)+6, yend = median(mut_load_df$mutational_load)), colour = "red")
+  p <- p + coord_flip()
+  p <- p + theme(axis.title.y=element_blank(),
+                 axis.text.y=element_blank(),
+                 axis.ticks.y=element_blank())
+  # p <- p + theme(legend.position="none")
+  p <- p + ylab("Mutational Load")
+  p <- p + geom_point(data=mut_load_df[mut_load_df$Patient == params$ID, ], aes(x=x_val, y=mutational_load), colour="red", size=4, shape = 1)
+  p
 }
-
-mut_load_df <- mut_load_df[order(mut_load_df$mutational_load),]
-mut_load_df$x_val <- 1:nrow(mut_load_df)
-
-suppressPackageStartupMessages(library(ggplot2))
-
-p <- ggplot(mut_load_df, aes(x=x_val, y=mutational_load, group = subset))
-p <- p + geom_point(size=2, aes(shape=subset, color=subset))
-p <- p + scale_color_manual(values=c('#56B4E9','#E69F00', 'gray60'))
-p <- p + geom_segment(aes(x = median(mut_load_df$x_val)-6, y = median(mut_load_df$mutational_load), 
-                          xend = median(mut_load_df$x_val)+6, yend = median(mut_load_df$mutational_load)), colour = "red")
-p <- p + coord_flip()
-p <- p + theme(axis.title.y=element_blank(),
-               axis.text.y=element_blank(),
-               axis.ticks.y=element_blank())
-# p <- p + theme(legend.position="none")
-p <- p + ylab("Mutational Load")
-p <- p + geom_point(data=mut_load_df[mut_load_df$Patient == params$ID, ], aes(x=x_val, y=mutational_load), colour="red", size=4, shape = 1)
-p
 ```
-Mutational loads (Numbers of mutations per Mb) for `r nrow(mut_load_df)` patients (including the current patient, circled in red) are represented in the above scatter plot. Red vertical line segment represents the overall median mutational load value.
+
+`r if(params$type == "glioma") {paste0("Mutational loads (Numbers of mutations per Mb) for ", nrow(mut_load_df), " patients (including the current patient, circled in red) are represented in the above scatter plot. Red vertical line segment represents the overall median mutational load value.")}`
 
 ```{r load_table, echo = F, comment=NA}
-load_tbl <- tapply(mut_load_df$mutational_load, mut_load_df$subset, median)
-load_tbl <- as.data.frame(load_tbl)
-colnames(load_tbl) <- "Median Mutational Load"
-
-load_tbl <- rbind(load_tbl, median(mut_load_df$mutational_load))
-rownames(load_tbl)[nrow(load_tbl)] <- "Overall"
-
-pander(load_tbl, align = "c",table.caption.prefix ="")
+if (params$type == "glioma") {
+  load_tbl <- tapply(mut_load_df$mutational_load, mut_load_df$subset, median)
+  load_tbl <- as.data.frame(load_tbl)
+  colnames(load_tbl) <- "Median Mutational Load"
+  
+  load_tbl <- rbind(load_tbl, median(mut_load_df$mutational_load))
+  rownames(load_tbl)[nrow(load_tbl)] <- "Overall"
+  
+  pander(load_tbl, align = "c",table.caption.prefix ="")
+}
 ```
 
 Mutation load (Number of mutations per Mb) for the current patient is: `r mut_load`
@@ -215,14 +239,15 @@ class_tbl$Tumor_Sample_Barcode <- NULL
 pander(class_tbl, align = "c", table.caption.prefix ="")
 ```
 
-### III. c. Important SNVs in Glioma
+`r if(params$type == "glioma") {"### III. c. Important SNVs in Glioma"} else {"### III. c. Important SNVs in Medulloblastoma"}`
 
-This is the intersection of SNVs in this case with a list of SNVs manually curated because of their importance in gliomas.
+`r if(params$type == "glioma") {"This is the intersection of SNVs in this case with a list of SNVs manually curated because of their importance in gliomas."} else {"This is the intersection of SNVs in this case with a list of SNVs manually curated because of their importance in medulloblastomas."}`
+
 
 ```{r imp_snv, echo = F, comment=NA}
-if(file.exists("./NOTATES/Somatic_SNV/important_glioma_SNVs.csv"))
+if(file.exists("./NOTATES/Somatic_SNV/important_SNVs.csv"))
 {
-  imp_snv <- read.csv("./NOTATES/Somatic_SNV/important_glioma_SNVs.csv", stringsAsFactors = F, colClasses = c("character"))
+  imp_snv <- read.csv("./NOTATES/Somatic_SNV/important_SNVs.csv", stringsAsFactors = F, colClasses = c("character"))
   imp_snv <- imp_snv[,setdiff(colnames(imp_snv),c("COSMIC_total_alterations_in_gene","DNA_repair","selected_KEGG"))]
   colnames(imp_snv) <- c("Gene", "Effect", "Protein", "Genome","TumorF","Genotype", "COS_n_ov",
                         "UniProt_Region", "SIFT","Irino", "TMZ")
@@ -363,9 +388,9 @@ Other coding mutations and non-coding mutations are provided as attachments.
 
 Only SCNAs with a $log_2(Tumor/Normal)$ ratio $\le$ -0.25 or $\ge$ 0.2 are reported in the tables.
 
-### IV. a. Important SCNAs in glioma
+`r if(params$type == "glioma") {"### IV. a. Important SCNAs in Glioma"} else {"### IV. a. Important SCNAs in Medulloblastoma"}`
 
-This is the intersection of SCNAs in this case with a list of SCNAs manually curated because of their importance in gliomas.
+`r if(params$type == "glioma") {"This is the intersection of SCNAs in this case with a list of SCNAs manually curated because of their importance in gliomas."} else {"This is the intersection of SCNAs in this case with a list of SCNAs manually curated because of their importance in medulloblastomas."}`
 
 ```{r, imp_cna, echo = F, comment=NA}
 if(file.exists("./NOTATES/SCNA/important_CNVs.csv"))

@@ -2,15 +2,15 @@
 ################################################################################
 ######################### NeuroOncology Technologies ###########################
 ###################### Whole-Exome Sequencing Pipeline #########################
-########################## Ege Ulgen, March 2018 ###############################
+########################## Ege Ulgen, March 2019 ###############################
 ################################################################################
 #set -ueo pipefail
 
+patientID=$1
+normal_name=$2
+tumor_name=$3
 cap_kit=$4
-if [ ${#cap_kit} == 0 ]
-	then
-	read -p "Enter the capture kit name: " cap_kit
-fi
+tumor_type=$5
 
 ### Set main_dir to the directory where this script is located
 main_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -34,11 +34,6 @@ fi
 ############################ Check Patient ID ##################################
 ######################## Normal ID and Tumor ID ################################
 ################################################################################
-patientID=$1
-if [ ${#patientID} == 0 ]
-	then
-	read -p "Enter the patient ID: " patientID
-fi
 
 path_to_patient=$(find . -type d -name $patientID -print)
 if [ ${#path_to_patient} == 0 ]
@@ -49,22 +44,12 @@ if [ ${#path_to_patient} == 0 ]
 fi
 cd $path_to_patient
 
-normal_name=$2
-if [ ${#normal_name} == 0 ]
-	then
-	read -p "Enter the normal ID: " normal_name
-fi
 if [ ! -d "$normal_name" ]
 	then
 	printf "FOLDER NOT FOUND! :\n  Make sure that the normal ID is correct\n"
 	exit 3
 fi
 
-tumor_name=$3
-if [ ${#tumor_name} == 0 ]
-	then
-	read -p "Enter the tumor ID: " tumor_name
-fi
 if [ ! -d "$tumor_name" ]
 	then
 	printf "FOLDER NOT FOUND! :\n  Make sure that the tumor ID is correct\n"
@@ -77,6 +62,7 @@ echo "The chosen patient ID is: ""$patientID"
 echo "The germline sample ID is: ""$normal_name"
 echo "The tumor sample ID  is: ""$tumor_name"
 echo ""
+echo "The tumor type is: ""$tumor_type"
 
 ################################################################################
 ############################## Merging fastq files #############################
@@ -265,7 +251,7 @@ Rscript "$scripts_dir"/QC.R $normal_name $tumor_name
 ################################################################################
 
 echo "######################## Running R script for NOTATES v4.1       " $(date)
-Rscript "$scripts_dir"/NOTATESv4.1/run_NOTATES.R
+Rscript "$scripts_dir"/NOTATESv4.1/run_NOTATES.R $tumor_type
 
 echo "######################## Running R script for Pathway Enrichment " $(date)
 Rscript "$scripts_dir"/pathway_enrichment.R
@@ -278,7 +264,7 @@ Rscript "$scripts_dir"/MSIseq.R $patientID $exome_length $scripts_dir
 
 echo "######################## Creating Report					       " $(date)
 cp $scripts_dir/Report.Rmd ./Report.Rmd
-Rscript "$scripts_dir"/create_report.R $patientID $scripts_dir $exome_length
+Rscript "$scripts_dir"/create_report.R $patientID $scripts_dir $exome_length $tumor_type
 rm Report.Rmd
 mv Report.pdf Report_"$patientID".pdf
 
