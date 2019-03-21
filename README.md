@@ -1,4 +1,4 @@
-# NOTATES : NOT - Alterations in Tumor Exome Sequencing
+# <img src="Scripts/NOT_logo.png" align="left" height=120/> # NOTATES : NOT - Alterations in Tumor Exome Sequencing
 NeuroOncology Technologies(NOT) aims to analyze Whole Exome Sequencing reads of blood-matched tumor samples that belong to brain tumor patients. For the moment, the analysis is focused on gliomas. Therefore, glioma-specific genomic alterations that are expected to affect diagnosis, prognosis and treatment response are assessed in each case, utilizing manually-curated databases of genes and genomic alterations that are related to glioma biology.
 
 ## Overview of the Pipeline
