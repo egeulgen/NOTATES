@@ -33,7 +33,6 @@ The path/to/tool should be specified in the configuration file:
 - [GATK](https://software.broadinstitute.org/gatk/)
 - [THetA2](http://compbio.cs.brown.edu/projects/theta/)
 - [Oncotator](https://github.com/broadinstitute/oncotator/releases)
-- [Conpair](https://github.com/nygenome/Conpair)
 
 ### Resources
 Note that **only hg19 reference and resources with hg19 coordinates are supported** as this is the only reference genome build compatible with oncotator data sources.
