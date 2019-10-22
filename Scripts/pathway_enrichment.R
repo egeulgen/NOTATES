@@ -63,6 +63,7 @@ pathways_list <- keggList("pathway", "hsa")
 
 # make them into KEGG-style human pathway identifiers
 pathway_codes <- sub("path:", "", names(pathways_list))
+pathways_list <- sub(" - Homo sapiens \\(human\\)", "", pathways_list)
 
 # subsetting by c(TRUE, FALSE) -- which repeats
 # as many times as needed, sorts through some
@@ -72,12 +73,13 @@ genes_by_pathway <- sapply(pathway_codes, function(pwid){
   pw <- keggGet(pwid)
   pw <- pw[[1]]$GENE[c(F, T)]
   pw <- sub(";.+", "", pw)
-  pw <- pw[grepl("^[a-zA-Z0-9_-]*$", pw)] ## removing mistaken lines
+  pw <- pw[grep("^[A-Za-z0-9_-]+(\\@)?$", pw)] ## removing mistaken lines
+  pw <- unique(pw)
   pw
 })
 
 all_genes <- read.csv(paste0(script_dir, "/NOTATESv4.1/homo_sapiens_genes.csv"), stringsAsFactors = F)
-all_genes <- all_genes$SYMBOL
+all_genes <- unique(all_genes$SYMBOL)
 
 hyperg_test <- function(pw_genes, chosen_genes, all_genes) {
   pw_genes_selected <- length(intersect(chosen_genes, pw_genes))
@@ -92,14 +94,12 @@ hyperg_test <- function(pw_genes, chosen_genes, all_genes) {
 }
 
 enrichment_res <- sapply(genes_by_pathway, hyperg_test, genes_of_interest, all_genes)
-enrichment_res <- data.frame(p = enrichment_res)
-enrichment_res <- enrichment_res[order(enrichment_res$p),, drop = F]
-enrichment_res <- enrichment_res[enrichment_res$p < 0.05,, drop = F]
-
-enrichment_res$Pathway <- pathways_list[match(paste0("path:", rownames(enrichment_res)), 
-                                              names(pathways_list))]
-enrichment_res$Pathway <- sub(" - Homo sapiens \\(human\\)", "", enrichment_res$Pathway)
-enrichment_res <- enrichment_res[,2:1]
+enrichment_res <- sort(enrichment_res)
+enrichment_res <- data.frame(Pathway = pathways_list[match(paste0("path:", names(enrichment_res)), 
+                                                           names(pathways_list))],
+                             p = enrichment_res,
+                             FDR_p = p.adjust(enrichment_res, method = "BH"))
+enrichment_res <- enrichment_res[enrichment_res$FDR_p < 0.05,, drop = F]
 
 # Visualization -----------------------------------------------------------
 suppressPackageStartupMessages(library(pathview))

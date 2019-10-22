@@ -7,7 +7,12 @@ cd ./"$name"
 	
 export lanes=$(ls | grep '_L[0-9]*' -o | uniq)
 lanes=${lanes//_}
-echo "$lanes" > lanes.txt
+
+if [ -f "./lanes.txt" ]; then
+   echo "The lanes file exists"
+else
+   echo "$lanes" > lanes.txt
+fi
 
 for lane in $lanes
 do

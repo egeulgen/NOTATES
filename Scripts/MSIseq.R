@@ -10,6 +10,8 @@ script_dir <- arguments[3]
 
 ## Input MAF
 all_muts <- read.delim("./Oncotator/annotated.sSNVs.tsv", comment.char = "#")
+all_muts <- subset(all_muts, 
+                   alt_allele_seen == "True")
 all_muts$Chrom <- paste0("chr", all_muts$Chromosome)
 input <- all_muts[,c("Chrom", "Start_position", "End_position", "Variant_Type", "Tumor_Sample_Barcode")]
 colnames(input) <- sub("position", "Position", colnames(input))

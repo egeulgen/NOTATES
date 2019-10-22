@@ -113,7 +113,8 @@ write.csv(common_var, "./Germline/common_var.csv", row.names = F)
 
 # Somatic Mutations -------------------------------------------------------
 dir.create("./Somatic_SNV")
-somatic_SNVs <- read.delim("../Oncotator/annotated.sSNVs.tsv", stringsAsFactors=F, comment.char="#")
+somatic_SNVs <- read.delim("../Oncotator/annotated.sSNVs.tsv", stringsAsFactors=FALSE, comment.char="#")
+somatic_SNVs <- somatic_SNVs[order(somatic_SNVs$tumor_f, decreasing = TRUE), ]
 
 # Subsetting for (MuTect's default) HQ filters
 somatic_SNVs <- subset(somatic_SNVs, 
@@ -350,18 +351,20 @@ if(any(cnv_by_gene$Gene %in% curated_CNA$Gene))
 {
   tmp <- cnv_by_gene[cnv_by_gene$Gene %in% curated_CNA$Gene,]
   tmp <- tmp[tmp$CN != 2,]
-  tmp$keep <- T
-  for(i in 1:nrow(tmp))
-  {
-    tmp2 <- tmp[i,]
-    tmp3 <- curated_CNA$Type[curated_CNA$Gene == tmp2$Gene]
-    if( !(tmp3 == "A" & tmp2$ratio >1) & !(tmp3 == "D" & tmp2$ratio <1) )
-      tmp$keep[i] <- F
+  if (nrow(tmp) != 0) {
+    tmp$keep <- T
+    for(i in 1:nrow(tmp))
+    {
+      tmp2 <- tmp[i,]
+      tmp3 <- curated_CNA$Type[curated_CNA$Gene == tmp2$Gene]
+      if( !(tmp3 == "A" & tmp2$ratio >1) & !(tmp3 == "D" & tmp2$ratio <1) )
+        tmp$keep[i] <- F
+    }
+    tmp <- tmp[tmp$keep,]
+    cnv_by_gene <- cnv_by_gene[!cnv_by_gene$Segments %in% tmp$Segments,]
+    
+    write.csv(tmp[,-ncol(tmp)], "SCNA/important_CNVs.csv", row.names = F)
   }
-  tmp <- tmp[tmp$keep,]
-  cnv_by_gene <- cnv_by_gene[!cnv_by_gene$Segments %in% tmp$Segments,]
-  
-  write.csv(tmp[,-ncol(tmp)], "SCNA/important_CNVs.csv", row.names = F)
 }
 
 ### CGC + TS/OG Concordant
