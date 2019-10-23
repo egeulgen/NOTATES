@@ -4,7 +4,7 @@ NeuroOncology Technologies(NOT) aims to analyze Whole Exome Sequencing reads of 
 ## Overview of the Pipeline
 The pipeline consists of several bash and R scripts, and a wrapper bash script.
 
-The combined germline variation, somatic Single Nucleotide Variant(SNV) and Insertion/Deletion(InDel) discovery pipeline was created based on the GATK Best Practices workflow. Germline SNV and InDels are called using GATK HaplotypeCaller. Somatic SNV and InDels are called using GATK MuTect 2. Both germline and somatic variants are annotated via Oncotator.
+The combined germline variation, somatic Single Nucleotide Variant(SNV) and Insertion/Deletion(InDel) discovery pipeline was created based on the GATK Best Practices workflow. Germline SNV and InDels are called using GATK HaplotypeCaller. Somatic SNV and InDels are called using GATK MuTect2. Both germline and somatic variants are annotated via Oncotator.
 
 Tumor contamination and tumor-normal concordance are estimated using Conpair.
 
@@ -14,12 +14,13 @@ Clonal/subclonal copy number aberrations are estimated using THetA2.
 
 Variant reporting and integration of detected alterations are achieved with custom scripts and curated resources.
 
-### Dependencies
+### Dependencies - UPDATE!!
 The pipeline depends on the following (if not in bin, path/to/tool can be altered in the configuration file configurations.cfg):
 
 Should be located in bin directory:
 - [JAVA](https://www.java.com/en/download/manual.jsp)
 - [R](https://www.r-project.org)
+- [python 2.7.x](https://www.python.org/downloads/)
 - [FastQC](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/)
 - [SAMTools](http://samtools.sourceforge.net/)
 - [BWA](http://bio-bwa.sourceforge.net/)
