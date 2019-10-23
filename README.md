@@ -1,7 +1,7 @@
 # <img src="Scripts/NOT_logo.png" align="left" height=120/> NOTATES : NOT - Alterations in Tumor Exome Sequencing
-NeuroOncology Technologies(NOT) aims to analyze Whole Exome Sequencing reads of blood-matched tumor samples that belong to brain tumor patients. For the moment, the analysis is focused on gliomas. Therefore, glioma-specific genomic alterations that are expected to affect diagnosis, prognosis and treatment response are assessed in each case, utilizing manually-curated databases of genes and genomic alterations that are related to glioma biology.
+NeuroOncology Technologies(NOT) aims to analyze Whole Exome Sequencing reads of blood-matched tumor samples that belong to brain tumor patients. For the moment, the analysis is focused on gliomas and medulloblastomas (MBs). Therefore, glioma/MB-specific genomic alterations that are expected to affect diagnosis, prognosis and treatment response are assessed in each case, utilizing manually-curated databases of genes and genomic alterations that are related to glioma/MB biology.
 
-## Overview of the Pipeline
+## Overview of the Pipeline - UPDATE!!
 The pipeline consists of several bash and R scripts, and a wrapper bash script.
 
 The combined germline variation, somatic Single Nucleotide Variant(SNV) and Insertion/Deletion(InDel) discovery pipeline was created based on the GATK Best Practices workflow. Germline SNV and InDels are called using GATK HaplotypeCaller. Somatic SNV and InDels are called using GATK MuTect2. Both germline and somatic variants are annotated via Oncotator.
