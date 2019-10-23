@@ -2,7 +2,7 @@
 #                NeuroOncology Technologies                #
 #             Whole-Exome Sequencing Pipeline              #
 #           Preparion of Alterations for Report            #
-#                   Ege Ulgen, Mar 2019                    #
+#                   Ege Ulgen, Oct 2019                    #
 ############################################################
 
 dir.create("./NOTATES/")
@@ -49,14 +49,20 @@ if (mb_arg == 'glioma') {
 dir.create("./Germline")
 germline_mutations <- read.csv("../Germline/output/germline_variant_report.csv", stringsAsFactors = F)
 
+germline_cols <- c("Hugo_Symbol", "id", "Chromosome", "Start_position",
+                   "Filter_Comment", "Variant_Classification",
+                   "Reference_Allele", "Germline_Seq_Allele2", "allelic_depth")
+renamed_g_cols <- c("Gene", "rs_id", "Chr", "Pos", 
+                    "Disease(s)", "Effect", 
+                    "Ref", "Alt", "AD")
+
 ### ACMG incidental
 if(any(grepl("ACMG",germline_mutations$Filter_Group)))
 {
-  tmp <- germline_mutations[grepl("ACMG",germline_mutations$Filter_Group),]
-  tmp <- tmp[,c("Hugo_Symbol","id","Filter_Comment","Variant_Classification",
-                "minor_allele","Reference_Allele", "Germline_Seq_Allele2", "allele_frequency")]
-  colnames(tmp) <- c("Gene","ID","Disease(s)","Effect","Minor Allele", "Ref", "Var", "AF")
-  germline_mutations <- germline_mutations[!grepl("ACMG",germline_mutations$Filter_Group),]
+  tmp <- germline_mutations[grepl("ACMG", germline_mutations$Filter_Group),]
+  tmp <- tmp[, germline_cols]
+  colnames(tmp) <- renamed_g_cols
+  germline_mutations <- germline_mutations[!grepl("ACMG", germline_mutations$Filter_Group),]
   
   write.csv(tmp, "./Germline/ACMG.csv", row.names = F)
 }
@@ -64,9 +70,10 @@ if(any(grepl("ACMG",germline_mutations$Filter_Group)))
 if(any(grepl("CGC",germline_mutations$Filter_Group)))
 {
   tmp <- germline_mutations[grepl("CGC",germline_mutations$Filter_Group),]
-  tmp <- tmp[,c("Hugo_Symbol","id","Variant_Classification",
-                "minor_allele","Reference_Allele", "Germline_Seq_Allele2", "allele_frequency")]
-  colnames(tmp) <- c("Gene","ID","Effect","Minor Allele", "Ref", "Var", "AF")
+  tmp <- tmp[, germline_cols]
+  colnames(tmp) <- renamed_g_cols
+  tmp <- tmp[, colnames(tmp) != "Disease(s)"]
+  
   germline_mutations <- germline_mutations[!grepl("CGC",germline_mutations$Filter_Group),]
   
   write.csv(tmp, "./Germline/CGC.csv", row.names = F)
@@ -75,9 +82,9 @@ if(any(grepl("CGC",germline_mutations$Filter_Group)))
 if(any(grepl("CPG",germline_mutations$Filter_Group)))
 {
   tmp <- germline_mutations[grepl("CPG",germline_mutations$Filter_Group),]
-  tmp <- tmp[,c("Hugo_Symbol","id","Variant_Classification",
-                "minor_allele","Reference_Allele", "Germline_Seq_Allele2", "allele_frequency")]
-  colnames(tmp) <- c("Gene","ID","Effect","Minor Allele", "Ref", "Var", "AF")
+  tmp <- tmp[, germline_cols]
+  colnames(tmp) <- renamed_g_cols
+  tmp <- tmp[, colnames(tmp) != "Disease(s)"]
   germline_mutations <- germline_mutations[!grepl("CPG",germline_mutations$Filter_Group),]
   
   write.csv(tmp, "./Germline/CPG.csv", row.names = F)
@@ -86,9 +93,9 @@ if(any(grepl("CPG",germline_mutations$Filter_Group)))
 if(any(grepl("FAP",germline_mutations$Filter_Group)))
 {
   tmp <- germline_mutations[grepl("FAP",germline_mutations$Filter_Group),]
-  tmp <- tmp[,c("Hugo_Symbol","id","Variant_Classification",
-                "minor_allele","Reference_Allele", "Germline_Seq_Allele2", "allele_frequency")]
-  colnames(tmp) <- c("Gene","ID","Effect","Minor Allele", "Ref", "Var", "AF")
+  tmp <- tmp[, germline_cols]
+  colnames(tmp) <- renamed_g_cols
+  tmp <- tmp[, colnames(tmp) != "Disease(s)"]
   germline_mutations <- germline_mutations[!grepl("FAP",germline_mutations$Filter_Group),]
   
   write.csv(tmp, "./Germline/FAP.csv", row.names = F)
@@ -97,9 +104,9 @@ if(any(grepl("FAP",germline_mutations$Filter_Group)))
 if(nrow(germline_mutations) != 0)
 {
   tmp <- germline_mutations
-  tmp <- tmp[,c("Hugo_Symbol","id","Variant_Classification",
-                "minor_allele","Reference_Allele", "Germline_Seq_Allele2", "allele_frequency")]
-  colnames(tmp) <- c("Gene","ID","Effect","Minor Allele", "Ref", "Var", "AF")
+  tmp <- tmp[, germline_cols]
+  colnames(tmp) <- renamed_g_cols
+  tmp <- tmp[, colnames(tmp) != "Disease(s)"]
   
   write.csv(tmp, "./Germline/OTHER.csv", row.names = F)
 }
@@ -107,8 +114,8 @@ if(nrow(germline_mutations) != 0)
 ### Common Variants
 common_var <- read.csv("../Germline/output/common_variant_report.csv", stringsAsFactors = F)
 common_var <- common_var[,c("id","Hugo_Symbol","Variant_Classification",
-                            "gCCV_Risk_allele","Reference_Allele","Normal_Seq_Allele2","allele_frequency")]
-colnames(common_var) <-  c("ID","Gene","Effect","Risk Allele", "Ref", "Var", "AF")
+                            "gCCV_Risk_allele","Reference_Allele","Normal_Seq_Allele2","allelic_depth")]
+colnames(common_var) <-  c("rs_id","Gene","Effect","Risk Allele", "Ref", "Alt", "AD")
 write.csv(common_var, "./Germline/common_var.csv", row.names = F)
 
 # Somatic Mutations -------------------------------------------------------

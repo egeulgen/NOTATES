@@ -257,10 +257,11 @@ echo "######################## Running R script for Pathway Enrichment " $(date)
 Rscript "$scripts_dir"/pathway_enrichment.R
 
 echo "######################## Running R script for DeConstructSigs    " $(date)
-Rscript "$scripts_dir"/DeConstructSigs.R $scripts_dir
+Rscript "$scripts_dir"/DeConstructSigs.R $scripts_dir $patientID
 
-echo "######################## Running R script for MSIseq             " $(date)
-Rscript "$scripts_dir"/MSIseq.R $patientID $exome_length $scripts_dir
+echo "######################## Running R script for MSIpred            " $(date)
+Rscript "$scripts_dir"/MSIpred_prep.R $patientID
+python "$scripts_dir"/MSIpred_analysis.py $data_sources_dir $exome_length
 
 echo "######################## Creating Report					       " $(date)
 cp $scripts_dir/Report.Rmd ./Report.Rmd

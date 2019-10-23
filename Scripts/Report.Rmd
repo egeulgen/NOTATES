@@ -56,14 +56,13 @@ kable(QC_df, align = "c")
 
 # II. Germline Alterations
 
+In this section, the germline SNV/indels in this sample is reported. Only the alterations with ClinVar clinical significances containing "Pathogenic" designations are reported.
+
 ### II. a. ACMG Incidental Findings
 ```{r, ACMG, echo = F, comment=NA}
 if(file.exists("./NOTATES/Germline/ACMG.csv"))
 {
   ACMG_df <- read.csv("./NOTATES/Germline/ACMG.csv",stringsAsFactors = F)
-  # tmp <- unlist(strsplit(ACMG_df$Disease.s., ", "))
-  # tmp <- setdiff(tmp, c("glioma predisposition gene","CGC_germline"))
-  # ACMG_df$Filter_Comment <- tmp
   rownames(ACMG_df) <- ACMG_df$ID
   ACMG_df <- ACMG_df[,-2]
   pander(ACMG_df, align = "c",table.caption.prefix ="")
@@ -181,7 +180,6 @@ if (params$type == "glioma") {
   p <- p + theme(axis.title.y=element_blank(),
                  axis.text.y=element_blank(),
                  axis.ticks.y=element_blank())
-  # p <- p + theme(legend.position="none")
   p <- p + ylab("Mutational Load")
   p <- p + geom_point(data=mut_load_df[mut_load_df$Patient == params$ID, ], aes(x=x_val, y=mutational_load), colour="red", size=4, shape = 1)
   p
@@ -208,34 +206,15 @@ Mutation load (Number of mutations per Mb) for the current patient is: `r mut_lo
 ### III. b. Microsatellite Instability Status
 
 ```{r variables, echo = F, comment=NA}
-var_tbl <- read.csv("MSIseq_out/Input_vars.csv", row.names = 1)
-rownames(var_tbl) <- ""
-var_tbl <- round(var_tbl, 2)
-pander(var_tbl, align = "c", table.caption.prefix ="")
+var_tbl <- read.csv("MSIpred/maf_feats.csv")
+rownames(var_tbl) <- NULL
+var_tbl <- round(var_tbl[1, -1], 2)
+pander(var_tbl, align = "c", table.caption.prefix ="",)
 ```
 
-- T.sns: total count of SNVs/Mb
-
-- S.sns: count of SNVs in simple sequence repeats/Mb
-
-- T.ind: total count of indels/Mb
-
-- S.ind: count of indels in simple sequence repeats/Mb
-
-- T: total mutation count/Mb
-
-- S: mutation count in simple sequence repeats/Mb
-
-- ratio.sns: S.sns/T.sns
-
-- ratio.ind: S.ind/T.ind
-
-- ratio: S/T
-
 ```{r classification, echo = F, comment=NA}
-class_tbl <- read.csv("MSIseq_out/result.csv", row.names = 1)
-rownames(class_tbl) <- ""
-class_tbl$Tumor_Sample_Barcode <- NULL
+class_tbl <- read.csv("MSIpred/MSIpred_prediction.csv", row.names = 1)
+rownames(class_tbl) <- NULL
 pander(class_tbl, align = "c", table.caption.prefix ="")
 ```
 
@@ -251,8 +230,7 @@ if(file.exists("./NOTATES/Somatic_SNV/important_SNVs.csv"))
   imp_snv <- imp_snv[,setdiff(colnames(imp_snv),c("COSMIC_total_alterations_in_gene","DNA_repair","selected_KEGG"))]
   colnames(imp_snv) <- c("Gene", "Effect", "Protein", "Genome","TumorF","Genotype", "COS_n_ov",
                         "UniProt_Region", "SIFT","Irino", "TMZ")
-  # rownames(imp_snv) <- imp_snv$Gene
-  # imp_snv <- imp_snv[,-1]
+  
   pander(imp_snv, align = "c",table.caption.prefix ="")
 }else
 {
@@ -271,9 +249,7 @@ if(file.exists("./NOTATES/Somatic_SNV/COSMIC_hotspot.csv"))
   hot_snv <- hot_snv[,setdiff(colnames(hot_snv),c("COSMIC_total_alterations_in_gene","DNA_repair","selected_KEGG"))]
   colnames(hot_snv) <- c("Gene", "Effect", "Protein", "Genome","TumorF","Genotype", "COS_n_ov",
                         "UniProt_Region", "SIFT", "Irino", "TMZ")
-  # rownames(hot_snv) <- hot_snv$Gene
-  # hot_snv <- hot_snv[,-1]
-  
+
   pander(hot_snv, align = "c",table.caption.prefix ="")
 }else
 {
@@ -292,8 +268,6 @@ if(file.exists("./NOTATES/Somatic_SNV/CGC_genes.csv"))
   cgc_snv <- cgc_snv[,setdiff(colnames(cgc_snv),c("COSMIC_total_alterations_in_gene","DNA_repair","selected_KEGG"))]
   colnames(cgc_snv) <- c("Gene", "Effect", "Protein", "Genome","TumorF","Genotype", "COS_n_ov",
                         "UniProt_Region", "SIFT", "Irino", "TMZ")
-  # rownames(cgc_snv) <- cgc_snv$Gene
-  # cgc_snv <- cgc_snv[,-1]
   pander(cgc_snv, align = "c",table.caption.prefix ="")
 }else
 {
@@ -313,9 +287,7 @@ if(file.exists("./NOTATES/Somatic_SNV/DDR_related.csv"))
   ddr_snv <- ddr_snv[,setdiff(colnames(ddr_snv),c("COSMIC_total_alterations_in_gene","selected_KEGG"))]
   colnames(ddr_snv) <- c("Gene", "Effect", "Protein", "Genome","TumorF","Genotype", "COS_n_ov",
                         "UniProt_Region", "SIFT", "DNA_repair", "Irino", "TMZ")
-  # rownames(ddr_snv) <- ddr_snv$Gene
-  # ddr_snv <- ddr_snv[,-1]
-  
+
   pander(ddr_snv, align = "c",table.caption.prefix ="")
 }else
 {
@@ -332,9 +304,7 @@ if(file.exists("./NOTATES/Somatic_SNV/KEGG_selected.csv"))
 
   colnames(kegg_snv) <- c("Gene", "Effect", "Protein", "Genome","TumorF","Genotype", "COS_n_ov",
                           "COS_tot", "UniProt_Region", "SIFT", "DNA_repair", "Irino", "TMZ", "KEGG")
-  # rownames(kegg_snv) <- kegg_snv$Gene
-  # kegg_snv <- kegg_snv[,-1]
-  
+
   pander(kegg_snv, align = "c",table.caption.prefix ="")
 }else
 {
@@ -351,8 +321,6 @@ if(file.exists("./NOTATES/Somatic_SNV/irinotecan.csv"))
 
   colnames(irino_snv) <- c("Gene", "Effect", "Protein", "Genome","TumorF","Genotype", "COS_n_ov",
                           "COS_tot", "UniProt_Region", "SIFT", "DNA_repair", "Irino", "TMZ", "KEGG")
-  # rownames(irino_snv) <- irino_snv$Gene
-  # irino_snv <- irino_snv[,-1]
   
   pander(irino_snv, align = "c", table.caption.prefix ="")
 }else
@@ -370,9 +338,7 @@ if(file.exists("./NOTATES/Somatic_SNV/tmz_res.csv"))
   
   colnames(tmz_snv) <- c("Gene", "Effect", "Protein", "Genome","TumorF","Genotype", "COS_n_ov",
                           "COS_tot", "UniProt_Region", "SIFT", "DNA_repair", "Irino", "TMZ", "KEGG")
-  # rownames(tmz_snv) <- tmz_snv$Gene
-  # tmz_snv <- tmz_snv[,-1]
-  
+
   pander(tmz_snv, align = "c",table.caption.prefix ="")
 }else
 {
