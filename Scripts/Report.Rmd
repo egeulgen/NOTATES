@@ -56,7 +56,7 @@ kable(QC_df, align = "c")
 
 # II. Germline Alterations
 
-In this section, the germline SNV/indels in this sample is reported. Only the alterations with ClinVar clinical significances containing "Pathogenic" designations are reported.
+In this section, the germline SNV/indels in this sample is reported. Only the alterations with ClinVar clinical significances containing "Pathogenic" designations are reported`r if(params$type == "glioma") {" (except for the subsection II. f. Common Variants)"}`.
 
 ### II. a. ACMG Incidental Findings
 ```{r, ACMG, echo = F, comment=NA}
