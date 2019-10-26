@@ -180,6 +180,8 @@ if (params$type == "glioma") {
   p <- p + theme(axis.title.y=element_blank(),
                  axis.text.y=element_blank(),
                  axis.ticks.y=element_blank())
+  p <- p + scale_y_log10(breaks = scales::trans_breaks("log10", function(x) 10^x),
+                         labels = scales::trans_format("log10", scales::math_format(10^.x)))
   p <- p + ylab("Mutational Load")
   p <- p + geom_point(data=mut_load_df[mut_load_df$Patient == params$ID, ], aes(x=x_val, y=mutational_load), colour="red", size=4, shape = 1)
   p
