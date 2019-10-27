@@ -1,24 +1,36 @@
+##################################################
+## Project: NOTATES
+## Script purpose: Script for identifying COSMIC
+## mutational signatures (SBS v3) in the sample
+## using deconstructSigs
+## Date: Oct 27, 2019
+## Author: Ege Ulgen
+##################################################
+
 # load and install required libraries -------------------------------------
-if(!require(BSgenome.Hsapiens.UCSC.hg19))
-{
-  source("https://bioconductor.org/biocLite.R")
-  biocLite("BSgenome.Hsapiens.UCSC.hg19")
+if(!suppressPackageStartupMessages(require(BSgenome.Hsapiens.UCSC.hg19))) {
+  if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+  
+  BiocManager::install("BSgenome.Hsapiens.UCSC.hg19")
+  suppressPackageStartupMessages(library(BSgenome.Hsapiens.UCSC.hg19))
 }
-if(!require(deconstructSigs))
-{
-  if(!require(devtools))
+
+if(!suppressPackageStartupMessages(require(deconstructSigs))) {
+  if(!requireNamespace("devtools"))
     install.packages("devtools")
   devtools::install_github("raerose01/deconstructSigs")
+  suppressPackageStartupMessages(library(deconstructSigs))
 }
-library(deconstructSigs)
-library(BSgenome.Hsapiens.UCSC.hg19)
 
 arguments <- commandArgs(trailingOnly = T)
 script_dir <- arguments[1]
 sample_id <- arguments[2]
 
+options(stringsAsFactors = FALSE)
+
 # load somatic SNVs -------------------------------------------------------
-somatic_SNVs <- read.delim("./Oncotator/annotated.sSNVs.tsv", stringsAsFactors=F, comment.char="#")
+somatic_SNVs <- read.delim("./Oncotator/annotated.sSNVs.tsv", comment.char="#")
 
 # Subsetting for (MuTect's default) HQ filters
 somatic_SNVs <- subset(somatic_SNVs, 
@@ -46,12 +58,13 @@ signatures <- whichSignatures(tumor.ref = sigs.input,
 pdf("mut_signatures.pdf")
 plotSignatures(signatures, sub = '')
 dev.off()
+
 pdf("mut_signatures_pie.pdf")
-makePie(signatures)
+makePie(signatures, v3 = TRUE)
 dev.off()
 
+# Add details (manually extracted from COSMIC)
 nms <- names(signatures$weights)[signatures$weights!=0]
-
 cosmic_sigs <- read.csv(paste0(script_dir,"/cosmic_sbs_details.csv"), stringsAsFactors = F)
 
 sig_df <- t(round(as.matrix(signatures$weights[nms]),2))
