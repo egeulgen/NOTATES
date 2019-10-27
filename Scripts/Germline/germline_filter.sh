@@ -1,5 +1,13 @@
 #!/bin/bash
 
+##################################################
+## Project: NOTATES
+## Script purpose: Filter germline SNP/Indels
+## Date: Oct 27, 2019
+## Author: Ege Ulgen
+##################################################
+
+
 cd ./Germline
 echo "##################################### Selecting Germline SNPs    " $(date)
 $GATK SelectVariants -R $genome -V ./raw.snps.indels.vcf \

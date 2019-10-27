@@ -1,17 +1,24 @@
-if(!require(rmarkdown))
-  install.packages("rmarkdown")
-if(!require(markdown))
-  install.packages("markdown")
-if(!require(formatR))
-  install.packages("formatR")
-if(!require(knitr))
-  install.packages("knitr")
-if(!"ggplot2" %in% installed.packages())
-  install.packages("ggplot2")
-library(rmarkdown)
+##################################################
+## Project: NOTATES
+## Script purpose: Wrapper to create PDF report
+## Date: Oct 26, 2019
+## Author: Ege Ulgen
+##################################################
 
+# Packages and arg.s ------------------------------------------------------
+if(!suppressMessages(require("rmarkdown")))
+  install.packages("rmarkdown")
+if(!suppressPackageStartupMessages(require("markdown")))
+  install.packages("markdown")
+if(!suppressPackageStartupMessages(require(knitr)))
+  install.packages("knitr")
+if(!suppressPackageStartupMessages(require("ggplot2")))
+  install.packages("ggplot2")
+
+suppressPackageStartupMessages(library(rmarkdown))
 args <- commandArgs(trailingOnly=TRUE)
 
+# Knit PDF report ---------------------------------------------------------
 ## Copy the template RMD file
 path2reportRMD <- file.path(paste0("Report_", args[1], ".Rmd"))
 file.copy(file.path(args[2], "Report.Rmd"),

@@ -1,4 +1,12 @@
 #!/bin/bash
+##################################################
+## Project: NOTATES
+## Script purpose: Configuration file for the NOT
+## Whole Exome Sequencing pipeline
+## Date: Oct 22, 2019
+## Author: Ege Ulgen
+##################################################
+
 name=$1
 
 cd ./"$name"

@@ -1,10 +1,9 @@
-############################################################
-#                NeuroOncology Technologies                #
-#             Whole-Exome Sequencing Pipeline              #
-#                    ExomeCNV Analysis                     #
-#             GATK pileup files to baf files               #
-#                   Ege Ulgen, Dec 2017                    #
-############################################################
+##################################################
+## Project: NOTATES
+## Script purpose: Parse VCF to create BAF files
+## Date: Oct 27, 2019
+## Author: Ege Ulgen
+##################################################
 
 setwd("./ExomeCNV/baf")
 
@@ -60,8 +59,14 @@ tumor_Theta$`#Chrm`[tumor_Theta$`#Chrm`=="X"] <- 23
 tumor_Theta$`#Chrm`[tumor_Theta$`#Chrm`=="Y"] <- 24
 
 dir.create("../../THetA/")
-write.table(normal_Theta, file = "../../THetA/normal_SNP.txt", sep = "\t", row.names = F, quote = F, col.names = T)
-write.table(tumor_Theta, file = "../../THetA/tumor_SNP.txt", sep = "\t", row.names = F, quote = F, col.names = T)
+write.table(normal_Theta, file = "../../THetA/normal_SNP.txt", 
+			sep = "\t", row.names = FALSE, col.names = TRUE,
+			quote = FALSE)
+write.table(tumor_Theta, file = "../../THetA/tumor_SNP.txt",
+			sep = "\t", row.names = FALSE, col.names = TRUE,
+			quote = FALSE)
+
+cat("\nBAF files saved for THetA!\n")
 
 # Output for ExomeCNV -----------------------------------------------------
 normal_BAF <- normal_BAF[, c("CHROM", "POS", "coverage", "baf")]
@@ -71,4 +76,4 @@ colnames(normal_BAF) <- c("chr", "position", "coverage", "baf")
 colnames(tumor_BAF) <- c("chr", "position", "coverage", "baf")
 
 save(normal_BAF, tumor_BAF, file = "BAF_data.Rdata")
-cat("baf files created!\n")
+cat("\nBAF files created!\n")

@@ -1,5 +1,16 @@
 #!/bin/bash
 
+##################################################
+## Project: NOTATES
+## Script purpose: Script for mapping (bwa),  
+## Cleaning (picard), SAM>BAM (picard), fixing 
+## mate info.(picard) and  marking duplicates 
+## per lane. Combination of all anes (if >1 lane) 
+## and BQSR (GATK)
+## Date: Jun 1, 2018
+## Author: Ege Ulgen
+##################################################
+
 name=$1
 sample=$2
 
@@ -76,7 +87,6 @@ else
 	mv $lanes'.marked.bai' "$sample"'.marked.bai'
 	mv './QC/'"$lanes"'_MarkDup_metrics.txt' './QC/MarkDup_metrics.txt'
 fi
-rm lanes.txt
 
 ################################### Quality score recalibration
 echo '##############################################'"$name"': BQSR    ' $(date)

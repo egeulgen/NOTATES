@@ -1,9 +1,12 @@
-############################################################
-#                NeuroOncology Technologies                #
-#             Whole-Exome Sequencing Pipeline              #
-#                    Germline Analysis                     #
-#                   Ege Ulgen, Oct 2019                    #
-############################################################
+##################################################
+## Project: NOTATES
+## Script purpose: Script for processing germline
+## SNP/indels for categorical reporting of variants
+## that are reported as "pathogenic"/"likely-pathogenic"
+## in ClinVar
+## Date: Oct 23, 2019
+## Author: Ege Ulgen
+##################################################
 
 # Locate directory for data sources Set working dir and create output dir ----------------------
 

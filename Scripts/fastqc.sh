@@ -1,4 +1,12 @@
 #!/bin/bash
+
+##################################################
+## Project: NOTATES
+## Script purpose: Wrapper for FASTQC analysis per lane
+## Date: Oct 22, 2016
+## Author: Ege Ulgen
+##################################################
+
 name=$1
 
 echo "################################## Running FASTQC for ""$name    " $(date)
