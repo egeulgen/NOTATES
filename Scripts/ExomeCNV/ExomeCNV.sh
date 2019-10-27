@@ -1,19 +1,37 @@
 #!/bin/bash
 
+##################################################
+## Project: NOTATES
+## Script purpose: Prepare necesarry data and 
+## identify SCNAs using ExomeCNV
+## Date: Oct 27, 2019
+## Author: Ege Ulgen
+##################################################
+
 normal_name=$1
 tumor_name=$2
 
 ####### Coverage files
-echo "########################## Prep for ExomeCNV - Coverage files    " $(date)
+echo "########################## Prep for ExomeCNV - Coverage files     " $(date)
 mkdir -p ./ExomeCNV/DepthOfCoverage
 echo "############################### Normal: Creating coverage file    " $(date)
-$JAVA "$resources_dir""/Tools/GenomeAnalysisTK.jar" -T DepthOfCoverage -omitBaseOutput -omitLocusTable -R $genome \
-	-I normal.final.bam --intervals $Bait_Intervals \
+$JAVA "$resources_dir""/Tools/GenomeAnalysisTK.jar" \
+	-T DepthOfCoverage \
+	-omitBaseOutput -omitLocusTable \
+	-R $genome \
+	-I normal.final.bam \
+	--intervals $Bait_Intervals \
+	-ct 1 -ct 5 -ct 10 -ct 25 -ct 50 -ct 100 \
 	-o ./ExomeCNV/DepthOfCoverage/normal.coverage
 
-echo "############################### Tumor: Creating coverage file    " $(date)
-$JAVA "$resources_dir""/Tools/GenomeAnalysisTK.jar" -T DepthOfCoverage -omitBaseOutput -omitLocusTable -R $genome \
-	-I tumor.final.bam --intervals $Bait_Intervals \
+echo "############################### Tumor: Creating coverage file     " $(date)
+$JAVA "$resources_dir""/Tools/GenomeAnalysisTK.jar" \
+	-T DepthOfCoverage \
+	-omitBaseOutput -omitLocusTable \
+	-R $genome \
+	-I tumor.final.bam \
+	--intervals $Bait_Intervals \
+	-ct 1 -ct 5 -ct 10 -ct 25 -ct 50 -ct 100 \
 	-o ./ExomeCNV/DepthOfCoverage/tumor.coverage
 
 ####### BAF files

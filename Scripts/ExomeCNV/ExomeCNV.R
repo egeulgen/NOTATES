@@ -1,31 +1,46 @@
-############################################################
-#                NeuroOncology Technologies                #
-#             Whole-Exome Sequencing Pipeline              #
-#                    ExomeCNV Analysis                     #
-#                   Ege Ulgen, Feb 2018                    #
-############################################################
-
-# Install required packages (if needed) -----------------------------------
-# the directory where ExomeCNV source is located
-initial.options <- commandArgs(trailingOnly = FALSE)
-script.name <- sub("--file=", "", initial.options[grep("--file=", initial.options)])
-script_dir <- dirname(script.name)
-
-if(!"DNAcopy" %in% installed.packages()){
-  source("https://bioconductor.org/biocLite.R")
-  biocLite("DNAcopy")
-  }
-if(!"ExomeCNV" %in% installed.packages())
-  install.packages(paste0(script_dir,"/ExomeCNV_1.4.tar.gz"), repos = NULL, type = "source")
-
-require(ExomeCNV)
-
-# set workdir to currentdir/ExomeCNV
-setwd("./ExomeCNV/")
+##################################################
+## Project: NOTATES
+## Script purpose: Script for identifying SCNAs 
+## using ExomeCNV
+## Date: Oct 27, 2019
+## Author: Ege Ulgen
+##################################################
 
 # set read length
 args <- commandArgs(trailingOnly=TRUE)
 read_length <- as.numeric(args[1])
+
+# Install required packages (if needed) -----------------------------------
+if(!suppressPackageStartupMessages(require(DNAcopy))){
+  if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+  
+  BiocManager::install("DNAcopy")
+}
+
+if(!suppressPackageStartupMessages(require(ExomeCNV))) {
+  install.packages("https://cran.r-project.org/src/contrib/Archive/ExomeCNV/ExomeCNV_1.4.tar.gz", 
+                   repos = NULL, type = "source", method = "libcurl")
+  suppressPackageStartupMessages(library(ExomeCNV))
+}
+
+if(!suppressPackageStartupMessages(require(parallel))) {
+  install.packages("parallel")
+  suppressPackageStartupMessages(library(parallel))
+}  
+
+if(!suppressPackageStartupMessages(require(doParallel))) {
+  install.packages("doParallel")
+  suppressPackageStartupMessages(library(doParallel))
+}  
+
+if(!suppressPackageStartupMessages(require(foreach))) {
+  install.packages("foreach")
+  suppressPackageStartupMessages(library(foreach))
+}  
+
+# set workdir to currentdir/ExomeCNV
+setwd("./ExomeCNV/")
 
 # LOH Calling -------------------------------------------------------------
 load("./baf/BAF_data.Rdata")
@@ -59,7 +74,7 @@ chr.list <- c("chr1", "chr2", "chr3", "chr4", "chr5", "chr6",
 ###### Load in coverage files
 read.coverage.gatk.fix <- function(file){
   gatk = read.table(file, header = TRUE)
-  gatk <- gatk[grepl("-", gatk$Target), ]
+  gatk <- gatk[grep("-", gatk$Target), ]
   
   chrpos = matrix(unlist(strsplit(as.character(gatk$Target), 
                                   ":")), ncol = 2, byrow = TRUE)
@@ -69,10 +84,17 @@ read.coverage.gatk.fix <- function(file){
   start = pos[, 1]
   end = pos[, 2]
   
-  return(data.frame(probe = gatk$Target, chr = chr, probe_start = start, 
-                    probe_end = end, targeted.base = end - start + 1, sequenced.base = NA, 
-                    coverage = as.numeric(gatk$total_coverage), average.coverage = as.numeric(gatk$average_coverage), 
-                    base.with..10.coverage = NA))
+  cov_10x <- as.numeric(gatk[, grep("_above_10$", colnames(gatk))])
+  
+  return(data.frame(probe = gatk$Target, 
+                    chr = chr, 
+                    probe_start = start, 
+                    probe_end = end,
+                    targeted.base = end - start + 1,
+                    sequenced.base = NA, 
+                    coverage = as.numeric(gatk$total_coverage),
+                    average.coverage = as.numeric(gatk$average_coverage), 
+                    base.with..10.coverage = cov_10x))
 }
 normal <- read.coverage.gatk.fix("./DepthOfCoverage/normal.coverage.sample_interval_summary")
 tumor <- read.coverage.gatk.fix("./DepthOfCoverage/tumor.coverage.sample_interval_summary")
@@ -89,13 +111,22 @@ admix_rate <- admix_rate$contamination
 ### Call CNV on each exon (using classify.eCNV), one chromosome at a time. We recommend high min.spec (0.9999) 
 ### and option="spec" to be conservative against false positive. This is because whatever is called 
 ### at exon level will persist through merging step
-patient.eCNV <- c()
-for (i in 1:length(chr.list)) {
+# Determine number of processes
+n_processes <- detectCores()
+# Initiate the clusters
+cl <- makeCluster(n_processes)
+registerDoParallel(cl)
+
+print(paste0("##################### Calling CNV for each exon ", date()))
+
+patient.eCNV <- foreach(i=1:length(chr.list), .combine = rbind) %dopar% {
   idx <- (normal$chr == chr.list[i])
-  ecnv <- classify.eCNV(normal = normal[idx, ], tumor = tumor[idx, ], logR=patient.logR[idx], 
-                        min.spec = 0.9999, min.sens = 0.9999, option="spec", admix = admix_rate, read.len = read_length)
-  patient.eCNV <- rbind(patient.eCNV, ecnv)
+  ExomeCNV::classify.eCNV(normal = normal[idx, ], tumor = tumor[idx, ], 
+                          logR=patient.logR[idx], 
+                          min.spec = 0.9999, min.sens = 0.9999, option="spec", 
+                          admix = admix_rate, read.len = read_length)
 }
+stopCluster(cl)
 
 ###### Combine exonic CNV into larger segments
 ###Here, we use lower min.spec and min.sens and option="auc" to be less conservative and allow for more discovery.
