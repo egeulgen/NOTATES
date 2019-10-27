@@ -1,17 +1,21 @@
-############################################################
-#                NeuroOncology Technologies                #
-#             Whole-Exome Sequencing Pipeline              #
-#           Preparion of Alterations for Report            #
-#                   Ege Ulgen, Oct 2019                    #
-############################################################
+##################################################
+## Project: NOTATES
+## Script purpose: Script for sequentially filtering
+## germline and somatic alterations for reporting of
+## clinically-relevant findings
+## Date: Oct 23, 2019
+## Author: Ege Ulgen
+##################################################
 
 dir.create("./NOTATES/")
 setwd("./NOTATES/")
 
+options(stringsAsFactors = FALSE)
+
 # dir for data sources (same as the directory where script is located)
 initial_options <- commandArgs(trailingOnly = FALSE)
 script_name <- sub("--file=", "", initial_options[grep("--file=", initial_options)])
-script_dir <- dirname(script_name)
+notates_dir <- dirname(script_name)
 
 ## Argument for MB vs Glioma
 mb_arg <- commandArgs(trailingOnly=TRUE)
@@ -20,34 +24,34 @@ if (length(mb_arg) == 0)
 
 # Necessary resources -----------------------------------------------------
 # CGC
-CGC_df <- read.csv(paste0(script_dir, "/../CGC_latest.csv"), stringsAsFactors = F)
+CGC_df <- read.csv(paste0(notates_dir, "/../CGC_latest.csv"))
 
 # Curated Databases
-dna_repair_df <- read.csv(paste0(script_dir, "/curated_dbs/DNA_damage_repair_22feb16.csv"), stringsAsFactors = F)
-irinotecan_df <- read.csv(paste0(script_dir, "/curated_dbs/irinotecan_response_genes_22feb16.csv"),stringsAsFactors = F)
-tmz_df <- read.csv(paste0(script_dir, "/curated_dbs/temozolamide_resistance_genes_22feb16.csv"),stringsAsFactors = F)
+dna_repair_df <- read.csv(paste0(notates_dir, "/curated_dbs/DNA_damage_repair_22feb16.csv"))
+irinotecan_df <- read.csv(paste0(notates_dir, "/curated_dbs/irinotecan_response_genes_22feb16.csv"))
+tmz_df <- read.csv(paste0(notates_dir, "/curated_dbs/temozolamide_resistance_genes_22feb16.csv"))
 if (mb_arg == 'glioma') {
-  KEGG_df <- read.csv(paste0(script_dir, "/curated_dbs/important_KEGG_pws_19mar19.csv"),stringsAsFactors = F)
+  KEGG_df <- read.csv(paste0(notates_dir, "/curated_dbs/important_KEGG_pws_19mar19.csv"))
 } else {
-  KEGG_df <- read.csv(paste0(script_dir, "/curated_dbs/important_KEGG_pws_MB_19mar19.csv"),stringsAsFactors = F)
+  KEGG_df <- read.csv(paste0(notates_dir, "/curated_dbs/important_KEGG_pws_MB_19mar19.csv"))
 }
 
 # Curated Alterations
 if (mb_arg == 'glioma') {
-  curated_SNV <- read.csv(paste0(script_dir, "/curated_alterations/glioma_important_SNV_May25_17.csv"), stringsAsFactors = F)
-  curated_CNA <- read.csv(paste0(script_dir, "/curated_alterations/glioma_important_CNA_May25_17.csv"), stringsAsFactors = F)
+  curated_SNV <- read.csv(paste0(notates_dir, "/curated_alterations/glioma_important_SNV_May25_17.csv"))
+  curated_CNA <- read.csv(paste0(notates_dir, "/curated_alterations/glioma_important_CNA_May25_17.csv"))
 } else {
-  curated_SNV <- read.csv(paste0(script_dir, "/curated_alterations/MB_important_SNV_Mar19_19.csv"), stringsAsFactors = F)
+  curated_SNV <- read.csv(paste0(notates_dir, "/curated_alterations/MB_important_SNV_Mar19_19.csv"))
   curated_SNV$Genomic_Alt[is.na(curated_SNV$Genomic_Alt)] <- ""
   curated_SNV$Protein_Alt[is.na(curated_SNV$Protein_Alt)] <- ""
   # keep only >= 5 times affected
   curated_SNV <- curated_SNV[curated_SNV$Note >= 5, ]
-  curated_CNA <- read.csv(paste0(script_dir, "/curated_alterations/MB_important_CNA_Mar19_19.csv"), stringsAsFactors = F)
+  curated_CNA <- read.csv(paste0(notates_dir, "/curated_alterations/MB_important_CNA_Mar19_19.csv"))
 }
 
 # Germline Mutations ------------------------------------------------------
 dir.create("./Germline")
-germline_mutations <- read.csv("../Germline/output/germline_variant_report.csv", stringsAsFactors = F)
+germline_mutations <- read.csv("../Germline/output/germline_variant_report.csv")
 
 germline_cols <- c("Hugo_Symbol", "id", "Chromosome", "Start_position",
                    "Filter_Comment", "Variant_Classification",
@@ -108,19 +112,19 @@ if(nrow(germline_mutations) != 0)
   colnames(tmp) <- renamed_g_cols
   tmp <- tmp[, colnames(tmp) != "Disease(s)"]
   
-  write.csv(tmp, "./Germline/OTHER.csv", row.names = F)
+  write.csv(tmp, "./Germline/OTHER.csv", row.names = FALSE)
 }
 
 ### Common Variants
-common_var <- read.csv("../Germline/output/common_variant_report.csv", stringsAsFactors = F)
+common_var <- read.csv("../Germline/output/common_variant_report.csv")
 common_var <- common_var[,c("id","Hugo_Symbol","Variant_Classification",
                             "gCCV_Risk_allele","Reference_Allele","Normal_Seq_Allele2","allelic_depth")]
 colnames(common_var) <-  c("rs_id","Gene","Effect","Risk Allele", "Ref", "Alt", "AD")
-write.csv(common_var, "./Germline/common_var.csv", row.names = F)
+write.csv(common_var, "./Germline/common_var.csv", row.names = FALSE)
 
 # Somatic Mutations -------------------------------------------------------
 dir.create("./Somatic_SNV")
-somatic_SNVs <- read.delim("../Oncotator/annotated.sSNVs.tsv", stringsAsFactors=FALSE, comment.char="#")
+somatic_SNVs <- read.delim("../Oncotator/annotated.sSNVs.tsv", comment.char="#")
 somatic_SNVs <- somatic_SNVs[order(somatic_SNVs$tumor_f, decreasing = TRUE), ]
 
 # Subsetting for (MuTect's default) HQ filters
@@ -263,21 +267,20 @@ if(any(somatic_SNVs$TMZ_resistance != "no"))
 ### Other coding
 write.csv(somatic_SNVs, "Somatic_SNV/Other_coding.csv", row.names = F)
 
-# Helper functions for annotation and Cytoband & Gene annotations ---------
-source(paste0(script_dir,"/seg_annot_funcs.R"))
 
-# read in genes file
-HS_genes <- read.csv(paste0(script_dir, "/homo_sapiens_genes.csv"), stringsAsFactors = F)
-HS_genes <- HS_genes[,-c(4,5)]
+# Helper functions for Cytoband & Gene annotations ------------------------
+source(file.path(notates_dir, "segment_annotation_hg19.R"))
 
 # read in cytobands file
-cytobands <- read.delim(paste0(script_dir, "/cytoBand.txt"), header = F, stringsAsFactors = F)
-cytobands$V4 <- paste0(cytobands$V1, cytobands$V4)
+cytobands_df <- read.delim(file.path(notates_dir, "hg19_cytoBand.txt"), 
+                           header = FALSE)
+colnames(cytobands_df) <- c("Chr", "Start", "End", "Cytb_name", "stain")
+cytobands_df$Cytb_name <- paste0(cytobands_df$Chr, cytobands_df$Cytb_name)
 
 # CNV - exomeCNV ---------------------------------------------------------------------
 dir.create("./SCNA")
 # read in cnv file
-cnv <- read.delim("../ExomeCNV/CNV.cnv.txt", header = T, stringsAsFactors = F)
+cnv <- read.delim("../ExomeCNV/CNV.cnv.txt", header = TRUE)
 # discard rows with NA spec
 cnv <- subset(cnv, !is.na(spec))
 # discard rows with NA sens
@@ -300,50 +303,45 @@ copy_num_call <- function(ratio){
     return(round(ratio*2))
 }
 
-cnv$copy.number <- sapply(cnv$ratio, copy_num_call)
+cnv$copy.number <- vapply(cnv$ratio, copy_num_call, 2)
 
-#find genes that are overlapped by segment and segments that overlap genes
-cnv_genes_overlap <- find_feat_in_seg(cnv, HS_genes)
-cnv_cytb_overlap <- find_feat_in_seg(cnv, cytobands, threshold = .5)
+## annotate genes and cytobands within segments
+cnv_genes_overlap <- annotate_genes(cnv)
+cnv_cytb_overlap <- annotate_cytb(cnv, cytobands_df)
 
 cnv$length <- cnv$probe_end - cnv$probe_start + 1
-cnv$genes <- sapply(cnv_genes_overlap[["Segment_feats"]], function(x) ifelse(length(x) > 500, ">500", paste(x, collapse = ", ")))
-cnv$cytoband <- sapply(cnv_cytb_overlap[["Segment_feats"]], function(cyt) cyt_func(cyt, cytobands))
+cnv$genes <- sapply(cnv_genes_overlap$Segment_genes, function(x) ifelse(length(x) > 100, ">100", paste(x, collapse = ", ")))
+cnv$cytoband <- sapply(cnv_cytb_overlap$Segment_cytbs, function(cyt) shorten_cyt_anno(cyt, cytobands_df))
 
 cnv <- cnv[, c("genes", "length", "cytoband", setdiff(colnames(cnv), c("genes", "cytoband", "length")))]
-write.csv(cnv, "SCNA/exomeCNV.csv", row.names = F)
+write.csv(cnv, "SCNA/exomeCNV.csv", row.names = FALSE)
 
-cnv_by_gene <- data.frame(Gene=names(cnv_genes_overlap[["Feat_segments"]]),
-                          Segment = NA, 
-                          ratio = NA, CN = NA, av_cov = NA, stringsAsFactors = F)
+cnv_by_gene <- data.frame(Gene=names(cnv_genes_overlap$Gene_segments),
+                          Segment = NA, ratio = NA, CN = NA, av_cov = NA)
 cnv$id <- paste0(cnv$chr,":", cnv$probe_start, "-", cnv$probe_end)
-gene_segs <- cnv_genes_overlap[["Feat_segments"]]
-N <- length(gene_segs)
-for(i in 1:N)
-{
-  gene <- gene_segs[[i]]
-  idx <- match(names(gene), cnv$id)
+gene_segs <- cnv_genes_overlap$Gene_segments
+
+original_len <- length(gene_segs)
+for(i in seq_len(original_len)) {
+  segments_vec <- gene_segs[[i]]
+  idx <- match(segments_vec, cnv$id)
   
-  tmp_ratio <- cnv$ratio[idx]
-  tmp_av_cov <- cnv$average.coverage[idx]
-  
-  if(length(gene) == 1)
-  {
+  if(length(segments_vec) == 1) {
     cnv_by_gene$ratio[i] <- cnv$ratio[idx]
     cnv_by_gene$av_cov[i] <- cnv$average.coverage[idx]
-    cnv_by_gene$Segment[i] <- names(gene)
-  }else
-  {
+    cnv_by_gene$Segment[i] <- segments_vec
+  } else {
     cnv_by_gene$ratio[i] <- cnv$ratio[idx[1]]
     cnv_by_gene$av_cov[i] <- cnv$average.coverage[idx[1]]
     cnv_by_gene$Segment[i] <- names(gene)[1]
-    for(j in 2:length(gene))
+    for(j in 2:length(segments_vec))
     {
-      cnv_by_gene <- rbind(cnv_by_gene, c(names(gene_segs)[i], 
-                                          names(gene)[j],
-                                          cnv$ratio[idx[j]],
-                                          NA,
-                                          cnv$average.coverage[idx[j]]))
+      cnv_by_gene <- rbind(cnv_by_gene, 
+                           data.frame(Gene = names(gene_segs)[i], 
+                                      Segment = segments_vec[j],
+                                      ratio = cnv$ratio[idx[j]],
+                                      CN = NA,
+                                      av_cov = cnv$average.coverage[idx[j]]))
     }
   }
 }
@@ -354,14 +352,12 @@ cnv_by_gene$CN <- sapply(cnv_by_gene$ratio, copy_num_call)
 write.csv(cnv_by_gene, "SCNA/all_genes.csv", row.names = F)
 
 ### Glioma important SCNAs
-if(any(cnv_by_gene$Gene %in% curated_CNA$Gene))
-{
+if(any(cnv_by_gene$Gene %in% curated_CNA$Gene)) {
   tmp <- cnv_by_gene[cnv_by_gene$Gene %in% curated_CNA$Gene,]
   tmp <- tmp[tmp$CN != 2,]
   if (nrow(tmp) != 0) {
     tmp$keep <- T
-    for(i in 1:nrow(tmp))
-    {
+    for(i in 1:nrow(tmp)) {
       tmp2 <- tmp[i,]
       tmp3 <- curated_CNA$Type[curated_CNA$Gene == tmp2$Gene]
       if( !(tmp3 == "A" & tmp2$ratio >1) & !(tmp3 == "D" & tmp2$ratio <1) )
@@ -375,13 +371,11 @@ if(any(cnv_by_gene$Gene %in% curated_CNA$Gene))
 }
 
 ### CGC + TS/OG Concordant
-if(any(cnv_by_gene$Gene %in% CGC_df$Gene.Symbol))
-{
+if(any(cnv_by_gene$Gene %in% CGC_df$Gene.Symbol)) {
   tmp <- cnv_by_gene[cnv_by_gene$Gene %in% CGC_df$Gene.Symbol,]
   tmp <- tmp[tmp$CN != 2,]
   tmp$keep <- T
-  for(i in 1:nrow(tmp))
-  {
+  for(i in 1:nrow(tmp)) {
     tmp2 <- tmp[i,]
     tmp3 <- CGC_df$Role.in.Cancer[CGC_df$Gene.Symbol == tmp2$Gene]
     if( !( grepl("onc",tmp3) & tmp2$ratio >1) & !(grepl("TSG",tmp3) & tmp2$ratio <1) )
@@ -391,53 +385,56 @@ if(any(cnv_by_gene$Gene %in% CGC_df$Gene.Symbol))
   
   write.csv(tmp[,-ncol(tmp)], "SCNA/CGC_CNVs.csv", row.names = F)
 }
+
 ### Broad SCNAs
 broad <- cnv[!is.na(cnv$cytoband),-1]
 broad <- broad[,c(15,2,9,11)]
-write.csv(broad, "SCNA/broad.csv", row.names = F)
+write.csv(broad, "SCNA/broad.csv", row.names = FALSE)
 
 # LOH - exomeCNV ---------------------------------------------------------------------
 dir.create("LOH")
 # read in loh file
-loh <- read.csv("../ExomeCNV/LOH_regions.csv", header = T, stringsAsFactors = F)
+loh <- read.csv("../ExomeCNV/LOH_regions.csv", header = TRUE)
 loh <- loh[loh$difference > 0.4,]
 loh <- loh[,c("chr", "position.start", "position.end", "normal_b", "tumor_b", "difference")]
 
 #find genes that are overlapped by segment and segments that overlap genes
-loh_genes_overlap <- find_feat_in_seg(loh, HS_genes, threshold = 0)
-loh_cytb_overlap <- find_feat_in_seg(loh, cytobands, threshold = 0)
+loh_genes_overlap <- annotate_genes(loh)
+loh_cytb_overlap <- annotate_cytb(loh, cytobands_df)
 
 loh$length <- loh$position.end - loh$position.start + 1
-loh$genes <- sapply(loh_genes_overlap[["Segment_feats"]], function(x) ifelse(length(x) > 500, "500",
+loh$genes <- sapply(loh_genes_overlap$Segment_genes, function(x) ifelse(length(x) > 100, "100",
                                                                              paste(x, collapse = ", ")))
-loh$cytoband <- sapply(loh_cytb_overlap[["Segment_feats"]], function(x) cyt_func(x, cytobands))
+loh$cytoband <- sapply(loh_cytb_overlap$Segment_cytbs, function(x) shorten_cyt_anno(x, cytobands_df))
 
 loh <- loh[, c("genes", "length", "cytoband", setdiff(colnames(loh), c("genes", "cytoband", "length")))]
 colnames(loh) <- c("Genes", "Length", "Cytoband", "Chr", "Start", "End", "N_BAF", "T_BAF", "Absolute_Diff")
 write.csv(loh, "LOH/LOH.csv", row.names = F)
 
-loh_by_gene <- data.frame(Gene=names(loh_genes_overlap[["Feat_segments"]]), 
-                          Segment = NA, Absolute_Diff = NA, stringsAsFactors = F)
+loh_by_gene <- data.frame(Gene = names(loh_genes_overlap$Gene_segments), 
+                          Segment = NA, Absolute_Diff = NA)
 loh$id <- paste0(loh$Chr,":", loh$Start, "-", loh$End)
-gene_segs <- loh_genes_overlap[["Feat_segments"]]
-for(i in 1:length(gene_segs))
-{
-  gene <- gene_segs[[i]]
-  idx <- match(names(gene), loh$id)
+gene_segs <- loh_genes_overlap$Gene_segments
+
+for(i in 1:length(gene_segs)) {
+  genes_segments <- gene_segs[[i]]
+  idx <- match(genes_segments, loh$id)
   
   loh_by_gene$Segment[i] <- loh$id[idx[1]]
   loh_by_gene$Absolute_Diff[i] <- loh$Absolute_Diff[idx[1]]
-  if(length(idx) > 1)
-    for(j in 2:length(idx))
-      loh_by_gene <- rbind(loh_by_gene, data.frame(Gene = loh_by_gene$Gene[i],
-                                                   Segment = loh$id[idx[j]],
-                                                   Absolute_Diff = loh$Absolute_Diff[idx[j]], stringsAsFactors = F), stringsAsFactors = F)
+  if(length(idx) > 1) {
+    for(j in 2:length(idx)) {
+      loh_by_gene <- rbind(loh_by_gene, 
+                           data.frame(Gene = loh_by_gene$Gene[i],
+                                      Segment = loh$id[idx[j]],
+                                      Absolute_Diff = loh$Absolute_Diff[idx[j]]))
+    }
+  }
 }
 
 ### CGC genes
 if(any(loh_by_gene$Gene %in% CGC_df$Gene.Symbol))
 {
-  tmp <- loh_by_gene[loh_by_gene$Gene %in% CGC_df$Gene.Symbol,]
+  stmp <- loh_by_gene[loh_by_gene$Gene %in% CGC_df$Gene.Symbol,]
   write.csv(tmp, "LOH/CGC_loh.csv", row.names = F)
 }
-

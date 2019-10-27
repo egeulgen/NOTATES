@@ -40,7 +40,7 @@ library(pander)
 
 # I. Quality Metrics
 ```{r QC, echo = F}
-QC_df <- read.csv("./Quality_Metrics/QC_table.csv",stringsAsFactors = F, row.names = 1)
+QC_df <- read.csv("./QC_table.csv",stringsAsFactors = F, row.names = 1)
 kable(QC_df, align = "c")
 ```
 
