@@ -2,7 +2,7 @@
 ################################################################################
 ######################### NeuroOncology Technologies ###########################
 ###################### Whole-Exome Sequencing Pipeline #########################
-########################## Ege Ulgen, March 2019 ###############################
+########################### Ege Ulgen, Oct 2019 ################################
 ################################################################################
 #set -ueo pipefail
 
@@ -16,7 +16,7 @@ tumor_type=$5
 main_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 ### Source the configuration file
-source "$main_dir"/configurations.cfg "verbose" $cap_kit
+source "$main_dir"/notates.config "verbose" $cap_kit
 
 ################################################################################
 ############################## Checkpoint for backup ###########################
@@ -178,12 +178,6 @@ oncotator -v --input_format=VCF --db-dir "$oncotator_ds" --tx-mode CANONICAL \
 deactivate
 
 ################################################################################
-########################### Germline Report ####################################
-################################################################################
-echo "######################## Running R script for Germline Report    " $(date)
-Rscript "$scripts_dir"/Germline/Germline.R
-
-################################################################################
 ################################# ExomeCNV #####################################
 ################################################################################
 bash "$scripts_dir"/ExomeCNV/ExomeCNV.sh $normal_name $tumor_name
@@ -209,27 +203,6 @@ bash "$THetA"/bin/RunTHetA THetA/CNV.input --TUMOR_FILE THetA/tumor_SNP.txt \
 ################################################################################
 #################################### QC ########################################
 ################################################################################
-## Insert-size Metrics
-$JAVA $PICARD CollectInsertSizeMetrics \
-	HISTOGRAM_FILE=$normal_name/QC/insert_size_histogram.pdf \
-	INPUT=normal.final.bam OUTPUT=$normal_name/QC/insert_size_metrics.txt
-
-$JAVA $PICARD CollectInsertSizeMetrics \
-	HISTOGRAM_FILE=$tumor_name/QC/insert_size_histogram.pdf \
-	INPUT=tumor.final.bam OUTPUT=$tumor_name/QC/insert_size_metrics.txt
-
-## Depth of coverage over target intervals
-$JAVA "$resources_dir""/Tools/GenomeAnalysisTK.jar" -T DepthOfCoverage -R $genome -I normal.final.bam \
-	-o $normal_name/QC/primary_target_coverage \
-	--intervals $Bait_Intervals --interval_padding 100 \
-	-ct 1 -ct 5 -ct 10 -ct 25 -ct 50 -ct 100
-
-$JAVA "$resources_dir""/Tools/GenomeAnalysisTK.jar" -T DepthOfCoverage -R $genome -I tumor.final.bam \
-	-o $tumor_name/QC/primary_target_coverage \
-	--intervals $Bait_Intervals --interval_padding 100 \
-	-ct 1 -ct 5 -ct 10 -ct 25 -ct 50 -ct 100
-
-
 ## Alignment Summary Metrics
 $JAVA $PICARD CollectAlignmentSummaryMetrics \
 	METRIC_ACCUMULATION_LEVEL=ALL_READS REFERENCE_SEQUENCE=$genome \
@@ -239,19 +212,17 @@ $JAVA $PICARD CollectAlignmentSummaryMetrics \
 	METRIC_ACCUMULATION_LEVEL=ALL_READS REFERENCE_SEQUENCE=$genome \
 	INPUT=tumor.final.bam OUTPUT=$tumor_name/QC/alignment_summary_metrics.txt
 
-## FlagStat
-samtools flagstat normal.final.bam > $normal_name/QC/flagstat_metrics.txt
-samtools flagstat tumor.final.bam > $tumor_name/QC/flagstat_metrics.txt
-
 ## QC Wrapper
-Rscript "$scripts_dir"/QC.R $normal_name $tumor_name
+Rscript "$scripts_dir"/QC_table_prep.R $normal_name $tumor_name
 
 ################################################################################
 ################################# NOTATES ######################################
 ################################################################################
+echo "######################## Running R script for Germline Report    " $(date)
+Rscript "$scripts_dir"/Germline/Germline.R
 
 echo "######################## Running R script for NOTATES v4.1       " $(date)
-Rscript "$scripts_dir"/NOTATESv4.1/run_NOTATES.R $tumor_type
+Rscript "$scripts_dir"/NOTATES/run_NOTATES.R $tumor_type
 
 echo "######################## Running R script for Pathway Enrichment " $(date)
 Rscript "$scripts_dir"/pathway_enrichment.R
@@ -261,7 +232,7 @@ Rscript "$scripts_dir"/DeConstructSigs.R $scripts_dir $patientID
 
 echo "######################## Running R script for MSIpred            " $(date)
 Rscript "$scripts_dir"/MSIpred_prep.R $patientID
-python "$scripts_dir"/MSIpred_analysis.py $data_sources_dir $exome_length
+python "$scripts_dir"/MSIpred_analysis.py $simple_repeats $exome_length
 
 echo "######################## Creating Report					       " $(date)
 Rscript "$scripts_dir"/create_report.R $patientID $scripts_dir $exome_length $tumor_type
