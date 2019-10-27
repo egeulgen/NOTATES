@@ -9,7 +9,7 @@ for the given sample
 ##################################################
 ## Project: NOTATES
 ## Script purpose: Perform MSIpred Analysis
-## Date: Oct 22, 2019
+## Date: Oct 27, 2019
 ## Author: Ege Ulgen
 ##################################################
 import sys
@@ -18,7 +18,7 @@ import MSIpred as mp
 # pd.set_option('display.max_row', 5) 
 
 def main():
-    data_sources_dir = sys.argv[1]
+    simple_repeat_file = sys.argv[1]
     exome_size = float(sys.argv[2])
 
     ## Initialization of the MAF file object
@@ -28,7 +28,7 @@ def main():
     ## by adding one extra column called “In_repeats”, which indicates whether 
     ## mutation events happen in simple repeats region, to the original MAF file 
     ## given the 'simpleRepeat.txt' file
-    maf_obj.create_tagged_maf(ref_repeats_file = data_sources_dir + '/simpleRepeat.txt', 
+    maf_obj.create_tagged_maf(ref_repeats_file = simple_repeat_file, 
                               tagged_maf_file  = 'MSIpred/tagged_somatic.maf')
 
     ## Initialization of an annotated MAF file object using the annotated MAF file 
