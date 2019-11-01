@@ -55,10 +55,12 @@ germline_mutations <- read.csv("../Germline/output/germline_variant_report.csv")
 
 germline_cols <- c("Hugo_Symbol", "id", "Chromosome", "Start_position",
                    "Filter_Comment", "Variant_Classification",
-                   "Reference_Allele", "Germline_Seq_Allele2", "allelic_depth")
+                   "Reference_Allele", "Germline_Seq_Allele2", 
+                   "Ref_depth", "Alt_depth", "allele_frequency")
 renamed_g_cols <- c("Gene", "rs_id", "Chr", "Pos", 
                     "Disease(s)", "Effect", 
-                    "Ref", "Alt", "AD")
+                    "Ref", "Alt", 
+                    "Ref_depth", "Alt_depth", "AF")
 
 ### ACMG incidental
 if(any(grepl("ACMG",germline_mutations$Filter_Group)))
@@ -78,29 +80,29 @@ if(any(grepl("CGC",germline_mutations$Filter_Group)))
   colnames(tmp) <- renamed_g_cols
   tmp <- tmp[, colnames(tmp) != "Disease(s)"]
   
-  germline_mutations <- germline_mutations[!grepl("CGC",germline_mutations$Filter_Group),]
+  germline_mutations <- germline_mutations[!grepl("CGC", germline_mutations$Filter_Group),]
   
   write.csv(tmp, "./Germline/CGC.csv", row.names = F)
 }
 ### Cancer Predisposition Gene
 if(any(grepl("CPG",germline_mutations$Filter_Group)))
 {
-  tmp <- germline_mutations[grepl("CPG",germline_mutations$Filter_Group),]
+  tmp <- germline_mutations[grepl("CPG", germline_mutations$Filter_Group),]
   tmp <- tmp[, germline_cols]
   colnames(tmp) <- renamed_g_cols
   tmp <- tmp[, colnames(tmp) != "Disease(s)"]
-  germline_mutations <- germline_mutations[!grepl("CPG",germline_mutations$Filter_Group),]
+  germline_mutations <- germline_mutations[!grepl("CPG", germline_mutations$Filter_Group),]
   
   write.csv(tmp, "./Germline/CPG.csv", row.names = F)
 }
 ### Fanconi Anemia Pathway
 if(any(grepl("FAP",germline_mutations$Filter_Group)))
 {
-  tmp <- germline_mutations[grepl("FAP",germline_mutations$Filter_Group),]
+  tmp <- germline_mutations[grepl("FAP", germline_mutations$Filter_Group),]
   tmp <- tmp[, germline_cols]
   colnames(tmp) <- renamed_g_cols
   tmp <- tmp[, colnames(tmp) != "Disease(s)"]
-  germline_mutations <- germline_mutations[!grepl("FAP",germline_mutations$Filter_Group),]
+  germline_mutations <- germline_mutations[!grepl("FAP", germline_mutations$Filter_Group),]
   
   write.csv(tmp, "./Germline/FAP.csv", row.names = F)
 }
@@ -118,8 +120,9 @@ if(nrow(germline_mutations) != 0)
 ### Common Variants
 common_var <- read.csv("../Germline/output/common_variant_report.csv")
 common_var <- common_var[,c("id","Hugo_Symbol","Variant_Classification",
-                            "gCCV_Risk_allele","Reference_Allele","Normal_Seq_Allele2","allelic_depth")]
-colnames(common_var) <-  c("rs_id","Gene","Effect","Risk Allele", "Ref", "Alt", "AD")
+                            "gCCV_Risk_allele","Reference_Allele","Normal_Seq_Allele2",
+                            "Ref_depth", "Alt_depth", "allele_frequency")]
+colnames(common_var) <-  c("rs_id","Gene","Effect","Risk Allele", "Ref", "Alt", "Ref_depth", "Alt_depth", "AF")
 write.csv(common_var, "./Germline/common_var.csv", row.names = FALSE)
 
 # Somatic Mutations -------------------------------------------------------

@@ -31,6 +31,12 @@ germline <- subset(germline, alt_allele_seen == "True")
 # Subsetting for Germline HQ filters
 germline <- subset(germline, HQ_SNP_filter=="PASS" & HQ_InDel_filter=="PASS" & LowQual=="PASS")
 
+# Add ref/alt depths
+germline$Ref_depth <- vapply(germline$allelic_depth, function(x) 
+  as.integer(unlist(strsplit(x, split =","))[1]), 1L)
+germline$Alt_depth <- vapply(germline$allelic_depth, function(x) 
+  as.integer(unlist(strsplit(x, split =","))[2]), 1L)  
+  
 # 0. Seperate Report for Common variants with low penetrance --------------
 # load gCCV table
 common_vars <- read.csv(paste0(script_dir, "/common_variants_list.csv"))
@@ -40,7 +46,7 @@ idx <- which(germline$id %in% common_vars$rs_ID)
 common_variant_df <- germline[idx, ]
 
 cols <- c("id", "Hugo_Symbol", "Chromosome", "Start_position", "End_position", "Variant_Classification",
-          "Reference_Allele", "Tumor_Seq_Allele1", "Tumor_Seq_Allele2", "read_depth", "allelic_depth", 
+          "Reference_Allele", "Tumor_Seq_Allele1", "Tumor_Seq_Allele2", "Ref_depth", "Alt_depth", 
           "allele_frequency")
 
 common_variant_df <- common_variant_df[, cols]
@@ -116,7 +122,7 @@ germline_final <- germline_final[germline_final$lookup %in% clinvar_pathogenic$l
 cols_to_keep <- c("Hugo_Symbol", "Chromosome", "Start_position", "End_position", "Variant_Classification", 
                   "Reference_Allele", "Tumor_Seq_Allele1", "Tumor_Seq_Allele2", "id", 
                   "Filter_Group", "Filter_Comment",
-                  "allelic_depth", "allele_frequency")
+                  "Ref_depth", "Alt_depth", "allele_frequency")
 
 germline_final <- germline_final[, cols_to_keep]
 colnames(germline_final) <- gsub("Tumor", "Germline", colnames(germline_final))
