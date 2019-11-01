@@ -24,11 +24,6 @@ if(!suppressPackageStartupMessages(require(ExomeCNV))) {
   suppressPackageStartupMessages(library(ExomeCNV))
 }
 
-if(!suppressPackageStartupMessages(require(parallel))) {
-  install.packages("parallel")
-  suppressPackageStartupMessages(library(parallel))
-}  
-
 if(!suppressPackageStartupMessages(require(doParallel))) {
   install.packages("doParallel")
   suppressPackageStartupMessages(library(doParallel))
