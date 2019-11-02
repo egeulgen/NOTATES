@@ -11,6 +11,8 @@ normal_name=$2
 tumor_name=$3
 cap_kit=$4
 tumor_type=$5
+primary_cond=$6
+tumor_sample=$7
 
 ### Set main_dir to the directory where this script is located
 main_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -100,19 +102,21 @@ bash "$scripts_dir"/mapping_preprocessing.sh $tumor_name "tumor"
 
 ########################################## HC ##################################
 echo "############## Running Haplotype Caller for Germline Variants    " $(date)
-mkdir ./Germline/
+mkdir Germline
 $GATK HaplotypeCaller -R $genome -I normal.final.bam --dbsnp $dbSNP \
 	--intervals $Bait_Intervals --interval-padding 100 \
 	-O ./Germline/raw.snps.indels.vcf
 
 ################################### Mutect #####################################
 echo "############################################# Running MuTect2    " $(date)
-mkdir ./Mutect
-$GATK Mutect2 -R $genome \
-	-I tumor.final.bam -tumor $tumor_name -I normal.final.bam -normal $normal_name \
-	--germline-resource $gnomad_vcf --af-of-alleles-not-in-resource 0.0000025 \
-	--intervals $Bait_Intervals --interval-padding 100 \
-	-O ./Mutect/Mutect_raw.vcf.gz -bamout tumor_normal_m2.bam 
+mkdir Mutect2
+$GATK Mutect2 \
+	-R "$genome" \
+	-I tumor.final.bam \
+	-I normal.final.bam -normal "$normal_name" \
+	--germline-resource "$gnomad_vcf" \
+	--intervals "$Bait_Intervals" --interval-padding 100 \
+	-O ./Mutect2/Mutect_raw.vcf.gz
 
 ################################################################################
 ############################ Variant Filtering #################################
@@ -123,23 +127,29 @@ bash "$scripts_dir"/Germline/germline_filter.sh
 
 ##################### Somatic Variant Filtering ###############################
 $GATK GetPileupSummaries \
--I tumor.final.bam \
--V $small_exac_common \
--O tumor_getpileupsummaries.table
+	-I tumor.final.bam \
+	-V $small_exac_common \
+	--intervals $Bait_Intervals --interval-padding 100 \
+	-O tumor_getpileupsummaries.table
 
 $GATK GetPileupSummaries \
--I normal.final.bam \
--V $small_exac_common \
--O normal_getpileupsummaries.table
+	-I normal.final.bam \
+	-V $small_exac_common \
+	--intervals $Bait_Intervals --interval-padding 100 \
+	-O normal_getpileupsummaries.table
 
 $GATK CalculateContamination \
--I tumor_getpileupsummaries.table -matched normal_getpileupsummaries.table \
--O tumor_calculatecontamination.table
+	-I tumor_getpileupsummaries.table \
+	-matched normal_getpileupsummaries.table \
+	--tumor-segmentation segments.tsv \
+	-O tumor_calculatecontamination.table
 
 $GATK FilterMutectCalls \
--V ./Mutect/Mutect_raw.vcf.gz \
---contamination-table tumor_calculatecontamination.table \
--O ./Mutect/Mutect_filt_once.vcf.gz
+	-R $genome \
+	-V ./Mutect2/Mutect_raw.vcf.gz \
+	--contamination-table tumor_calculatecontamination.table \
+	--tumor-segmentation segments.tsv \
+	-O ./Mutect2/Mutect_filt_once.vcf.gz
 
 $GATK CollectSequencingArtifactMetrics \
 -I tumor.final.bam \
@@ -149,14 +159,14 @@ $GATK CollectSequencingArtifactMetrics \
 $GATK FilterByOrientationBias \
 -AM 'G/T' \
 -AM 'C/T' \
--V ./Mutect/Mutect_filt_once.vcf.gz \
+-V ./Mutect2/Mutect_filt_once.vcf.gz \
 -P artifact_metrics.pre_adapter_detail_metrics \
--O ./Mutect/Mutect_filt_twice.vcf.gz
+-O ./Mutect2/Mutect_filt_twice.vcf.gz
 
 $GATK SelectVariants -R $genome \
--V ./Mutect/Mutect_filt_twice.vcf.gz \
+-V ./Mutect2/Mutect_filt_twice.vcf.gz \
 --exclude-filtered \
--O ./Mutect/Filtered_mutect.vcf.gz
+-O ./Mutect2/Filtered_mutect.vcf.gz
 
 ################################################################################
 ############################ Variant Annoation #################################
@@ -234,8 +244,8 @@ echo "######################## Running R script for MSIpred            " $(date)
 Rscript "$scripts_dir"/MSIpred_prep.R $patientID
 python "$scripts_dir"/MSIpred_analysis.py $simple_repeats $exome_length
 
-echo "######################## Creating Report					       " $(date)
-Rscript "$scripts_dir"/create_report.R $patientID $scripts_dir $exome_length $tumor_type
+echo "######################## Creating Report                         " $(date)
+Rscript "$scripts_dir"/create_report.R $patientID $scripts_dir $exome_length $tumor_type $primary_cond $tumor_sample
 
 echo "######################## Finished 							   " $(date)
 exit 0

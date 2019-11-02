@@ -5,34 +5,37 @@ params:
   script_dir: ""
   exome_length: ""
   type: ""
+  primary_tm: ""
+  tumor_sample: ""
 header-includes:
 - \usepackage{titling}
-- \pretitle{\begin{center}\LARGE\includegraphics[width=160pt]{`r paste0(params$script_dir, "/NOT_logo.png")`}\\[\bigskipamount]}
+- \pretitle{\begin{center}\LARGE\includegraphics[width=160pt]{`r file.path(params$script_dir, "NOT_logo.png")`}\\[\bigskipamount]}
 - \posttitle{\end{center}}
 - \usepackage{pdflscape}
 - \newcommand{\blandscape}{\begin{landscape}}
 - \newcommand{\elandscape}{\end{landscape}}
----
-
----
-title: "\n\n\n\nNeuroOncology Technologies (NOT)"
+- \usepackage{float}
+- \usepackage{booktabs}
+- \usepackage[table]{xcolor}
+title: \ \ NeuroOncology Technologies (NOT)
 author: "Whole Exome Sequencing Report"
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-options(stringsAsFactors = FALSE)
+options(stringsAsFactors = FALSE, Encoding="UTF-8")
 library(knitr)
-library(pander)
+library(kableExtra)
 ```
 
 \pagenumbering{gobble} 
-\vspace{3cm}
+\vspace{2cm}
 
 ***
 
 >>> `r paste("**NOT ID: **", params$ID)` \
-**Tumor sample:** Fresh tumor tissue, snap-frozen in liquid nitrogen \
+**Treatment status:** `r ifelse(as.logical(params$primary_tm), "Primary (untreated) tumor", "Recurrent (previously treated) tumor")` \
+**Tumor sample:** `r ifelse(params$tumor_sample == "FFPE", "Formalin-Fixed Paraffin-Embedded (FFPE) tissue specimen", "Fresh tumor tissue, snap-frozen in liquid nitrogen")` \
 **Normal sample:** Peripheral venous blood \
 **DNA extraction method:** QIAGEN DNeasy Blood & Tissue kit \
 **Report date:** `r format(Sys.time(), '%d %B, %Y')`
@@ -46,95 +49,143 @@ library(pander)
 
 
 # I. Quality Metrics
+
+## Ia. Summary Table of Quality Metrics
+
 ```{r QC, echo = F}
-QC_df <- read.csv("./QC_table.csv", row.names = 1)
-kable(QC_df, align = "c")
+QC_df <- read.csv("./QC_table.csv" )
+colnames(QC_df)[1] <- ""
+kable_styling(kable(QC_df,
+                    format = "latex", 
+                    booktabs = TRUE,
+                    align = c("r", "c", "c")), 
+              latex_options = "striped",
+              stripe_color = "lightgray")
 ```
 
 >>> \* PF is defined as passing Illumina's filter \
-\*\* The percentage of PF reads that aligned to the reference sequence \
-\*\*\* The percentage of reads whose mate pair was also aligned to the reference
+    \*\* The percentage of PF reads that aligned to the reference sequence \
+    \*\*\* The percentage of reads whose mate pair was also aligned to the reference
 
+## Ib. Tumor Purity
+
+The fraction of reads coming from cross-sample contamination, reflecting a measure of tumor purity, is calculated using GATK's `CalculateContamination` tool.
+
+```{r contamination, echo = F}
+# contam_df <- read.delim("tumor_calculatecontamination.table")
+# kable_styling(kable(contam_df[, -1],
+#                     format = "latex", 
+#                     booktabs = TRUE,
+#                     align = "c"))
+```
 
 \newpage
 \blandscape
 
 # II. Germline Alterations
 
-In this section, the germline SNV/indels in this sample is reported. Only the alterations with ClinVar clinical significances containing "Pathogenic" designations are reported`r if(params$type == "glioma") {" (except for the subsection II. f. Common Variants)"}`.
+Germline alterations are assessed from the WES sequencing of DNA extracted from blood. Alterations were called using GATK - HaplotypeCaller. Findings were filtered for germline single nucleotide variations (SNVs) and short insertion-deletion events (indels) that were reported as “pathogenic” or “likely pathogenic” in ClinVar`r if(params$type == "glioma") {" (except for the subsection II. f. Common Variants)"}`. Variants of unknown significance (VUS) are not reported. The altered gene, the position of the SNV, the reference nucleotide as well as the altered nucleotide and the mutation type are reported. The read depth at the variation and the predicted allelic frequency are also noted. The report follows a sequential order where a reported positive finding is not reported in the following sections.
 
 ### II. a. ACMG Incidental Findings
+
+Any pathogenic/likely-pathogenic germline SNV/indel that affects any of the genes listed in ACMG SF V2.0[^1] are reported undewr this subsection.
+
+[^1]: Kalia SS, Adelman K, Bale SJ, et al. Recommendations for reporting of secondary findings in clinical exome and genome sequencing, 2016 update (ACMG SF v2.0): a policy statement of the American College of Medical Genetics and Genomics. Genet Med. 2017;19(2):249-255.
+
 ```{r, ACMG, echo = F, comment=NA}
-if(file.exists("./NOTATES/Germline/ACMG.csv"))
-{
+if(file.exists("./NOTATES/Germline/ACMG.csv")) {
   ACMG_df <- read.csv("./NOTATES/Germline/ACMG.csv")
   rownames(ACMG_df) <- ACMG_df$ID
   ACMG_df <- ACMG_df[,-2]
-  pander(ACMG_df, align = "c",table.caption.prefix ="")
-}else
-{
+  
+  kable_styling(kable(ACMG_df,
+                      format = "latex", 
+                      booktabs = TRUE,
+                      align = "c"))
+} else {
   cat("No variation to report.")
 }
 ```
 
 ### II. b. Variations in Cancer Gene Census genes
+
+Cancer Gene Census (CGC) from the Catalogue of Somatic Mutations in Cancer (COSMIC) database is a catalogue of genes which contain mutations that have been causally linked to cancer [(https://cancer.sanger.ac.uk/census)](https://cancer.sanger.ac.uk/census). This subsection filters the germline SNV/indels for genes that are reported in CGC. 
+
 ```{r, CGC, echo = F, comment=NA}
-if(file.exists("./NOTATES/Germline/CGC.csv"))
-{
+if(file.exists("./NOTATES/Germline/CGC.csv")) {
   gCGC_df <- read.csv("./NOTATES/Germline/CGC.csv")
-  pander(gCGC_df, align = "c",table.caption.prefix ="")
-}else
-{
+  kable_styling(kable(gCGC_df,
+                      format = "latex", 
+                      booktabs = TRUE,
+                      align = "c"))
+} else {
   cat("No variation to report.")
 }
 ```
 
 ### II. c. Variations in Cancer Predisposition Genes
+
+Genes in which germline mutations confer highly or moderately increased risks of cancer are called cancer predisposition genes. Germline SNV/indels catalogued in the 2014 Nature publication by Rahman[^2] are reported in this subsection.
+
+[^2]: Rahman N. Realizing the promise of cancer predisposition genes. Nature. 2014;505(7483):302-8.
+
 ```{r, CPG, echo = F, comment=NA}
-if(file.exists("./NOTATES/Germline/CPG.csv"))
-{
+if(file.exists("./NOTATES/Germline/CPG.csv")) {
   CPG_df <- read.csv("./NOTATES/Germline/CPG.csv")
-  pander(CPG_df, align = "c",table.caption.prefix ="")
-}else
-{
+  kable_styling(kable(CPG_df,
+                      format = "latex", 
+                      booktabs = TRUE,
+                      align = "c"))
+} else {
   cat("No variation to report.")
 }
 ```
 
 ### II. d. Variations in Fanconi Anemia Pathway genes
+
+Fanconi anemia is characterized by the inability to repair DNA interstrand cross-links (ICLs) and results in cancer predisposition[^3]. Genes belonging to this pathway, alterations of which would lead to “BRCA-ness" phenotype are reported here. 
+
+[^3]: Niraj J, Farkkila A, D'andrea AD. The Fanconi Anemia Pathway in Cancer. Annu Rev Cancer Biol. 2019;3:457-478.
+
 ```{r, FAP, echo = F, comment=NA}
-if(file.exists("./NOTATES/Germline/FAP.csv"))
-{
+if(file.exists("./NOTATES/Germline/FAP.csv")) {
   FAP_df <- read.csv("./NOTATES/Germline/FAP.csv")
-  pander(FAP_df, align = "c",table.caption.prefix ="")
-}else
-{
+  kable_styling(kable(FAP_df,
+                      format = "latex", 
+                      booktabs = TRUE,
+                      align = "c"))
+} else {
   cat("No variation to report.")
 }
 ```
 
 ### II. e. Other important germline variations
+
 ```{r, OTH, echo = F, comment=NA}
-if(file.exists("./NOTATES/Germline/OTHER.csv"))
-{
+if(file.exists("./NOTATES/Germline/OTHER.csv")) {
   OTH_df <- read.csv("./NOTATES/Germline/OTHER.csv")
-  pander(OTH_df, align = "c",table.caption.prefix ="")
-}else
-{
+  kable_styling(kable(OTH_df,
+                      format = "latex", 
+                      booktabs = TRUE,
+                      align = "c"))
+} else {
   cat("No variation to report.")
 }
 ```
 
 `r if(params$type == "glioma") {"### II. f. Common Variants"}`
 
+`r if(params$type == "glioma") {"This subsection is distinct from the previous portion of the germline alterations section. Here, germline alterations are filtered for “coding single nucleotide polymorphisms (SNPs)” which were previously shown in genome wide association studies (GWAS) to have an association with gliomas and were listed in the GWAS catalog [(https://www.ebi.ac.uk/gwas/efotraits/EFO_0005543)](https://www.ebi.ac.uk/gwas/efotraits/EFO_0005543)"}`
+
 ```{r, common, echo = F, comment=NA}
 if (params$type == "glioma") {
-  if(file.exists("./NOTATES/Germline/common_var.csv"))
-  {
+  if(file.exists("./NOTATES/Germline/common_var.csv")) {
     common_df <- read.csv("./NOTATES/Germline/common_var.csv")
-    pander(common_df, align = "c",table.caption.prefix ="")
-  }else
-  {
+    kable_styling(kable(common_df,
+                        format = "latex", 
+                        booktabs = TRUE,
+                        align = "c"))
+  } else {
     cat("No variation to report.")
   }
 }
@@ -142,37 +193,67 @@ if (params$type == "glioma") {
 
 \newpage
 
-# III. Somatic Single Nucleotide Variations(SNVs)
+# III. Somatic Single Nucleotide Variations (SNVs) and Small Insertion/Deletions(Indels)
 
-### III. a. Mutational Load
+### III. a. Tumor Mutational Burden (TMB)
 
-```{r mutload, echo=F, fig.width=12, fig.height=2.5}
+TMB is defined as the number of somatic mutations in the coding region (more accurately the exome capture kit's intervals) per megabase, including single nucleotide variants (SNVs) and small INDELs (insertions and deletions, typically less than 20 bases).
+
+<!-- Others filtering parameters of somatic mutations identified by WES for TMB calculation were a mutated allele frequency greater than 5% and a sequence depth greater than 20X in tumor samples greater or 10X in normal samples. -->
+
+```{r TMB, echo=F, fig.width=12, fig.height=2.5}
 somatic_SNVs <- read.delim("./Oncotator/annotated.sSNVs.tsv", comment.char="#")
 
-# Subsetting for (MuTect's default) HQ filters
+somatic_SNVs$tot_depth <- vapply(somatic_SNVs$allelic_depth, 
+                                 function(x) sum(as.numeric(unlist(strsplit(x, ",")))), 
+                                 1, USE.NAMES = FALSE)
+somatic_SNVs$lookup <- paste0(somatic_SNVs$Chromosome, somatic_SNVs$Start_position, 
+                              somatic_SNVs$End_position, somatic_SNVs$Reference_Allele, 
+                              somatic_SNVs$Tumor_Seq_Allele2)
+
+# Filter somatic vars
+all_vars <- unique(somatic_SNVs$lookup)
+for (s_var in all_vars) {
+  tmp <- somatic_SNVs[somatic_SNVs$lookup == s_var, ]
+  if (tmp$tot_depth[tmp$Tumor_Sample_Barcode])
+}
+
+# subset for (MuTect's default) HQ filters
 somatic_SNVs <- subset(somatic_SNVs, 
-                       alt_allele_seen=="True" & 
-                       short_tandem_repeat_membership == "False")
+                       alt_allele_seen=="True")
+
+# subset for tumor_f > 0.05, total depth (tm + normal) > 30X
+
+
 mut_num <- nrow(somatic_SNVs)
-mut_load <- mut_num/as.numeric(params$exome_length)
+mut_load <- mut_num / as.numeric(params$exome_length)
 
 if (params$type == "glioma") {
   mut_load_df <- read.delim(paste0(params$script_dir, "/mut_loads.txt"), sep = "\t") 
   
   if(!params$ID %in% mut_load_df$Patient) {
-    somatic_SNVs <- somatic_SNVs[! somatic_SNVs$Variant_Classification %in% c("Silent", "3'UTR", "3'Flank", "5'UTR", "5'Flank", 
-                                                                              "IGR", "Intron", "lincRNA", "RNA"),]
+    high_conseq <- c("Frame_Shift_Del", "Frame_Shift_Ins", "Splice_Site", 
+                 "Translation_Start_Site","Nonsense_Mutation", 
+                 "Nonstop_Mutation", "In_Frame_Del","In_Frame_Ins", 
+                 "Missense_Mutation")
+    somatic_SNVs <- somatic_SNVs[somatic_SNVs$Variant_Classification %in% high_conseq,]
     sset <- ifelse("H3F3A" %in% somatic_SNVs$Hugo_Symbol, "H3-mut",
                    ifelse("IDH1" %in% somatic_SNVs$Hugo_Symbol | "IDH2" %in% somatic_SNVs$Hugo_Symbol, "IDH-mut", "IDH-WT"))
     
     mut_load_df <- rbind(mut_load_df, data.frame(Patient = params$ID, 
                                                  mutational_load = mut_load, 
-                                                 subset = sset))
+                                                 subset = sset,
+                                                 primary = params$primary_tm))
     write.table(mut_load_df, paste0(params$script_dir, "/mut_loads.txt"), sep = "\t", row.names = F, quote = F)
   }
   
   mut_load_df <- mut_load_df[order(mut_load_df$mutational_load),]
   mut_load_df$x_val <- 1:nrow(mut_load_df)
+  
+  mut_load_df$for_facet <- ifelse(mut_load_df$primary, "Primary", "Primary + Recurrent")
+  tmp <- mut_load_df[mut_load_df$for_facet == "Primary", ]
+  tmp$for_facet <- "Primary + Recurrent"
+  mut_load_df <- as.data.frame(rbind(mut_load_df, tmp))
   
   suppressPackageStartupMessages(library(ggplot2))
   
@@ -189,6 +270,7 @@ if (params$type == "glioma") {
                          labels = scales::trans_format("log10", scales::math_format(10^.x)))
   p <- p + ylab("Mutational Load")
   p <- p + geom_point(data=mut_load_df[mut_load_df$Patient == params$ID, ], aes(x=x_val, y=mutational_load), colour="red", size=4, shape = 1)
+  p <- p + facet_grid(rows = vars(for_facet))
   p
 }
 ```
@@ -197,14 +279,24 @@ if (params$type == "glioma") {
 
 ```{r load_table, echo = F, comment=NA}
 if (params$type == "glioma") {
-  load_tbl <- tapply(mut_load_df$mutational_load, mut_load_df$subset, median)
-  load_tbl <- as.data.frame(load_tbl)
-  colnames(load_tbl) <- "Median Mutational Load"
+  load_tbl_ALL <- tapply(mut_load_df$mutational_load, mut_load_df$subset, median)
+  load_tbl_ALL <- as.data.frame(load_tbl_ALL)
+  load_tbl_ALL <- rbind(load_tbl_ALL, median(mut_load_df$mutational_load))
+  rownames(load_tbl_ALL)[nrow(load_tbl_ALL)] <- "Overall"
+  colnames(load_tbl_ALL) <- "Primary (untreated) + Recurrent (previoulsy treated)"
   
-  load_tbl <- rbind(load_tbl, median(mut_load_df$mutational_load))
-  rownames(load_tbl)[nrow(load_tbl)] <- "Overall"
+  tmp <- mut_load_df[mut_load_df$primary, ]
+  load_tbl_primary <- tapply(tmp$mutational_load, tmp$subset, median)
+  load_tbl_primary <- as.data.frame(load_tbl_primary)
+  load_tbl_primary <- rbind(load_tbl_primary, median(tmp$mutational_load))
+  rownames(load_tbl_primary)[nrow(load_tbl_primary)] <- "Overall"
+  colnames(load_tbl_primary) <- "Primary (untreated)"
   
-  pander(load_tbl, align = "c",table.caption.prefix ="")
+  load_tbl <- cbind(load_tbl_ALL, load_tbl_primary)
+  
+  kable_styling(kable(load_tbl,
+                      format = "latex", booktabs = TRUE), 
+                latex_options = "scale_down")
 }
 ```
 
@@ -212,17 +304,12 @@ if (params$type == "glioma") {
 
 ### III. b. Microsatellite Instability Status
 
-```{r variables, echo = F, comment=NA}
-var_tbl <- read.csv("MSIpred/maf_feats.csv")
-rownames(var_tbl) <- NULL
-var_tbl <- round(var_tbl[1, -1], 2)
-pander(var_tbl, align = "c", table.caption.prefix ="")
-```
-
 ```{r classification, echo = F, comment=NA}
 class_tbl <- read.csv("MSIpred/MSIpred_prediction.csv", row.names = 1)
 rownames(class_tbl) <- NULL
-pander(class_tbl, align = "c", table.caption.prefix ="")
+kable_styling(kable(class_tbl,
+                    format = "latex", booktabs = TRUE), 
+              latex_options = "scale_down")
 ```
 
 `r if(params$type == "glioma") {"### III. c. Important SNVs in Glioma"} else {"### III. c. Important SNVs in Medulloblastoma"}`
@@ -238,7 +325,9 @@ if(file.exists("./NOTATES/Somatic_SNV/important_SNVs.csv"))
   colnames(imp_snv) <- c("Gene", "Effect", "Protein", "Genome","TumorF","Genotype", "COS_n_ov",
                         "UniProt_Region", "SIFT","Irino", "TMZ")
   
-  pander(imp_snv, align = "c",table.caption.prefix ="")
+  kable_styling(kable(imp_snv,
+                      format = "latex", booktabs = TRUE), 
+                latex_options = "scale_down")
 }else
 {
   cat("No variation to report.")
@@ -247,7 +336,7 @@ if(file.exists("./NOTATES/Somatic_SNV/important_SNVs.csv"))
 
 ### III. d. CGC gene + COSMIC hotspot
 
-These are the SNVs in this case in a CGC gene, positioned at a site with at least one COSMIC overlapping mutation.
+These are the somatic SNVs/indels in this case in a CGC gene, positioned at a site with at least one COSMIC overlapping mutation.
 
 ```{r, hotspot, echo = F, comment=NA}
 if(file.exists("./NOTATES/Somatic_SNV/COSMIC_hotspot.csv"))
@@ -256,8 +345,9 @@ if(file.exists("./NOTATES/Somatic_SNV/COSMIC_hotspot.csv"))
   hot_snv <- hot_snv[,setdiff(colnames(hot_snv),c("COSMIC_total_alterations_in_gene","DNA_repair","selected_KEGG"))]
   colnames(hot_snv) <- c("Gene", "Effect", "Protein", "Genome","TumorF","Genotype", "COS_n_ov",
                         "UniProt_Region", "SIFT", "Irino", "TMZ")
-
-  pander(hot_snv, align = "c",table.caption.prefix ="")
+  kable_styling(kable(hot_snv,
+                      format = "latex", booktabs = TRUE), 
+                latex_options = "scale_down")
 }else
 {
   cat("No variation to report.")
@@ -275,8 +365,10 @@ if(file.exists("./NOTATES/Somatic_SNV/CGC_genes.csv"))
   cgc_snv <- cgc_snv[,setdiff(colnames(cgc_snv),c("COSMIC_total_alterations_in_gene","DNA_repair","selected_KEGG"))]
   colnames(cgc_snv) <- c("Gene", "Effect", "Protein", "Genome","TumorF","Genotype", "COS_n_ov",
                         "UniProt_Region", "SIFT", "Irino", "TMZ")
-  pander(cgc_snv, align = "c",table.caption.prefix ="")
-}else
+    kable_styling(kable(cgc_snv,
+                      format = "latex", booktabs = TRUE), 
+                latex_options = "scale_down")
+} else
 {
   cat("No variation to report.")
 }
@@ -294,8 +386,9 @@ if(file.exists("./NOTATES/Somatic_SNV/DDR_related.csv"))
   ddr_snv <- ddr_snv[,setdiff(colnames(ddr_snv),c("COSMIC_total_alterations_in_gene","selected_KEGG"))]
   colnames(ddr_snv) <- c("Gene", "Effect", "Protein", "Genome","TumorF","Genotype", "COS_n_ov",
                         "UniProt_Region", "SIFT", "DNA_repair", "Irino", "TMZ")
-
-  pander(ddr_snv, align = "c",table.caption.prefix ="")
+  kable_styling(kable(ddr_snv,
+                      format = "latex", booktabs = TRUE), 
+                latex_options = "scale_down")
 }else
 {
   cat("No variation to report.")
@@ -305,16 +398,16 @@ if(file.exists("./NOTATES/Somatic_SNV/DDR_related.csv"))
 SNVs in important KEGG Pathway genes:
 
 ```{r, kegg, echo = F, comment=NA}
-if(file.exists("./NOTATES/Somatic_SNV/KEGG_selected.csv"))
-{
+if(file.exists("./NOTATES/Somatic_SNV/KEGG_selected.csv")) {
   kegg_snv <- read.csv("./NOTATES/Somatic_SNV/KEGG_selected.csv", colClasses = c("character"))
 
   colnames(kegg_snv) <- c("Gene", "Effect", "Protein", "Genome","TumorF","Genotype", "COS_n_ov",
                           "COS_tot", "UniProt_Region", "SIFT", "DNA_repair", "Irino", "TMZ", "KEGG")
 
-  pander(kegg_snv, align = "c",table.caption.prefix ="")
-}else
-{
+  kable_styling(kable(kegg_snv,
+                      format = "latex", booktabs = TRUE), 
+                latex_options = "scale_down")
+} else {
   cat("No variation to report.")
 }
 ```
@@ -322,16 +415,16 @@ if(file.exists("./NOTATES/Somatic_SNV/KEGG_selected.csv"))
 SNVs in important Irinotecan response genes:
 
 ```{r, irino, echo = F, comment=NA}
-if(file.exists("./NOTATES/Somatic_SNV/irinotecan.csv"))
-{
+if(file.exists("./NOTATES/Somatic_SNV/irinotecan.csv")) {
   irino_snv <- read.csv("./NOTATES/Somatic_SNV/irinotecan.csv", colClasses = c("character"))
 
   colnames(irino_snv) <- c("Gene", "Effect", "Protein", "Genome","TumorF","Genotype", "COS_n_ov",
                           "COS_tot", "UniProt_Region", "SIFT", "DNA_repair", "Irino", "TMZ", "KEGG")
   
-  pander(irino_snv, align = "c", table.caption.prefix ="")
-}else
-{
+  kable_styling(kable(iirino_snv,
+                      format = "latex", booktabs = TRUE), 
+                latex_options = "scale_down")
+} else {
   cat("No variation to report.")
 }
 ```
@@ -339,16 +432,16 @@ if(file.exists("./NOTATES/Somatic_SNV/irinotecan.csv"))
 SNVs in important Temozolomide resistance genes:
 
 ```{r, tmz, echo = F, comment=NA}
-if(file.exists("./NOTATES/Somatic_SNV/tmz_res.csv"))
-{
+if(file.exists("./NOTATES/Somatic_SNV/tmz_res.csv")) {
   tmz_snv <- read.csv("./NOTATES/Somatic_SNV/tmz_res.csv", colClasses = c("character"))
   
   colnames(tmz_snv) <- c("Gene", "Effect", "Protein", "Genome","TumorF","Genotype", "COS_n_ov",
                           "COS_tot", "UniProt_Region", "SIFT", "DNA_repair", "Irino", "TMZ", "KEGG")
 
-  pander(tmz_snv, align = "c",table.caption.prefix ="")
-}else
-{
+  kable_styling(kable(tmz_snv,
+                      format = "latex", booktabs = TRUE), 
+                latex_options = "scale_down")
+} else {
   cat("No variation to report.")
 }
 ```
@@ -366,12 +459,12 @@ Only SCNAs with a $log_2(Tumor/Normal)$ ratio $\le$ -0.25 or $\ge$ 0.2 are repor
 `r if(params$type == "glioma") {"This is the intersection of SCNAs in this case with a list of SCNAs manually curated because of their importance in gliomas."} else {"This is the intersection of SCNAs in this case with a list of SCNAs manually curated because of their importance in medulloblastomas."}`
 
 ```{r, imp_cna, echo = F, comment=NA}
-if(file.exists("./NOTATES/SCNA/important_CNVs.csv"))
-{
+if(file.exists("./NOTATES/SCNA/important_CNVs.csv")) {
   imp_cna <- read.csv("./NOTATES/SCNA/important_CNVs.csv")
-  pander(imp_cna, align = "c",table.caption.prefix ="")
-}else
-{
+  kable_styling(kable(imp_cna,
+                      format = "latex", booktabs = TRUE), 
+                latex_options = "scale_down")
+} else {
   cat("No variation to report.")
 }
 ```
@@ -379,12 +472,12 @@ if(file.exists("./NOTATES/SCNA/important_CNVs.csv"))
 ### IV. b. SCNAs in Cancer Gene Census genes
 
 ```{r, cgc_cna, echo = F, comment=NA}
-if(file.exists("./NOTATES/SCNA/CGC_CNVs.csv"))
-{
+if(file.exists("./NOTATES/SCNA/CGC_CNVs.csv")) {
   cgc_cna <- read.csv("./NOTATES/SCNA/CGC_CNVs.csv")
-  pander(cgc_cna[,-c(2,3)], align = "c",table.caption.prefix ="")
-}else
-{
+  kable_styling(kable(cgc_cna[,-c(2,3)],
+                      format = "latex", booktabs = TRUE), 
+                latex_options = "scale_down")
+} else {
   cat("No variation to report.")
 }
 ```
@@ -392,20 +485,20 @@ if(file.exists("./NOTATES/SCNA/CGC_CNVs.csv"))
 ### IV. c. Broad SCNAs
 
 ```{r, brod_cna, echo = F, comment=NA}
-if(file.exists("./NOTATES/SCNA/broad.csv"))
-{
+if(file.exists("./NOTATES/SCNA/broad.csv")) {
   broad_cna <- read.csv("./NOTATES/SCNA/broad.csv")
-  pander(broad_cna, align = "c",table.caption.prefix ="")
-}else
-{
+  kable_styling(kable(broad_cna,
+                      format = "latex", booktabs = TRUE), 
+                latex_options = "scale_down")
+} else {
   cat("No variation to report.")
 }
 ```
 
 ### IV. d. SCNA by Chromosome Plots
 
-\begin{center} 
-\includegraphics[width=600pt]{./ExomeCNV/CNV.cnv.png}
+\begin{center}
+\includegraphics[width=600pt]{./ExomeCNV/{CNV.cnv}.png}
 \end{center}
 
 \newpage
@@ -420,16 +513,37 @@ Only LOH events for which absolute difference of B-allele frequencies ($|BAF_{Tu
 loh <- read.csv("./NOTATES/LOH/LOH.csv")
 loh$Position <- paste0(loh$Chr, ":", loh$Start, "-", loh$End)
 loh <- loh[,c("Genes", "Position", "N_BAF", "T_BAF", "Absolute_Diff")]
-pander(loh, align = "c",table.caption.prefix ="")
+
+kable_styling(kable(loh,
+                      format = "latex", booktabs = TRUE), 
+                latex_options = "scale_down")
 ```
 
-### V. b. LOH Events in CGC genes 
+### V. b. LOH + somatic SNV/Indel
+
+```{r, loh_dhit, echo = F, comment=NA}
+if(file.exists("./NOTATES/LOH/d_hit_loh.csv"))
+{
+  loh_dhit <- read.csv("./NOTATES/LOH/d_hit_loh.csv")
+  kable_styling(kable(loh_dhit,
+                      format = "latex", booktabs = TRUE), 
+                latex_options = "scale_down")
+}else
+{
+  cat("No event to report.")
+}
+```
+
+
+### V. c. LOH Events in CGC genes 
 
 ```{r, loh_cgc, echo = F, comment=NA}
 if(file.exists("./NOTATES/LOH/CGC_loh.csv"))
 {
   loh_cgc <- read.csv("./NOTATES/LOH/CGC_loh.csv")
-  pander(loh_cgc, align = "c",table.caption.prefix ="")
+  kable_styling(kable(loh_cgc,
+                      format = "latex", booktabs = TRUE), 
+                latex_options = "scale_down")
 }else
 {
   cat("No event to report.")
@@ -472,7 +586,9 @@ THetA (Tumor Heterogeneity Analysis) is an algorithm that estimates the tumor pu
 
 ```{r, mut_sigs, echo = F, comment=NA}
 mut_sigs <- read.csv("./mut_signatures.csv", row.names = 1)
-pander(mut_sigs, align = "c",table.caption.prefix ="")
+kable_styling(kable(mut_sigs,
+                    format = "latex", booktabs = TRUE),
+              latex_options = "scale_down")
 ```
 
 \newpage
@@ -482,8 +598,9 @@ pander(mut_sigs, align = "c",table.caption.prefix ="")
 Genes that harbor non-synonymous exonic mutations and/or homozygous deletion or multi-copy amplification (3+) are included in the enrichment analysis.
 
 ### VIII. a. KEGG - Pathways in Cancer
-\begin{center} 
-\includegraphics[width=500pt]{./pathways/hsa05200.CANCER.multi.png}
+
+\begin{center}
+\includegraphics[width=500pt]{./pathways/{hsa05200.CANCER.multi}.png}
 \end{center}
 
 The right half of a gene indicates copy number ratio (scaled between -1 and 1) while the left half indicates somatic mutation status (1 if mutant).
@@ -492,7 +609,9 @@ The right half of a gene indicates copy number ratio (scaled between -1 and 1) w
 
 ```{r, enr_res, echo = F, comment=NA}
 enr_res <- read.csv("pathways/enrichment_results.csv", row.names = 1)
-pander(enr_res, align = "c",table.caption.prefix ="")
+kable_styling(kable(enr_res,
+                    format = "latex", booktabs = TRUE), 
+              latex_options = "scale_down")
 ```
 
 \elandscape
