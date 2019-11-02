@@ -135,9 +135,6 @@ somatic_SNVs <- subset(somatic_SNVs,
                        alt_allele_seen=="True" & 
                          short_tandem_repeat_membership == "False")
 
-# # Reject variants with "Unknown" Hugo Symbols
-# somatic_SNVs <- subset(somatic_SNVs, Hugo_Symbol != "Unknown")
-
 # Change "" protein changes to NA
 somatic_SNVs$Protein_Change[somatic_SNVs$Protein_Change == ""] <- NA
 
@@ -149,19 +146,23 @@ keep <- c("Hugo_Symbol", "Chromosome", "Start_position", "End_position", "Varian
           colnames(somatic_SNVs)[grepl("^GO_", colnames(somatic_SNVs))], 
           colnames(somatic_SNVs)[grepl("^CGC_", colnames(somatic_SNVs))])
 
-write.csv(somatic_SNVs[, keep], "./Somatic_SNV/detailed_sSNV.csv", row.names = F, quote = F)
-
 somatic_SNVs <- somatic_SNVs[, c("Hugo_Symbol", "Variant_Classification", "Protein_Change", "Genome_Change",
                                  "tumor_f", "genotype", "COSMIC_n_overlapping_mutations",
                                  "COSMIC_total_alterations_in_gene","UniProt_Region","dbNSFP_SIFT_pred")]
 
-noncoding_SNVs <- somatic_SNVs[somatic_SNVs$Variant_Classification %in% c("Silent", "3'UTR", "3'Flank", "5'UTR", "5'Flank", 
-                                                                          "IGR", "Intron", "lincRNA", "RNA"),]
-noncoding_SNVs <- noncoding_SNVs[,setdiff(colnames(noncoding_SNVs),c("Protein_Change","UniProt_Region"))]
-write.csv(noncoding_SNVs, "Somatic_SNV/noncoding_SNVs.csv", row.names = F)
 
-somatic_SNVs <- somatic_SNVs[!somatic_SNVs$Variant_Classification %in% c("Silent", "3'UTR", "3'Flank", "5'UTR", "5'Flank", 
-                                                                         "IGR", "Intron", "lincRNA", "RNA"),]
+# noncoding_SNVs <- somatic_SNVs[somatic_SNVs$Variant_Classification %in% c("Silent", "3'UTR", "3'Flank", "5'UTR", "5'Flank", 
+#                                                                           "IGR", "Intron", "lincRNA", "RNA"),]
+# noncoding_SNVs <- noncoding_SNVs[,setdiff(colnames(noncoding_SNVs),c("Protein_Change","UniProt_Region"))]
+# write.csv(noncoding_SNVs, "Somatic_SNV/noncoding_SNVs.csv", row.names = F)
+
+# Only include somatic snv/indels with Variant Classifications of High/Moderate variant consequences
+high_conseq <- c("Frame_Shift_Del", "Frame_Shift_Ins", "Splice_Site", 
+                 "Translation_Start_Site","Nonsense_Mutation", 
+                 "Nonstop_Mutation", "In_Frame_Del","In_Frame_Ins", 
+                 "Missense_Mutation")
+somatic_SNVs <- somatic_SNVs[somatic_SNVs$Variant_Classification %in% high_conseq, ]
+
 #### Other annotations 
 somatic_SNVs$DNA_repair <- ifelse(somatic_SNVs$Hugo_Symbol %in% dna_repair_df$Gene.Name, "yes", "no")
 somatic_SNVs$DNA_repair[somatic_SNVs$DNA_repair == "yes"] <- dna_repair_df$FUNCTION[match(somatic_SNVs$Hugo_Symbol[somatic_SNVs$DNA_repair == "yes"],dna_repair_df$Gene.Name)]
@@ -172,6 +173,7 @@ somatic_SNVs$TMZ_resistance <- ifelse(somatic_SNVs$Hugo_Symbol %in% tmz_df$gene,
 somatic_SNVs$selected_KEGG <- ifelse(somatic_SNVs$Hugo_Symbol %in% KEGG_df$Gene, "yes", "no")
 somatic_SNVs$selected_KEGG[somatic_SNVs$selected_KEGG == "yes"] <- KEGG_df$pathway[match(somatic_SNVs$Hugo_Symbol[somatic_SNVs$selected_KEGG == "yes"],KEGG_df$Gene)]
 
+somatic_SNVs_unfiltered <- somatic_SNVs
 
 ### Important Glioma SNVs
 if(any(somatic_SNVs$Hugo_Symbol %in% curated_SNV$Gene))
@@ -435,9 +437,16 @@ for(i in 1:length(gene_segs)) {
   }
 }
 
+### LOH + sSNV
+if (any(loh_by_gene$Gene %in% somatic_SNVs_unfiltered$Hugo_Symbol)) {
+  tmp <- loh_by_gene[loh_by_gene$Gene %in% somatic_SNVs_unfiltered$Hugo_Symbol,]
+  write.csv(tmp, "LOH/d_hit_loh.csv", row.names = F)
+  loh_by_gene <- loh_by_gene[!loh_by_gene$Gene %in% tmp$Gene]
+}
+
 ### CGC genes
 if(any(loh_by_gene$Gene %in% CGC_df$Gene.Symbol))
 {
-  stmp <- loh_by_gene[loh_by_gene$Gene %in% CGC_df$Gene.Symbol,]
+  tmp <- loh_by_gene[loh_by_gene$Gene %in% CGC_df$Gene.Symbol,]
   write.csv(tmp, "LOH/CGC_loh.csv", row.names = F)
 }
