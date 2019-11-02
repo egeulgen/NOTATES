@@ -46,7 +46,8 @@ expr3='vc.getGenotype("'"$normal_name"'").getDP()>=20'
 $GATK SelectVariants -R $genome \
 	-V ./Germline/filtered_germline_variants.vcf -select-type SNP \
 	--selectExpressions "$expr1" \
-	--selectExpressions "$expr2" --selectExpressions "$expr3" \
+	--selectExpressions "$expr2" \
+	--selectExpressions "$expr3" \
 	--exclude-filtered --restrict-alleles-to BIALLELIC \
 	-O ./ExomeCNV/baf/normal_HQ_SNPs.vcf
 
