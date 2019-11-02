@@ -57,12 +57,27 @@ tumor_QC_table <- create_QC_table(tumor_name, "tumor")
   
 # Merge and format --------------------------------------------------------
 QC_table <- rbind(normal_QC_table, tumor_QC_table)
-QC_table <- t(QC_table)
+# format
+QC_table$PCT_PF_READS <- paste0(QC_table$PCT_PF_READS, "%")
+QC_table$PCT_PF_READS_ALIGNED <- paste0(QC_table$PCT_PF_READS_ALIGNED, "%")
+QC_table$PCT_READS_ALIGNED_IN_PAIRS <- paste0(QC_table$PCT_READS_ALIGNED_IN_PAIRS, "%")
+
+QC_table$X._bases_above_1 <- paste0(QC_table$X._bases_above_1, "%")
+QC_table$X._bases_above_5 <- paste0(QC_table$X._bases_above_5, "%")
+QC_table$X._bases_above_10 <- paste0(QC_table$X._bases_above_10, "%")
+QC_table$X._bases_above_25 <- paste0(QC_table$X._bases_above_25, "%")
+QC_table$X._bases_above_50<- paste0(QC_table$X._bases_above_50, "%")
+QC_table$X._bases_above_100 <- paste0(QC_table$X._bases_above_100, "%")
+
+# transpose
+QC_table <- as.data.frame(t(QC_table))
+
+
 colnames(QC_table) <- c("Normal", "Tumor")
 rownames(QC_table) <- c("Number of Lanes","Read Type", "Read Length",
                               "Total Number of Reads(in millions)",
-                              "PF Reads* (%)", "Mapped** (%)", "PE Mapped*** (%)",
-                              "Mean Coverage", "1X (%)", "5X (%)", "10X (%)", "25X (%)", "50X (%)", "100X (%)")
+                              "PF Reads*", "Aligned PF Reads**", "PE Aligned***",
+                              "Mean Coverage", "1X", "5X", "10X", "25X", "50X", "100X")
 QC_table <- apply(QC_table, 2, trimws)
 
 write.csv(QC_table, "QC_table.csv", quote = F)
