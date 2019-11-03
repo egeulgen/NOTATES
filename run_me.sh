@@ -116,7 +116,7 @@ $GATK Mutect2 \
 	-I normal.final.bam -normal "$normal_name" \
 	--germline-resource "$gnomad_vcf" \
 	--intervals "$Bait_Intervals" --interval-padding 100 \
-	-O ./Mutect2/Mutect_raw.vcf.gz
+	-O Mutect2/Mutect_raw.vcf.gz
 
 ################################################################################
 ############################ Variant Filtering #################################
@@ -146,27 +146,29 @@ $GATK CalculateContamination \
 
 $GATK FilterMutectCalls \
 	-R $genome \
-	-V ./Mutect2/Mutect_raw.vcf.gz \
+	-V Mutect2/Mutect_raw.vcf.gz \
 	--contamination-table tumor_calculatecontamination.table \
 	--tumor-segmentation segments.tsv \
-	-O ./Mutect2/Mutect_filt_once.vcf.gz
+	-O Mutect2/Mutect_filt_once.vcf.gz
 
 $GATK CollectSequencingArtifactMetrics \
--I tumor.final.bam \
--O artifact_metrics \
--R $genome
+	-I tumor.final.bam \
+	-O artifact_metrics \
+	-R $genome
 
+## G/T: OxoG
+## C/T: FFPE
 $GATK FilterByOrientationBias \
--AM 'G/T' \
--AM 'C/T' \
--V ./Mutect2/Mutect_filt_once.vcf.gz \
--P artifact_metrics.pre_adapter_detail_metrics \
--O ./Mutect2/Mutect_filt_twice.vcf.gz
+	-AM 'G/T' \
+	-AM 'C/T' \
+	-V Mutect2/Mutect_filt_once.vcf.gz \
+	-P artifact_metrics.pre_adapter_detail_metrics \
+	-O Mutect2/Mutect_filt_twice.vcf.gz
 
 $GATK SelectVariants -R $genome \
--V ./Mutect2/Mutect_filt_twice.vcf.gz \
---exclude-filtered \
--O ./Mutect2/Filtered_mutect.vcf.gz
+	-V ./Mutect2/Mutect_filt_twice.vcf.gz \
+	--exclude-filtered \
+	-O Mutect2/Filtered_mutect.vcf.gz
 
 ################################################################################
 ############################ Variant Annoation #################################
