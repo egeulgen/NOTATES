@@ -135,6 +135,9 @@ somatic_SNVs <- subset(somatic_SNVs,
                        alt_allele_seen=="True" & 
                          short_tandem_repeat_membership == "False")
 
+# Filter for tumor_f > 0.05
+somatic_SNVs <- somatic_SNVs[somatic_SNVs$tumor_f > 0.05, ]
+
 # Change "" protein changes to NA
 somatic_SNVs$Protein_Change[somatic_SNVs$Protein_Change == ""] <- NA
 
@@ -149,12 +152,6 @@ keep <- c("Hugo_Symbol", "Chromosome", "Start_position", "End_position", "Varian
 somatic_SNVs <- somatic_SNVs[, c("Hugo_Symbol", "Variant_Classification", "Protein_Change", "Genome_Change",
                                  "tumor_f", "genotype", "COSMIC_n_overlapping_mutations",
                                  "COSMIC_total_alterations_in_gene","UniProt_Region","dbNSFP_SIFT_pred")]
-
-
-# noncoding_SNVs <- somatic_SNVs[somatic_SNVs$Variant_Classification %in% c("Silent", "3'UTR", "3'Flank", "5'UTR", "5'Flank", 
-#                                                                           "IGR", "Intron", "lincRNA", "RNA"),]
-# noncoding_SNVs <- noncoding_SNVs[,setdiff(colnames(noncoding_SNVs),c("Protein_Change","UniProt_Region"))]
-# write.csv(noncoding_SNVs, "Somatic_SNV/noncoding_SNVs.csv", row.names = F)
 
 # Only include somatic snv/indels with Variant Classifications of High/Moderate variant consequences
 high_conseq <- c("Frame_Shift_Del", "Frame_Shift_Ins", "Splice_Site", 
