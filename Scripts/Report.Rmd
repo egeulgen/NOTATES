@@ -574,7 +574,7 @@ if(file.exists("./NOTATES/double_hit.csv"))
 ```
 
 
-# VI. Tumor Heterogeneity Analysis 
+# VII. Tumor Heterogeneity Analysis 
 ```{r n3_or_n2, echo=F}
 if(!file.exists("./THetA/output/CNV.BEST.results")){
    n3_chosen <- F
@@ -592,7 +592,7 @@ THetA (Tumor Heterogeneity Analysis) is an algorithm that estimates the tumor pu
 
 \newpage
 
-# VII. Mutational Signatures
+# VIII. Mutational Signatures
 
 \begin{center} 
 \includegraphics[width=500pt]{mut_signatures.pdf}
@@ -613,11 +613,11 @@ kable_styling(k_tbl, latex_options = "scale_down")
 
 \newpage
 
-# VIII. KEGG Pathway Enrichment Analysis
+# IX. KEGG Pathway Enrichment Analysis
 
 Genes that harbor non-synonymous exonic mutations and/or homozygous deletion or multi-copy amplification (3+) are included in the enrichment analysis.
 
-### VIII. a. KEGG - Pathways in Cancer
+### IX. a. KEGG - Pathways in Cancer
 
 \begin{center}
 \includegraphics[width=500pt]{./pathways/{hsa05200.CANCER.multi}.png}
@@ -625,7 +625,7 @@ Genes that harbor non-synonymous exonic mutations and/or homozygous deletion or 
 
 The right half of a gene indicates copy number ratio (scaled between -1 and 1) while the left half indicates somatic mutation status (1 if mutant).
 
-### VIII. b. KEGG - Pathway Enrichment Results
+### IX. b. KEGG - Pathway Enrichment Results
 
 ```{r, enr_res, echo = F, comment=NA}
 enr_res <- read.csv("pathways/enrichment_results.csv", row.names = 1)
