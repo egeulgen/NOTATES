@@ -138,6 +138,13 @@ somatic_SNVs <- subset(somatic_SNVs,
 # Filter for tumor_f > 0.05
 somatic_SNVs <- somatic_SNVs[somatic_SNVs$tumor_f > 0.05, ]
 
+# Exclude variants in FLAGs
+flags <- c("TTN", "MUC16", "OBSCN", "AHNAK2", "SYNE1", "FLG", 
+           "MUC5B", "DNAH17", "PLEC", "DST", "SYNE2", "NEB", "HSPG2", 
+           "LAMA5", "AHNAK", "HMCN1", "USH2A", "DNAH11", "MACF1", 
+           "MUC17")
+somatic_SNVs <- somatic_SNVs[!somatic_SNVs$Hugo_Symbol %in% flags]
+
 # Change "" protein changes to NA
 somatic_SNVs$Protein_Change[somatic_SNVs$Protein_Change == ""] <- NA
 
@@ -288,6 +295,9 @@ cnv <- subset(cnv, !is.na(spec))
 # discard rows with NA sens
 cnv <- subset(cnv, !is.na(sens))
 
+# discard CN == 2
+cnv <- subset(cnv, copy.number != 2)
+  
 # -0.25 and 0.2 for cut-off
 #The inner cutoffs of +0.2 and -0.25 are sensitive 
 #enough to detect a single-copy gain or loss in a 
@@ -302,10 +312,12 @@ copy_num_call <- function(ratio){
   else if( ratio < 1 )
     return(1)
   else
-    return(round(ratio*2))
+    return(round(ratio * 2))
 }
 
 cnv$copy.number <- vapply(cnv$ratio, copy_num_call, 2)
+# discard CN == 2
+cnv <- subset(cnv, copy.number != 2)
 
 ## annotate genes and cytobands within segments
 cnv_genes_overlap <- annotate_genes(cnv)
@@ -318,7 +330,7 @@ cnv$cytoband <- sapply(cnv_cytb_overlap$Segment_cytbs, function(cyt) shorten_cyt
 cnv <- cnv[, c("genes", "length", "cytoband", setdiff(colnames(cnv), c("genes", "cytoband", "length")))]
 write.csv(cnv, "SCNA/exomeCNV.csv", row.names = FALSE)
 
-cnv_by_gene <- data.frame(Gene=names(cnv_genes_overlap$Gene_segments),
+cnv_by_gene <- data.frame(Gene = names(cnv_genes_overlap$Gene_segments),
                           Segment = NA, ratio = NA, CN = NA, av_cov = NA)
 cnv$id <- paste0(cnv$chr,":", cnv$probe_start, "-", cnv$probe_end)
 gene_segs <- cnv_genes_overlap$Gene_segments
