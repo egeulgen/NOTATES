@@ -105,7 +105,7 @@ echo "############## Running Haplotype Caller for Germline Variants    " $(date)
 mkdir Germline
 $GATK HaplotypeCaller -R $genome -I normal.final.bam --dbsnp $dbSNP \
 	--intervals $Bait_Intervals --interval-padding 100 \
-	-O ./Germline/raw.snps.indels.vcf
+	-O Germline/raw.snps.indels.vcf
 
 ################################### Mutect #####################################
 echo "############################################# Running MuTect2    " $(date)
@@ -127,27 +127,29 @@ bash "$scripts_dir"/Germline/germline_filter.sh
 
 ##################### Somatic Variant Filtering ###############################
 $GATK GetPileupSummaries \
+	-R $genome \
 	-I tumor.final.bam \
 	-V $small_exac_common \
-	--intervals $Bait_Intervals --interval-padding 100 \
-	-O tumor_getpileupsummaries.table
+	--intervals $small_exac_common \
+	-O tumor_pileups.table
 
 $GATK GetPileupSummaries \
+	-R $genome \
 	-I normal.final.bam \
 	-V $small_exac_common \
-	--intervals $Bait_Intervals --interval-padding 100 \
-	-O normal_getpileupsummaries.table
+	--intervals $small_exac_common \
+	-O normal_pileups.table
 
 $GATK CalculateContamination \
-	-I tumor_getpileupsummaries.table \
-	-matched normal_getpileupsummaries.table \
+	-I tumor_pileups.table \
+	-matched normal_pileups.table \
 	--tumor-segmentation segments.tsv \
-	-O tumor_calculatecontamination.table
+	-O contamination.table
 
 $GATK FilterMutectCalls \
 	-R $genome \
 	-V Mutect2/Mutect_raw.vcf.gz \
-	--contamination-table tumor_calculatecontamination.table \
+	--contamination-table contamination.table \
 	--tumor-segmentation segments.tsv \
 	-O Mutect2/Mutect_filt_once.vcf.gz
 
@@ -166,7 +168,7 @@ $GATK FilterByOrientationBias \
 	-O Mutect2/Mutect_filt_twice.vcf.gz
 
 $GATK SelectVariants -R $genome \
-	-V ./Mutect2/Mutect_filt_twice.vcf.gz \
+	-V Mutect2/Mutect_filt_twice.vcf.gz \
 	--exclude-filtered \
 	-O Mutect2/Filtered_mutect.vcf.gz
 
@@ -174,18 +176,19 @@ $GATK SelectVariants -R $genome \
 ############################ Variant Annoation #################################
 ################################################################################
 source "$oncotator_activate"
-mkdir ./Oncotator
+mkdir Oncotator
 
 echo "################################# Annotating Somatic variants    " $(date)
 oncotator -v --input_format=VCF --db-dir "$oncotator_ds" --tx-mode CANONICAL \
 	-c "$oncotator_ds"/tx_exact_uniprot_matches.AKT1_CRLF2_FGFR1.txt \
-	./Mutect/Filtered_mutect.vcf.gz ./Oncotator/annotated.sSNVs.tsv hg19
+	Mutect2/Filtered_mutect.vcf.gz \
+	Oncotator/annotated.sSNVs.tsv hg19
 
 echo "################################ Annotating Germline Variants    " $(date)
 oncotator -v --input_format=VCF --db-dir "$oncotator_ds" --tx-mode CANONICAL \
 	-c "$oncotator_ds"/tx_exact_uniprot_matches.AKT1_CRLF2_FGFR1.txt \
-	./Germline/filtered_germline_variants.vcf \
-	./Oncotator/annotated.germline_SNVs.tsv hg19
+	Germline/filtered_germline_variants.vcf \
+	Oncotator/annotated.germline_SNVs.tsv hg19
 
 deactivate
 
@@ -197,20 +200,20 @@ bash "$scripts_dir"/ExomeCNV/ExomeCNV.sh $normal_name $tumor_name
 ################################################################################
 ################################## THetA #######################################
 ################################################################################
-mkdir -p ./THetA/output
+mkdir -p THetA/output
 
 echo "################################## Preparing input for THetA     " $(date)
 ## ExomeCNV output to THetA input
-bash "$THetA"/bin/CreateExomeInput -s ./ExomeCNV/CNV.segment.copynumber.txt \
+bash "$THetA"/bin/CreateExomeInput -s ExomeCNV/CNV.segment.copynumber.txt \
 	-t tumor.final.bam -n normal.final.bam \
-	--FA $genome --EXON_FILE $Bait_Intervals --QUALITY 30 --DIR ./THetA
+	--FA $genome --EXON_FILE $Bait_Intervals --QUALITY 30 --DIR THetA
 rm tumor.final.pileup normal.final.pileup
 
 echo "############################################### Running THetA    " $(date)
 # bash "$THetA"/bin/RunTHetA THetA/CNV.input \
-# 	--DIR ./THetA/output --NUM_PROCESSES 8
+# 	--DIR THetA/output --NUM_PROCESSES 8
 bash "$THetA"/bin/RunTHetA THetA/CNV.input --TUMOR_FILE THetA/tumor_SNP.txt \
-	--NORMAL_FILE THetA/normal_SNP.txt --DIR ./THetA/output --NUM_PROCESSES 8
+	--NORMAL_FILE THetA/normal_SNP.txt --DIR THetA/output --NUM_PROCESSES 8
 
 ################################################################################
 #################################### QC ########################################
