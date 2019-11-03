@@ -232,29 +232,30 @@ mut_num <- nrow(somatic_SNVs)
 current_TMB <- mut_num / as.numeric(params$exome_length)
 
 TMB_tbl_path <- file.path(params$script_dir, 
-                          paste0(params$type, "_TMB_table.txt"))
-if (file.exists(TMB_tbl_path)) {
-  TMB_df <- read.delim(TMB_tbl_path, sep = "\t") 
+                          paste0(params$type, "_TMB_table.RDS"))
+if (!file.exists(TMB_tbl_path)) {
+  TMB_df <- data.frame()
+} else {
+  TMB_df <- readRDS(TMB_tbl_path)
+}
+## add to TMB table if not present
+if(!params$ID %in% TMB_df$ID) {
+  high_conseq <- c("Frame_Shift_Del", "Frame_Shift_Ins", "Splice_Site", 
+                   "Translation_Start_Site","Nonsense_Mutation", 
+                   "Nonstop_Mutation", "In_Frame_Del","In_Frame_Ins", 
+                   "Missense_Mutation")
+  somatic_SNVs <- somatic_SNVs[somatic_SNVs$Variant_Classification %in% high_conseq,]
+  current_sset <- ifelse("H3F3A" %in% somatic_SNVs$Hugo_Symbol, "H3-mut",
+                         ifelse("IDH1" %in% somatic_SNVs$Hugo_Symbol | "IDH2" %in% somatic_SNVs$Hugo_Symbol, "IDH-mut", "IDH-WT"))
   
-  ## add to TMB table if not present
-  if(!params$ID %in% TMB_df$ID) {
-    high_conseq <- c("Frame_Shift_Del", "Frame_Shift_Ins", "Splice_Site", 
-                     "Translation_Start_Site","Nonsense_Mutation", 
-                     "Nonstop_Mutation", "In_Frame_Del","In_Frame_Ins", 
-                     "Missense_Mutation")
-    somatic_SNVs <- somatic_SNVs[somatic_SNVs$Variant_Classification %in% high_conseq,]
-    current_sset <- ifelse("H3F3A" %in% somatic_SNVs$Hugo_Symbol, "H3-mut",
-                           ifelse("IDH1" %in% somatic_SNVs$Hugo_Symbol | "IDH2" %in% somatic_SNVs$Hugo_Symbol, "IDH-mut", "IDH-WT"))
-    
-    TMB_df <- rbind(TMB_df, data.frame(ID = params$ID, 
-                                       TMB = current_TMB, 
-                                       subset = current_sset,
-                                       primary = params$primary_tm))
-    write.table(TMB_df, 
-                file.path(params$script_dir, "TMB_table.txt"), 
-                sep = "\t", row.names = FALSE, quote = FALSE)
-  }
-  
+  TMB_df <- rbind(TMB_df, 
+                  data.frame(ID = params$ID, 
+                             TMB = current_TMB, 
+                             subset = current_sset,
+                             primary = params$primary_tm))
+  saveRDS(TMB_df, TMB_tbl_path)
+}
+
   ## Scatter plots of TMB over all analyses
   # rank TMB vals
   TMB_df <- TMB_df[order(TMB_df$TMB),]

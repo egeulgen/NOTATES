@@ -59,12 +59,13 @@ if [ ! -d "$tumor_name" ]
 fi
 
 #### Display the chosen patient ID and Normal ID, Tumor ID
-echo ""
+echo 
 echo "The chosen patient ID is: ""$patientID"
 echo "The germline sample ID is: ""$normal_name"
 echo "The tumor sample ID  is: ""$tumor_name"
-echo ""
+echo 
 echo "The tumor type is: ""$tumor_type"
+echo "The tumor sample type is: ""$tumor_sample"
 
 ################################################################################
 ############################## Merging fastq files #############################
