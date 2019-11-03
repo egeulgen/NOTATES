@@ -161,6 +161,8 @@ if(file.exists("./NOTATES/Germline/FAP.csv")) {
 
 ### II. e. Other important germline variations
 
+Germline variations in other manually curated genes (alterations of which may carry clinical importance) are reported under this subsection.
+
 ```{r, OTH, echo = F, comment=NA}
 if(file.exists("./NOTATES/Germline/OTHER.csv")) {
   OTH_df <- read.csv("./NOTATES/Germline/OTHER.csv")
@@ -195,73 +197,91 @@ if (params$type == "glioma") {
 
 # III. Somatic Single Nucleotide Variations (SNVs) and Small Insertion/Deletions(Indels)
 
+Somatic mutations were called from the tumor-blood pair in the current analysis using GATK - MuTect2 with a cutoff of 5% variant allele frequency (VAF). Only non-synonymous variants (with variant classifications of High/Moderate variant consequences: "Frame_Shift_Del", "Frame_Shift_Ins", "Splice_Site", "Translation_Start_Site","Nonsense_Mutation", "Nonstop_Mutation", "In_Frame_Del","In_Frame_Ins", "Missense_Mutation", see [http://www.ensembl.org/Help/Glossary?id=535]( http://www.ensembl.org/Help/Glossary?id=535)) were used for reporting. Genes that are often non-pathogenic and passengers but are frequently mutated in most of the public exome studies (named FLAGS) as collected by Shyr et al. were excluded from the report [^4]. 
+
+[^4]: Shyr C, Tarailo-graovac M, Gottlieb M, Lee JJ, Van karnebeek C, Wasserman WW. FLAGS, frequently mutated genes in public exomes. BMC Med Genomics. 2014;7:64.
+
 ### III. a. Tumor Mutational Burden (TMB)
 
 TMB is defined as the number of somatic mutations in the coding region (more accurately the exome capture kit's intervals) per megabase, including single nucleotide variants (SNVs) and small INDELs (insertions and deletions, typically less than 20 bases).
 
-<!-- Others filtering parameters of somatic mutations identified by WES for TMB calculation were a mutated allele frequency greater than 5% and a sequence depth greater than 20X in tumor samples greater or 10X in normal samples. -->
+This calculation was performed using the following filtering approach:
+1. keeping variants with mutated allele frequency greater than 5%
+2. keeping variants with a sequence depth greater than 20X in the tumor sample greater and 10X in the normal sample and 
+3. excluding variants short tandem repeat (STR) variants
 
-```{r TMB, echo=F, fig.width=12, fig.height=2.5}
+```{r TMB, echo=F, fig.width=12, fig.height=5}
 somatic_SNVs <- read.delim("./Oncotator/annotated.sSNVs.tsv", comment.char="#")
 
 somatic_SNVs$tot_depth <- vapply(somatic_SNVs$allelic_depth, 
                                  function(x) sum(as.numeric(unlist(strsplit(x, ",")))), 
                                  1, USE.NAMES = FALSE)
-somatic_SNVs$lookup <- paste0(somatic_SNVs$Chromosome, somatic_SNVs$Start_position, 
-                              somatic_SNVs$End_position, somatic_SNVs$Reference_Allele, 
-                              somatic_SNVs$Tumor_Seq_Allele2)
 
-# Filter somatic vars
-all_vars <- unique(somatic_SNVs$lookup)
-for (s_var in all_vars) {
-  tmp <- somatic_SNVs[somatic_SNVs$lookup == s_var, ]
-  if (tmp$tot_depth[tmp$Tumor_Sample_Barcode])
-}
+# Filter for depth greater than 20X in tumor samples greater or 10X in normal samples
+thresholds <- ifelse(somatic_SNVs$alt_allele_seen == "True", 20, 10)
+somatic_SNVs$dep_keep <- somatic_SNVs$tot_depth > thresholds
+tmp <- somatic_SNVs[somatic_SNVs$alt_allele_seen == "False" & !somatic_SNVs$dep_keep, ]
+somatic_SNVs$dep_keep[somatic_SNVs$Genome_Change %in% tmp$Genome_Change] <- FALSE
+somatic_SNVs <- somatic_SNVs[somatic_SNVs$dep_keep, ]
 
 # subset for (MuTect's default) HQ filters
-somatic_SNVs <- subset(somatic_SNVs, 
-                       alt_allele_seen=="True")
+somatic_SNVs <- somatic_SNVs[somatic_SNVs$alt_allele_seen == "True" &
+                               somatic_SNVs$short_tandem_repeat_membership == "False", ]
 
-# subset for tumor_f > 0.05, total depth (tm + normal) > 30X
+# subset for tumor_f > 0.05, depth
+somatic_SNVs <- somatic_SNVs[somatic_SNVs$tumor_f > 0.05, ]
 
-
+## Calculate TMB
 mut_num <- nrow(somatic_SNVs)
-mut_load <- mut_num / as.numeric(params$exome_length)
+current_TMB <- mut_num / as.numeric(params$exome_length)
 
-if (params$type == "glioma") {
-  mut_load_df <- read.delim(paste0(params$script_dir, "/mut_loads.txt"), sep = "\t") 
+TMB_tbl_path <- file.path(params$script_dir, 
+                          paste0(params$type, "_TMB_table.txt"))
+if (file.exists(TMB_tbl_path)) {
+  TMB_df <- read.delim(TMB_tbl_path, sep = "\t") 
   
-  if(!params$ID %in% mut_load_df$Patient) {
+  ## add to TMB table if not present
+  if(!params$ID %in% TMB_df$ID) {
     high_conseq <- c("Frame_Shift_Del", "Frame_Shift_Ins", "Splice_Site", 
-                 "Translation_Start_Site","Nonsense_Mutation", 
-                 "Nonstop_Mutation", "In_Frame_Del","In_Frame_Ins", 
-                 "Missense_Mutation")
+                     "Translation_Start_Site","Nonsense_Mutation", 
+                     "Nonstop_Mutation", "In_Frame_Del","In_Frame_Ins", 
+                     "Missense_Mutation")
     somatic_SNVs <- somatic_SNVs[somatic_SNVs$Variant_Classification %in% high_conseq,]
-    sset <- ifelse("H3F3A" %in% somatic_SNVs$Hugo_Symbol, "H3-mut",
-                   ifelse("IDH1" %in% somatic_SNVs$Hugo_Symbol | "IDH2" %in% somatic_SNVs$Hugo_Symbol, "IDH-mut", "IDH-WT"))
+    current_sset <- ifelse("H3F3A" %in% somatic_SNVs$Hugo_Symbol, "H3-mut",
+                           ifelse("IDH1" %in% somatic_SNVs$Hugo_Symbol | "IDH2" %in% somatic_SNVs$Hugo_Symbol, "IDH-mut", "IDH-WT"))
     
-    mut_load_df <- rbind(mut_load_df, data.frame(Patient = params$ID, 
-                                                 mutational_load = mut_load, 
-                                                 subset = sset,
-                                                 primary = params$primary_tm))
-    write.table(mut_load_df, paste0(params$script_dir, "/mut_loads.txt"), sep = "\t", row.names = F, quote = F)
+    TMB_df <- rbind(TMB_df, data.frame(ID = params$ID, 
+                                       TMB = current_TMB, 
+                                       subset = current_sset,
+                                       primary = params$primary_tm))
+    write.table(TMB_df, 
+                file.path(params$script_dir, "TMB_table.txt"), 
+                sep = "\t", row.names = FALSE, quote = FALSE)
   }
   
-  mut_load_df <- mut_load_df[order(mut_load_df$mutational_load),]
-  mut_load_df$x_val <- 1:nrow(mut_load_df)
+  ## Scatter plots of TMB over all analyses
+  # rank TMB vals
+  TMB_df <- TMB_df[order(TMB_df$TMB),]
+  TMB_df$x_val <- 1:nrow(TMB_df)
   
-  mut_load_df$for_facet <- ifelse(mut_load_df$primary, "Primary", "Primary + Recurrent")
-  tmp <- mut_load_df[mut_load_df$for_facet == "Primary", ]
-  tmp$for_facet <- "Primary + Recurrent"
-  mut_load_df <- as.data.frame(rbind(mut_load_df, tmp))
+  # prep for facets
+  TMB_df$for_facet <- ifelse(TMB_df$primary, "Primary", "Primary\n+\nRecurrent")
+  pr_tms <- TMB_df[TMB_df$for_facet == "Primary", ]
+  pr_tms$for_facet <- "Primary\n+\nRecurrent"
+  TMB_df_plot <- as.data.frame(rbind(TMB_df, pr_tms))
+  
+  # calculate height of median line segment
+  x_shift <- max(nrow(TMB_df_plot) / 7, 3)
   
   suppressPackageStartupMessages(library(ggplot2))
-  
-  p <- ggplot(mut_load_df, aes(x=x_val, y=mutational_load, group = subset))
+  p <- ggplot(TMB_df_plot, aes(x=x_val, y=TMB, group = subset))
   p <- p + geom_point(size=2, aes(shape=subset, color=subset))
   p <- p + scale_color_manual(values=c('#56B4E9','#E69F00', 'gray60'))
-  p <- p + geom_segment(aes(x = median(mut_load_df$x_val)-6, y = median(mut_load_df$mutational_load), 
-                            xend = median(mut_load_df$x_val)+6, yend = median(mut_load_df$mutational_load)), colour = "red")
+  p <- p + geom_segment(aes(x = median(TMB_df_plot$x_val) - x_shift, 
+                            y = median(TMB_df_plot$TMB), 
+                            xend = median(TMB_df_plot$x_val) + x_shift, 
+                            yend = median(TMB_df_plot$TMB)), 
+                        colour = "red")
   p <- p + coord_flip()
   p <- p + theme(axis.title.y=element_blank(),
                  axis.text.y=element_blank(),
@@ -269,47 +289,62 @@ if (params$type == "glioma") {
   p <- p + scale_y_log10(breaks = scales::trans_breaks("log10", function(x) 10^x),
                          labels = scales::trans_format("log10", scales::math_format(10^.x)))
   p <- p + ylab("Mutational Load")
-  p <- p + geom_point(data=mut_load_df[mut_load_df$Patient == params$ID, ], aes(x=x_val, y=mutational_load), colour="red", size=4, shape = 1)
+  p <- p + geom_point(data=TMB_df_plot[TMB_df_plot$ID == params$ID, ], 
+                      aes(x=x_val, y=TMB), colour="red", size=4, shape = 1)
   p <- p + facet_grid(rows = vars(for_facet))
   p
 }
 ```
 
-`r if(params$type == "glioma") {paste0("Mutational loads (Numbers of mutations per Mb) for ", nrow(mut_load_df), " patients (including the current patient, circled in red) are represented in the above scatter plot. Red vertical line segment represents the overall median mutational load value.")}`
+`r if(params$type == "glioma") {paste0("TMBs (mutations/Mb) of all previously reported tumors, including the current tumor, circled in red are presented in the above scatter plots, separately displayed for (a) primary (untreated tumors only, top panel, n =", nrow(pr_tms), ") and (b) primary + recurrent tumors (untreated tumors and tumors previously undergone treatment, bottom panel, n=", nrow(TMB_df), "). The red vertical lines indicate median TMB for each panel. The table below displays the median TMBs per glioma molecular subsets over all previous analyses for primary and primary+recurrent tumors separately.")}`
 
 ```{r load_table, echo = F, comment=NA}
 if (params$type == "glioma") {
-  load_tbl_ALL <- tapply(mut_load_df$mutational_load, mut_load_df$subset, median)
-  load_tbl_ALL <- as.data.frame(load_tbl_ALL)
-  load_tbl_ALL <- rbind(load_tbl_ALL, median(mut_load_df$mutational_load))
-  rownames(load_tbl_ALL)[nrow(load_tbl_ALL)] <- "Overall"
-  colnames(load_tbl_ALL) <- "Primary (untreated) + Recurrent (previoulsy treated)"
+  ss_TMB_tbl_ALL <- tapply(TMB_df$TMB, TMB_df$subset, median)
+  ss_TMB_tbl_ALL <- as.data.frame(ss_TMB_tbl_ALL)
+  ss_TMB_tbl_ALL <- rbind(ss_TMB_tbl_ALL, 
+                          median(TMB_df$TMB))
+  rownames(ss_TMB_tbl_ALL)[nrow(ss_TMB_tbl_ALL)] <- "Overall"
+  colnames(ss_TMB_tbl_ALL) <- "Primary\n+\nRecurrent"
   
-  tmp <- mut_load_df[mut_load_df$primary, ]
-  load_tbl_primary <- tapply(tmp$mutational_load, tmp$subset, median)
-  load_tbl_primary <- as.data.frame(load_tbl_primary)
-  load_tbl_primary <- rbind(load_tbl_primary, median(tmp$mutational_load))
-  rownames(load_tbl_primary)[nrow(load_tbl_primary)] <- "Overall"
-  colnames(load_tbl_primary) <- "Primary (untreated)"
+  tmp <- TMB_df[TMB_df$primary, ]
+  ss_TMB_tbl_prim <- tapply(tmp$TMB, tmp$subset, median)
+  ss_TMB_tbl_prim <- as.data.frame(ss_TMB_tbl_prim)
+  ss_TMB_tbl_prim <- rbind(ss_TMB_tbl_prim, 
+                           median(tmp$TMB))
+  rownames(ss_TMB_tbl_prim)[nrow(ss_TMB_tbl_prim)] <- "Overall"
+  colnames(ss_TMB_tbl_prim) <- "Primary"
   
-  load_tbl <- cbind(load_tbl_ALL, load_tbl_primary)
+  ss_TMB_tbl <- cbind(ss_TMB_tbl_ALL, ss_TMB_tbl_prim)
   
-  kable_styling(kable(load_tbl,
-                      format = "latex", booktabs = TRUE), 
-                latex_options = "scale_down")
+  kable_styling(kable(ss_TMB_tbl,
+                      format = "latex", 
+                      booktabs = TRUE,
+                      align = "c"))
 }
 ```
 
-** Mutation load (Number of mutations per Mb) for the current patient is: `r mut_load` **
+> Mutation load (Number of mutations per Mb) for the current tumor sample is: `r mut_load` 
 
 ### III. b. Microsatellite Instability Status
+
+The microsatellite instability (MSI) status was predicted using the tool MSIpred [5]. MSIpred computes 22 somatic mutational features (predictors of MSI) and using these features, it predicts tumor MSI status as microsatellite instability high (MSI-H) or microsatellite stable (MSS) using a machine learning method, support vector machine (SVM). 
+
+Additionally, polymerase-epsilon (POLE) deficiency is predicted based on the presence of both of:
+
+1. total count of somatic SNVs / Mb > 60 AND
+2. count of somatic indels in single sequence repats / Mb < 0.18
+
+[5]: Wang C, Liang C. MSIpred: a python package for tumor microsatellite instability classification from tumor mutation annotation data using a support vector machine. Sci Rep. 2018;8(1):17546.
+
 
 ```{r classification, echo = F, comment=NA}
 class_tbl <- read.csv("MSIpred/MSIpred_prediction.csv", row.names = 1)
 rownames(class_tbl) <- NULL
-kable_styling(kable(class_tbl,
-                    format = "latex", booktabs = TRUE), 
-              latex_options = "scale_down")
+kable_styling(kable(load_tbl,
+                        format = "latex", 
+                        booktabs = TRUE,
+                        align = "c"))
 ```
 
 `r if(params$type == "glioma") {"### III. c. Important SNVs in Glioma"} else {"### III. c. Important SNVs in Medulloblastoma"}`
