@@ -63,8 +63,7 @@ renamed_g_cols <- c("Gene", "rs_id", "Chr", "Pos",
                     "Ref_depth", "Alt_depth", "AF")
 
 ### ACMG incidental
-if(any(grepl("ACMG",germline_mutations$Filter_Group)))
-{
+if(any(grepl("ACMG",germline_mutations$Filter_Group))) {
   tmp <- germline_mutations[grepl("ACMG", germline_mutations$Filter_Group),]
   tmp <- tmp[, germline_cols]
   colnames(tmp) <- renamed_g_cols
@@ -73,8 +72,7 @@ if(any(grepl("ACMG",germline_mutations$Filter_Group)))
   write.csv(tmp, "./Germline/ACMG.csv", row.names = F)
 }
 ### Cancer Gene Census
-if(any(grepl("CGC",germline_mutations$Filter_Group)))
-{
+if(any(grepl("CGC",germline_mutations$Filter_Group))) {
   tmp <- germline_mutations[grepl("CGC",germline_mutations$Filter_Group),]
   tmp <- tmp[, germline_cols]
   colnames(tmp) <- renamed_g_cols
@@ -85,8 +83,7 @@ if(any(grepl("CGC",germline_mutations$Filter_Group)))
   write.csv(tmp, "./Germline/CGC.csv", row.names = F)
 }
 ### Cancer Predisposition Gene
-if(any(grepl("CPG",germline_mutations$Filter_Group)))
-{
+if(any(grepl("CPG",germline_mutations$Filter_Group))) {
   tmp <- germline_mutations[grepl("CPG", germline_mutations$Filter_Group),]
   tmp <- tmp[, germline_cols]
   colnames(tmp) <- renamed_g_cols
@@ -96,8 +93,7 @@ if(any(grepl("CPG",germline_mutations$Filter_Group)))
   write.csv(tmp, "./Germline/CPG.csv", row.names = F)
 }
 ### Fanconi Anemia Pathway
-if(any(grepl("FAP",germline_mutations$Filter_Group)))
-{
+if(any(grepl("FAP",germline_mutations$Filter_Group))) {
   tmp <- germline_mutations[grepl("FAP", germline_mutations$Filter_Group),]
   tmp <- tmp[, germline_cols]
   colnames(tmp) <- renamed_g_cols
@@ -107,8 +103,7 @@ if(any(grepl("FAP",germline_mutations$Filter_Group)))
   write.csv(tmp, "./Germline/FAP.csv", row.names = F)
 }
 ### Other
-if(nrow(germline_mutations) != 0)
-{
+if(nrow(germline_mutations) != 0) {
   tmp <- germline_mutations
   tmp <- tmp[, germline_cols]
   colnames(tmp) <- renamed_g_cols
@@ -127,36 +122,36 @@ write.csv(common_var, "./Germline/common_var.csv", row.names = FALSE)
 
 # Somatic Mutations -------------------------------------------------------
 dir.create("./Somatic_SNV")
-somatic_SNVs <- read.delim("../Oncotator/annotated.sSNVs.tsv", comment.char="#")
-somatic_SNVs <- somatic_SNVs[order(somatic_SNVs$tumor_f, decreasing = TRUE), ]
+somatic_vars <- read.delim("../Oncotator/annotated.sSNVs.tsv", comment.char="#")
+somatic_vars <- somatic_vars[order(somatic_vars$tumor_f, decreasing = TRUE), ]
 
 # Subsetting for (MuTect's default) HQ filters
-somatic_SNVs <- subset(somatic_SNVs, 
+somatic_vars <- subset(somatic_vars, 
                        alt_allele_seen=="True" & 
                          short_tandem_repeat_membership == "False")
 
 # Filter for tumor_f > 0.05
-somatic_SNVs <- somatic_SNVs[somatic_SNVs$tumor_f > 0.05, ]
+somatic_vars <- somatic_vars[somatic_vars$tumor_f > 0.05, ]
 
 # Exclude variants in FLAGs
 flags <- c("TTN", "MUC16", "OBSCN", "AHNAK2", "SYNE1", "FLG", 
            "MUC5B", "DNAH17", "PLEC", "DST", "SYNE2", "NEB", "HSPG2", 
            "LAMA5", "AHNAK", "HMCN1", "USH2A", "DNAH11", "MACF1", 
            "MUC17")
-somatic_SNVs <- somatic_SNVs[!somatic_SNVs$Hugo_Symbol %in% flags]
+somatic_vars <- somatic_vars[!somatic_vars$Hugo_Symbol %in% flags]
 
 # Change "" protein changes to NA
-somatic_SNVs$Protein_Change[somatic_SNVs$Protein_Change == ""] <- NA
+somatic_vars$Protein_Change[somatic_vars$Protein_Change == ""] <- NA
 
 # keep only needed annotations
 keep <- c("Hugo_Symbol", "Chromosome", "Start_position", "End_position", "Variant_Classification", "Variant_Type", 
           "Reference_Allele", "Tumor_Seq_Allele1", "Tumor_Seq_Allele2", "tumor_f", "genotype", "dbSNP_RS", "Genome_Change", "Codon_Change",
           "Protein_Change", "UniProt_AApos", "DNARepairGenes_Role", "FamilialCancerDatabase_Syndromes",
           "COSMIC_n_overlapping_mutations", "COSMIC_total_alterations_in_gene", "dbNSFP_SIFT_pred", 
-          colnames(somatic_SNVs)[grepl("^GO_", colnames(somatic_SNVs))], 
-          colnames(somatic_SNVs)[grepl("^CGC_", colnames(somatic_SNVs))])
+          colnames(somatic_vars)[grepl("^GO_", colnames(somatic_vars))], 
+          colnames(somatic_vars)[grepl("^CGC_", colnames(somatic_vars))])
 
-somatic_SNVs <- somatic_SNVs[, c("Hugo_Symbol", "Variant_Classification", "Protein_Change", "Genome_Change",
+somatic_vars <- somatic_vars[, c("Hugo_Symbol", "Variant_Classification", "Protein_Change", "Genome_Change",
                                  "tumor_f", "genotype", "COSMIC_n_overlapping_mutations",
                                  "COSMIC_total_alterations_in_gene","UniProt_Region","dbNSFP_SIFT_pred")]
 
@@ -165,117 +160,90 @@ high_conseq <- c("Frame_Shift_Del", "Frame_Shift_Ins", "Splice_Site",
                  "Translation_Start_Site","Nonsense_Mutation", 
                  "Nonstop_Mutation", "In_Frame_Del","In_Frame_Ins", 
                  "Missense_Mutation")
-somatic_SNVs <- somatic_SNVs[somatic_SNVs$Variant_Classification %in% high_conseq, ]
+somatic_vars <- somatic_vars[somatic_vars$Variant_Classification %in% high_conseq, ]
 
 #### Other annotations 
-somatic_SNVs$DNA_repair <- ifelse(somatic_SNVs$Hugo_Symbol %in% dna_repair_df$Gene.Name, "yes", "no")
-somatic_SNVs$DNA_repair[somatic_SNVs$DNA_repair == "yes"] <- dna_repair_df$FUNCTION[match(somatic_SNVs$Hugo_Symbol[somatic_SNVs$DNA_repair == "yes"],dna_repair_df$Gene.Name)]
+somatic_vars$DNA_repair <- ifelse(somatic_vars$Hugo_Symbol %in% dna_repair_df$Gene.Name, "yes", "no")
+somatic_vars$DNA_repair[somatic_vars$DNA_repair == "yes"] <- dna_repair_df$FUNCTION[match(somatic_vars$Hugo_Symbol[somatic_vars$DNA_repair == "yes"],dna_repair_df$Gene.Name)]
 
-somatic_SNVs$Irinotecan_resp <- ifelse(somatic_SNVs$Hugo_Symbol %in% irinotecan_df$Genes, "yes", "no")
-somatic_SNVs$TMZ_resistance <- ifelse(somatic_SNVs$Hugo_Symbol %in% tmz_df$gene, "yes", "no")
+somatic_vars$Irinotecan_resp <- ifelse(somatic_vars$Hugo_Symbol %in% irinotecan_df$Genes, "yes", "no")
+somatic_vars$TMZ_resistance <- ifelse(somatic_vars$Hugo_Symbol %in% tmz_df$gene, "yes", "no")
 
-somatic_SNVs$selected_KEGG <- ifelse(somatic_SNVs$Hugo_Symbol %in% KEGG_df$Gene, "yes", "no")
-somatic_SNVs$selected_KEGG[somatic_SNVs$selected_KEGG == "yes"] <- KEGG_df$pathway[match(somatic_SNVs$Hugo_Symbol[somatic_SNVs$selected_KEGG == "yes"],KEGG_df$Gene)]
+somatic_vars$selected_KEGG <- ifelse(somatic_vars$Hugo_Symbol %in% KEGG_df$Gene, "yes", "no")
+somatic_vars$selected_KEGG[somatic_vars$selected_KEGG == "yes"] <- KEGG_df$pathway[match(somatic_vars$Hugo_Symbol[somatic_vars$selected_KEGG == "yes"],KEGG_df$Gene)]
 
-somatic_SNVs_unfiltered <- somatic_SNVs
+somatic_vars_unfiltered <- somatic_vars
 
 ### Important Glioma SNVs
-if(any(somatic_SNVs$Hugo_Symbol %in% curated_SNV$Gene))
-{
-  idx <- which(somatic_SNVs$Hugo_Symbol %in% curated_SNV$Gene)
+if(any(somatic_vars$Hugo_Symbol %in% curated_SNV$Gene)) {
+  idx <- which(somatic_vars$Hugo_Symbol %in% curated_SNV$Gene)
   keep <- c()
-  for(i in idx)
-  {
-    tmp <- somatic_SNVs[i, ]
+  for(i in idx) {
+    tmp <- somatic_vars[i, ]
     idx2 <- which(curated_SNV$Gene == tmp$Hugo_Symbol)
     
-    if(any(curated_SNV$Genomic_Alt[idx2] != ""))
-    {
+    if(any(curated_SNV$Genomic_Alt[idx2] != "")) {
       tmp2 <- curated_SNV$Genomic_Alt[idx2]
-      if(unlist(strsplit(tmp$Genome_Change,":"))[2] %in% tmp2)
+      if(unlist(strsplit(tmp$Genome_Change,":"))[2] %in% tmp2) {
         keep <- c(keep, i)
-    }
-    else if(any(curated_SNV$Protein_Alt[idx2] != ""))
-    {
+      }
+    } else if(any(curated_SNV$Protein_Alt[idx2] != "")) {
       tmp2 <- curated_SNV$Protein_Alt[idx2]
-      if(unlist(strsplit(tmp$Protein_Change,"\\."))[2] %in% tmp2)
+      if(unlist(strsplit(tmp$Protein_Change,"\\."))[2] %in% tmp2) {
         keep <- c(keep, i)
-      else if(any(grepl("\\*",tmp2)))
-      {
+      } else if(any(grepl("\\*",tmp2))) {
         tmp2 <- tmp2[grepl("\\*",tmp2)]
         tmp2 <- sapply(tmp2, function(x) substr(x, 1, nchar(x)-1))
         
         tmp3 <- unlist(strsplit(tmp$Protein_Change,"\\."))[2]
-        if(substr(tmp3,1,nchar(tmp3)-1) %in% tmp2)
+        if(substr(tmp3,1,nchar(tmp3)-1) %in% tmp2) {
           keep <- c(keep, i)
+        }
       }
-    }
-    else
+    } else{
       keep <- c(keep, i)
+    }
   }
-  tmp <- somatic_SNVs[keep,]
-  somatic_SNVs <- somatic_SNVs[-keep,]
+  tmp <- somatic_vars[keep,]
+  somatic_vars <- somatic_vars[-keep,]
   write.csv(tmp, "Somatic_SNV/important_SNVs.csv",row.names = F)
 }
 
 ### in CGC and COSMIC hotspot
-if(any(somatic_SNVs$Hugo_Symbol %in% CGC_df$Gene.Symbol))
-{
-  cgc_id <- which(somatic_SNVs$Hugo_Symbol %in% CGC_df$Gene.Symbol)
-  hotspot_id <- which(somatic_SNVs$Hugo_Symbol %in% CGC_df$Gene.Symbol & somatic_SNVs$COSMIC_n_overlapping_mutations>0) # should this be >10 or more?
-  if(length(hotspot_id)>0)
-  {
-    cgc_id <- setdiff(cgc_id,hotspot_id)
-    tmp <- somatic_SNVs[hotspot_id,]
+if(any(somatic_vars$Hugo_Symbol %in% CGC_df$Gene.Symbol)) {
+  cgc_id <- which(somatic_vars$Hugo_Symbol %in% CGC_df$Gene.Symbol)
+  hotspot_id <- which(somatic_vars$Hugo_Symbol %in% CGC_df$Gene.Symbol & somatic_vars$COSMIC_n_overlapping_mutations>0) # should this be >10 or more?
+  if(length(hotspot_id) > 0) {
+    cgc_id <- setdiff(cgc_id, hotspot_id)
+    tmp <- somatic_vars[hotspot_id,]
     write.csv(tmp, "Somatic_SNV/COSMIC_hotspot.csv", row.names = F)
   }
   
-  if(length(cgc_id) >0)
-  {
-    tmp <- somatic_SNVs[cgc_id,]
+  if(length(cgc_id) > 0) {
+    tmp <- somatic_vars[cgc_id,]
     write.csv(tmp, "Somatic_SNV/CGC_genes.csv", row.names = F)
   }
-  somatic_SNVs <- somatic_SNVs[-c(cgc_id,hotspot_id),]
+  somatic_vars <- somatic_vars[-c(cgc_id, hotspot_id),]
 }
 
 ### DNA damage repair
-if(any(somatic_SNVs$DNA_repair != "no"))
-{
-  tmp <- somatic_SNVs[somatic_SNVs$DNA_repair != "no",]
-  somatic_SNVs <- somatic_SNVs[somatic_SNVs$DNA_repair == "no",]
+if(any(somatic_vars$DNA_repair != "no")) {
+  tmp <- somatic_vars[somatic_vars$DNA_repair != "no",]
+  somatic_vars <- somatic_vars[somatic_vars$DNA_repair == "no",]
   
   write.csv(tmp, "Somatic_SNV/DDR_related.csv",row.names = F)
 }
 
 ### Important KEGG Pathways
-if(any(somatic_SNVs$selected_KEGG != "no"))
-{
-  tmp <- somatic_SNVs[somatic_SNVs$selected_KEGG != "no",]
-  somatic_SNVs <- somatic_SNVs[somatic_SNVs$selected_KEGG == "no",]
+if(any(somatic_vars$selected_KEGG != "no")) {
+  tmp <- somatic_vars[somatic_vars$selected_KEGG != "no",]
+  somatic_vars <- somatic_vars[somatic_vars$selected_KEGG == "no",]
   
   write.csv(tmp, "Somatic_SNV/KEGG_selected.csv",row.names = F)
 }
 
-### Irinotecan Response
-if(any(somatic_SNVs$Irinotecan_resp != "no"))
-{
-  tmp <- somatic_SNVs[somatic_SNVs$Irinotecan_resp != "no",]
-  somatic_SNVs <- somatic_SNVs[somatic_SNVs$Irinotecan_resp == "no",]
-  
-  write.csv(tmp, "Somatic_SNV/irinotecan.csv",row.names = F)
-}
-
-### TMZ Resistance
-if(any(somatic_SNVs$TMZ_resistance != "no"))
-{
-  tmp <- somatic_SNVs[somatic_SNVs$TMZ_resistance != "no",]
-  somatic_SNVs <- somatic_SNVs[somatic_SNVs$TMZ_resistance == "no",]
-  
-  write.csv(tmp, "Somatic_SNV/tmz_res.csv",row.names = F)
-}
 ### Other coding
-write.csv(somatic_SNVs, "Somatic_SNV/Other_coding.csv", row.names = F)
-
+write.csv(somatic_vars, "Somatic_SNV/Other_coding.csv", row.names = F)
 
 # Helper functions for Cytoband & Gene annotations ------------------------
 source(file.path(notates_dir, "segment_annotation_hg19.R"))
@@ -348,8 +316,7 @@ for(i in seq_len(original_len)) {
     cnv_by_gene$ratio[i] <- cnv$ratio[idx[1]]
     cnv_by_gene$av_cov[i] <- cnv$average.coverage[idx[1]]
     cnv_by_gene$Segment[i] <- names(gene)[1]
-    for(j in 2:length(segments_vec))
-    {
+    for(j in 2:length(segments_vec)) {
       cnv_by_gene <- rbind(cnv_by_gene, 
                            data.frame(Gene = names(gene_segs)[i], 
                                       Segment = segments_vec[j],
@@ -363,7 +330,7 @@ cnv_by_gene$av_cov <- as.numeric(cnv_by_gene$av_cov)
 cnv_by_gene$ratio <- as.numeric(cnv_by_gene$ratio)
 cnv_by_gene$CN <- sapply(cnv_by_gene$ratio, copy_num_call)
 
-write.csv(cnv_by_gene, "SCNA/all_genes.csv", row.names = F)
+cnv_by_gene_unfilted <- cnv_by_gene
 
 ### Glioma important SCNAs
 if(any(cnv_by_gene$Gene %in% curated_CNA$Gene)) {
@@ -446,9 +413,11 @@ for(i in 1:length(gene_segs)) {
   }
 }
 
+loh_by_gene_unfiltered <- loh_by_gene
+
 ### LOH + sSNV
-if (any(loh_by_gene$Gene %in% somatic_SNVs_unfiltered$Hugo_Symbol)) {
-  tmp <- loh_by_gene[loh_by_gene$Gene %in% somatic_SNVs_unfiltered$Hugo_Symbol,]
+if (any(loh_by_gene$Gene %in% somatic_vars_unfiltered$Hugo_Symbol)) {
+  tmp <- loh_by_gene[loh_by_gene$Gene %in% somatic_vars_unfiltered$Hugo_Symbol,]
   write.csv(tmp, "LOH/d_hit_loh.csv", row.names = F)
   loh_by_gene <- loh_by_gene[!loh_by_gene$Gene %in% tmp$Gene]
 }
@@ -457,5 +426,41 @@ if (any(loh_by_gene$Gene %in% somatic_SNVs_unfiltered$Hugo_Symbol)) {
 if(any(loh_by_gene$Gene %in% CGC_df$Gene.Symbol))
 {
   tmp <- loh_by_gene[loh_by_gene$Gene %in% CGC_df$Gene.Symbol,]
-  write.csv(tmp, "LOH/CGC_loh.csv", row.names = F)
+  write.csv(tmp, "LOH/CGC_loh.csv", row.names = FALSE)
+}
+
+# Double-hit --------------------------------------------------------------
+cond1 <- somatic_vars_unfiltered$Hugo_Symbol %in% loh_by_gene_unfiltered$Gene
+cond2 <- somatic_vars_unfiltered$Hugo_Symbol %in% cnv_by_gene_unfilted$Gene
+
+if (any(cond1) | any(cond2) ) {
+  dhit_vars_df <- somatic_vars_unfiltered[cond1 | cond2, ]
+  dhit_vars <- tapply(dhit_vars_df$Protein_Change, dhit_vars_df$Hugo_Symbol, 
+                      function(x) paste(x, collapse = ", "))
+  
+  tmp_scna <- cnv_by_gene_unfilted[cnv_by_gene_unfilted$Gene %in% names(dhit_vars), ]
+  tmp_LOH <- loh_by_gene_unfiltered[loh_by_gene_unfiltered$Gene %in% names(dhit_vars), ]
+  
+  tmp_scna <- tapply(tmp_scna$ratio, tmp_scna$Gene, 
+                     function(ratio) paste(paste0(ifelse(ratio > 1, "AMP", "DEL"), " (", round(ratio, 2),")"), collapse = ", "))
+  
+  tmp_LOH <- tapply(tmp_LOH$Absolute_Diff, tmp_LOH$Gene, 
+                    function(x) paste(x, collapse = ", "))
+  
+  dhit_df <- data.frame(Hugo_Symbol = names(dhit_vars),
+                        PR_CH = dhit_vars)
+  
+  dhit_df$SCNA <- tmp_scna[match(dhit_df$Hugo_Symbol, names(tmp_scna))]
+  dhit_df$SCNA[is.na(dhit_df$SCNA)] <- "-"
+  dhit_df$LOH <- tmp_LOH[match(dhit_df$Hugo_Symbol, names(tmp_LOH))]
+  dhit_df$LOH[is.na(dhit_df$LOH)] <- "-"
+  
+  dhit_vars_df <- dhit_vars_df[, c("Hugo_Symbol", "DNA_repair", "Irinotecan_resp", "TMZ_resistance", "selected_KEGG")]
+  dhit_vars_df <- unique(dhit_vars_df)
+  dhit_vars_df$CGC <- ifelse(dhit_vars_df$Hugo_Symbol %in% CGC_df$Gene.Symbol, "yes", "no")
+  
+  dhit_df <- merge(dhit_df, dhit_vars_df)
+  colnames(dhit_df) <- c("Gene Symbol", "Protein Change(s)", "SCNA", "LOH",
+                         "DDR", "Irino", "TMZ", "KEGG", "CGC")
+  write.csv(dhit_df, "double_hit.csv", row.names = FALSE)
 }

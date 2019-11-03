@@ -549,13 +549,30 @@ if(file.exists("./NOTATES/LOH/CGC_loh.csv"))
                       format = "latex", 
                       booktabs = TRUE,
                       align = "c"))
-}else
-{
+} else {
   cat("No event to report.")
 }
 ```
 
 \newpage
+
+# VI. Genes with Double Hit
+
+In this section, the list of genes with somatic SNV/indel(s) as well as SCNA and/or LOH events are reported. A double hit strongly suggests a relevant tumor-suppressor gene.
+
+```{r, dhit_tbl, echo = F, comment=NA}
+if(file.exists("./NOTATES/double_hit.csv"))
+{
+  dhit_tbl <- read.csv("./NOTATES/double_hit.csv")
+  kable_styling(kable(dhit_tbl,
+                      format = "latex", 
+                      booktabs = TRUE,
+                      align = "c"))
+} else {
+  cat("No event to report.")
+}
+```
+
 
 # VI. Tumor Heterogeneity Analysis 
 ```{r n3_or_n2, echo=F}
