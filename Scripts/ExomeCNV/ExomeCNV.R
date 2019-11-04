@@ -2,10 +2,11 @@
 ## Project: NOTATES
 ## Script purpose: Script for identifying SCNAs 
 ## using ExomeCNV
-## Date: Oct 27, 2019
+## Date: Nov 5, 2019
 ## Author: Ege Ulgen
 ##################################################
 
+options(stringsAsFactors = TRUE)
 # set read length
 args <- commandArgs(trailingOnly=TRUE)
 read_length <- as.numeric(args[1])
@@ -99,7 +100,7 @@ patient.logR <- calculate.logR(normal, tumor)
 
 # admix_rate <- 1 - 2*mean(sapply(LOH.sites$baf_tumor/LOH.sites$coverage_tumor, function(x) abs(x - 0.5)))
 # print(admix_rate)
-admix_rate <- read.delim("../tumor_calculatecontamination.table", stringsAsFactors = F)
+admix_rate <- read.delim("../contamination.table")
 admix_rate <- admix_rate$contamination
 
 ###### Call CNV for each exon
