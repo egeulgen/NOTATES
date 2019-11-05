@@ -379,6 +379,21 @@ loh <- read.csv("../ExomeCNV/LOH_regions.csv", header = TRUE)
 loh <- loh[loh$difference > 0.4,]
 loh <- loh[,c("chr", "position.start", "position.end", "normal_b", "tumor_b", "difference")]
 
+cond1 <- loh$position.start == loh$position.end
+if (any(cond1)) {
+  loh$position.end[cond1] <- loh$position.end[cond1] + 1
+}
+
+cond2 <- loh$position.start > loh$position.end
+if (any(cond2)) {
+  tmp1 <- loh$position.start[cond2]
+  tmp2 <- loh$position.end[cond2]
+  
+  loh$position.end[cond2] <- tmp1
+  loh$position.start[cond2] <- tmp2
+}
+
+
 #find genes that are overlapped by segment and segments that overlap genes
 loh_genes_overlap <- annotate_genes(loh)
 loh_cytb_overlap <- annotate_cytb(loh, cytobands_df)
