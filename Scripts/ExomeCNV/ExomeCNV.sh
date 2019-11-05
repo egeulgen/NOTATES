@@ -15,7 +15,7 @@ tumor_name=$2
 echo "########################## Prep for ExomeCNV - Coverage files     " $(date)
 mkdir -p ./ExomeCNV/DepthOfCoverage
 echo "############################### Normal: Creating coverage file    " $(date)
-$JAVA "$resources_dir""/Tools/GenomeAnalysisTK.jar" \
+$JAVA "$GATK3" \
 	-T DepthOfCoverage \
 	-omitBaseOutput -omitLocusTable \
 	-R $genome \
@@ -25,7 +25,7 @@ $JAVA "$resources_dir""/Tools/GenomeAnalysisTK.jar" \
 	-o ./ExomeCNV/DepthOfCoverage/normal.coverage
 
 echo "############################### Tumor: Creating coverage file     " $(date)
-$JAVA "$resources_dir""/Tools/GenomeAnalysisTK.jar" \
+$JAVA "$GATK3" \
 	-T DepthOfCoverage \
 	-omitBaseOutput -omitLocusTable \
 	-R $genome \

@@ -104,9 +104,12 @@ bash "$scripts_dir"/mapping_preprocessing.sh $tumor_name "tumor"
 ########################################## HC ##################################
 echo "############## Running Haplotype Caller for Germline Variants    " $(date)
 mkdir Germline
-$GATK HaplotypeCaller -R $genome -I normal.final.bam --dbsnp $dbSNP \
+$GATK HaplotypeCaller \
+	-R $genome \
+	-I normal.final.bam \
+	--dbsnp $dbSNP \
 	--intervals $Bait_Intervals --interval-padding 100 \
-	-O Germline/raw.snps.indels.vcf
+	-O Germline/raw.snps.indels.vcf.gz
 
 ################################### Mutect #####################################
 echo "############################################# Running MuTect2    " $(date)
@@ -188,7 +191,7 @@ oncotator -v --input_format=VCF --db-dir "$oncotator_ds" --tx-mode CANONICAL \
 echo "################################ Annotating Germline Variants    " $(date)
 oncotator -v --input_format=VCF --db-dir "$oncotator_ds" --tx-mode CANONICAL \
 	-c "$oncotator_ds"/tx_exact_uniprot_matches.AKT1_CRLF2_FGFR1.txt \
-	Germline/filtered_germline_variants.vcf \
+	Germline/filtered_germline_variants.vcf.gz \
 	Oncotator/annotated.germline_SNVs.tsv hg19
 
 deactivate
