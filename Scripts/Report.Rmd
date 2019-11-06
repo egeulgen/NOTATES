@@ -66,7 +66,7 @@ kable_styling(kable(QC_df,
 
 ## Ib. Tumor Purity
 
-The fraction of reads coming from cross-sample contamination, reflecting a measure of tumor purity, is calculated using the GATK - `CalculateContamination` tool. This tool calculates the fraction of reads coming from cross-sample contamination and estimates contamination based on the signal from reference reads at homozygous alternate sites.
+The fraction of reads coming from cross-sample contamination, reflecting a measure of tumor purity, is calculated using the GATK - `CalculateContamination` tool. This tool calculates the fraction of reads coming from cross-sample contamination and estimates contamination based on the signal from reference reads at homozygous alternate sites. Another purity/clonality estimate based on copy number alterations (CNAs) is presented under section VII. Tumor Heterogeneity Analysis.
 
 ```{r contamination, echo = F}
 contam_df <- read.delim("contamination.table")
