@@ -44,7 +44,7 @@ expr2='vc.getGenotype("'"$normal_name"'").getPhredScaledQual()>=30.0'
 expr3='vc.getGenotype("'"$normal_name"'").getDP()>=20'
 
 $GATK SelectVariants -R $genome \
-	-V ./Germline/filtered_germline_variants.vcf -select-type SNP \
+	-V ./Germline/filtered_germline_variants.vcf.gz -select-type SNP \
 	--selectExpressions "$expr1" \
 	--selectExpressions "$expr2" \
 	--selectExpressions "$expr3" \
@@ -55,27 +55,27 @@ $GATK SelectVariants -R $genome \
 # HC
 $GATK HaplotypeCaller -R $genome -I tumor.final.bam \
 	--intervals ./ExomeCNV/baf/normal_HQ_SNPs.vcf \
-	-O ./ExomeCNV/baf/raw_tumor_HC.vcf
+	-O ./ExomeCNV/baf/raw_tumor_HC.vcf.gz
 
 # Filter
-$GATK VariantFiltration -R $genome -V ./ExomeCNV/baf/raw_tumor_HC.vcf \
+$GATK VariantFiltration -R $genome -V ./ExomeCNV/baf/raw_tumor_HC.vcf.gz \
 	--filter-expression "QD < 2.0 || MQ < 40.0 || FS > 60.0 || SOR > 4.0 || MQRankSum < -12.5 || ReadPosRankSum < -8.0" \
-	--filter-name "HQ_SNP_filter" -O ./ExomeCNV/baf/filtered_tumor_HC.vcf
+	--filter-name "HQ_SNP_filter" -O ./ExomeCNV/baf/filtered_tumor_HC.vcf.gz
 
-rm ./ExomeCNV/baf/raw_tumor_HC.vcf ./ExomeCNV/baf/raw_tumor_HC.vcf.idx
+rm ./ExomeCNV/baf/raw_tumor_HC.vcf.gz ./ExomeCNV/baf/raw_tumor_HC.vcf.gz.tbi
 
 # Select variants
 expr1='vc.getGenotype("'"$tumor_name"'").getPhredScaledQual() >= 30.0'
 expr2='vc.getGenotype("'"$tumor_name"'").getDP() >= 20'
 
 $GATK SelectVariants -R $genome \
-	-V ./ExomeCNV/baf/filtered_tumor_HC.vcf -select-type SNP \
+	-V ./ExomeCNV/baf/filtered_tumor_HC.vcf.gz -select-type SNP \
 	--selectExpressions "$expr1" \
 	--selectExpressions "$expr2" \
 	--exclude-filtered --restrict-alleles-to BIALLELIC \
 	-O ./ExomeCNV/baf/tumor_HQ_SNPs.vcf
 
-rm ./ExomeCNV/baf/filtered_tumor_HC.vcf ./ExomeCNV/baf/filtered_tumor_HC.vcf.idx
+rm ./ExomeCNV/baf/filtered_tumor_HC.vcf.gz ./ExomeCNV/baf/filtered_tumor_HC.vcf.gz.tbi
 
 Rscript "$scripts_dir"'/ExomeCNV/VCF_parser_BAF.R'
 
