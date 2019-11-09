@@ -2,14 +2,9 @@
 ## Project: NOTATES
 ## Script purpose: Script for performing KEGG pathway
 ## enrichment analysis (ORA) using high-confidence genes
-## Date: Oct 27, 2019
+## Date: Nov 10, 2019
 ## Author: Ege Ulgen
 ##################################################
-
-# dir for data sources (same as the directory where script is located)
-initial_options <- commandArgs(trailingOnly = FALSE)
-script_name <- sub("--file=", "", initial_options[grep("--file=", initial_options)])
-script_dir <- dirname(script_name)
 
 # Install package(s) if necessary -----------------------------------------
 if(!suppressPackageStartupMessages(require(KEGGREST))) {
@@ -19,154 +14,105 @@ if(!suppressPackageStartupMessages(require(KEGGREST))) {
   suppressPackageStartupMessages(library(KEGGREST))
 }
 
-if (!suppressPackageStartupMessages(require(Homo.sapiens))) {
+if(!suppressPackageStartupMessages(require(KEGGgraph))) {
   if (!requireNamespace("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
-  BiocManager::install("Homo.sapiens")
-  suppressPackageStartupMessages(library(Homo.sapiens))
+  BiocManager::install("KEGGgraph")
+  suppressPackageStartupMessages(library(KEGGgraph))
 }
 
-if(!suppressPackageStartupMessages(require(pathview))) {
+if(!suppressPackageStartupMessages(require(AnnotationDbi))) {
   if (!requireNamespace("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
-  BiocManager::install("pathview")
-  suppressPackageStartupMessages(library(pathview))
+  BiocManager::install("AnnotationDbi")
+  suppressPackageStartupMessages(library(AnnotationDbi))
 }
 
-# Extract coding genes with mutations -------------------------------------
-somatic_SNVs <- read.delim("./Oncotator/annotated.sSNVs.tsv", stringsAsFactors=F, comment.char="#")
+if(!suppressPackageStartupMessages(require(org.Hs.eg.db))) {
+  if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+  BiocManager::install("org.Hs.eg.db")
+  suppressPackageStartupMessages(library(org.Hs.eg.db))
+}
+
+if(!suppressPackageStartupMessages(require(pathfindR))) {
+  install.packages("pathfindR")
+  suppressPackageStartupMessages(library(pathfindR))
+}
+
+options(stringsAsFactors = FALSE)
+
+# High impact somatic SNV/indels ------------------------------------------
+somatic_vars <- read.delim("./Oncotator/annotated.sSNVs.tsv", stringsAsFactors=F, comment.char="#")
 
 # Subsetting for (MuTect's default) HQ filters
-somatic_SNVs <- subset(somatic_SNVs, 
-                       alt_allele_seen=="True" &
-                       short_tandem_repeat_membership == "False")
+somatic_vars <- subset(somatic_vars, 
+                       alt_allele_seen=="True")
 
-# Keep only coding mutations
-somatic_SNVs <- somatic_SNVs[!somatic_SNVs$Variant_Classification %in% c("Silent", "3'UTR", "3'Flank", "5'UTR", "5'Flank", 
-                                                                         "IGR", "Intron", "lincRNA", "RNA"),]
+# Exclude variants in FLAGs
+flags <- c("TTN", "MUC16", "OBSCN", "AHNAK2", "SYNE1", "FLG", 
+           "MUC5B", "DNAH17", "PLEC", "DST", "SYNE2", "NEB", "HSPG2", 
+           "LAMA5", "AHNAK", "HMCN1", "USH2A", "DNAH11", "MACF1", 
+           "MUC17")
+somatic_vars <- somatic_vars[!somatic_vars$Hugo_Symbol %in% flags, ]
 
-genes_df <- data.frame(Gene = unique(somatic_SNVs$Hugo_Symbol),
-                                Value = 1, stringsAsFactors = F)
+# Only include somatic snv/indels with Variant Classifications of High/Moderate variant consequences
+high_conseq <- c("Frame_Shift_Del", "Frame_Shift_Ins", "Splice_Site", 
+                 "Translation_Start_Site","Nonsense_Mutation", 
+                 "Nonstop_Mutation", "In_Frame_Del","In_Frame_Ins", 
+                 "Missense_Mutation")
+somatic_vars <- somatic_vars[somatic_vars$Variant_Classification %in% high_conseq, ]
 
-# Exract coding genes with CNV --------------------------------------------
-cnv_df <- read.csv("NOTATES/SCNA/all_genes.csv", stringsAsFactors = F)
-cnv_df <- cnv_df[cnv_df$ratio <= 0.5 | cnv_df$ratio >= 1.5,]
-
-if( anyDuplicated(cnv_df$Gene) != 0 ) {
-  dups <- unique(cnv_df$Gene[duplicated(cnv_df$Gene)])
-  for(dup in dups) {
-    cnv_df$ratio[cnv_df$Gene == dup] <- mean(cnv_df$ratio[cnv_df$Gene == dup])
-  }
-}
-cnv_df <- cnv_df[!duplicated(cnv_df$Gene),]
-
-cnv_df$logR <- log2(cnv_df$ratio)
-cnv_df <- cnv_df[,c("Gene", "logR")]
-
-final_df <- merge(genes_df, cnv_df, by = "Gene", all = TRUE)
-final_df$Value[is.na(final_df$Value)] <- 0
-final_df$logR[is.na(final_df$logR)] <- 0
-
-genes_of_interest <- unique(final_df$Gene)
-
-# Enrichment -----------------------------------
-# created named list, eg:  path:map00010: "Glycolysis / Gluconeogenesis"
-pathways_list <- keggList("pathway", "hsa")
-
-# make them into KEGG-style human pathway identifiers
-pathway_codes <- sub("path:", "", names(pathways_list))
-pathways_list <- sub(" - Homo sapiens \\(human\\)", "", pathways_list)
-
-# 
-# # subsetting by c(TRUE, FALSE) -- which repeats
-# # as many times as needed, sorts through some
-# # unexpected packaging of geneIDs in the GENE element
-# # of each pw[[n]]
-# kegg_gene_sets <- sapply(pathway_codes, function(pwid){
-#   pw <- keggGet(pwid)
-#   pw <- pw[[1]]$GENE[c(F, T)]
-#   pw <- sub(";.+", "", pw)
-#   pw <- pw[grep("^[A-Za-z0-9_-]+(\\@)?$", pw)] ## removing mistaken lines
-#   pw <- unique(pw)
-#   return(pw)
-# })
-# saveRDS(kegg_gene_sets, file.path(script_dir, "kegg_gene_sets.RDS"))
-
-kegg_gene_sets <- readRDS(file.path(script_dir, "kegg_gene_sets.RDS"))
-
-# exclude very smmall and very large pw gene sets
-cnts <- vapply(kegg_gene_sets, length, 1)
-kegg_gene_sets <- kegg_gene_sets[cnts >= 10 & cnts <= 300]
-
-# universal gene set
-all_genes <- as.data.frame(genes(TxDb.Hsapiens.UCSC.hg19.knownGene))
-tmp <- as.data.frame(org.Hs.egSYMBOL)
-all_genes <- tmp$symbol[match(all_genes$gene_id, tmp$gene_id)]
-all_genes <- all_genes[!is.na(all_genes)]
-all_genes <- unique(all_genes)
-
-hyperg_test <- function(pw_genes, chosen_genes, all_genes) {
-  pw_genes_selected <- length(intersect(chosen_genes, pw_genes))
-  pw_genes_in_pool <- length(pw_genes)
-  tot_genes_in_pool <- length(all_genes)
-  non_pw_genes_in_pool <- tot_genes_in_pool - pw_genes_in_pool
-  num_selected_genes <- length(chosen_genes)
+HQ_mut_df <- data.frame(GENE = somatic_vars$Hugo_Symbol,
+                        PVAL = 0.05)
   
-  stats::phyper(pw_genes_selected - 1, pw_genes_in_pool,
-                non_pw_genes_in_pool, num_selected_genes,
-                lower.tail = FALSE)
-}
+HQ_mut_res <- run_pathfindR(HQ_mut_df,
+                            plot_enrichment_chart = FALSE,
+                            visualize_enriched_terms = FALSE,
+                            output_dir = "pathfindR_results/HQ_mutations")
+write.csv(HQ_mut_res, "pathfindR_results/HQ_mutations/mut_enrichment_results.csv")
 
-enrichment_res <- sapply(kegg_gene_sets, hyperg_test, genes_of_interest, all_genes)
-enrichment_res <- sort(enrichment_res)
-enrichment_res <- data.frame(Pathway = pathways_list[match(paste0("path:", names(enrichment_res)), 
-                                                           names(pathways_list))],
-                             p = enrichment_res,
-                             FDR_p = p.adjust(enrichment_res, method = "BH"), 
-                             row.names = names(enrichment_res))
-enrichment_res <- enrichment_res[enrichment_res$FDR_p < 0.05,, drop = F]
+clustered <- cluster_enriched_terms(HQ_mut_res, 
+                                    plot_clusters_graph = FALSE, 
+                                    plot_dend = FALSE)
 
-# Visualization -----------------------------------------------------------
-rownames(final_df) <- final_df$Gene
-final_df <- final_df[,-1]
-colnames(final_df) <- c("Mutation", "CNV")
+png("pathfindR_results/HQ_mutations/enrichment_chart.png", width = 500, height = 700)
+enrichment_chart(clustered, plot_by_cluster = TRUE)
+dev.off()
 
-dir.create("pathways")
-setwd("pathways/")
 
-### Pathways in Cancer
-suppressMessages(pathview(gene.data = final_df, gene.idtype = "SYMBOL",
-                          pathway.id = "hsa05200", species = "hsa", out.suffix = "CANCER", 
-                          keys.align = "y", kegg.native = TRUE, key.pos = "topright", same.layer = FALSE, silent = TRUE))
+# High impact SCNAs -------------------------------------------------------
+cnv_df <- read.csv("NOTATES/SCNA/all_genes.csv", stringsAsFactors = F)
+cnv_df <- cnv_df[cnv_df$ratio <= 0.5 | cnv_df$ratio >= 1.5, ]
 
-### Enriched Pathways 
-enrichment_res$Somatic_Mutation <- ""
-enrichment_res$SCNA_down <- ""
-enrichment_res$SCNA_up <- ""
-
-cnv_up <- cnv_df$Gene[cnv_df$logR > 0 ]
-cnv_down <- cnv_df$Gene[cnv_df$logR < 0 ]
-
-for(i in 1:nrow(enrichment_res))
-{
-  path_suffix <- gsub("\\/", "_", enrichment_res$Pathway[i])
-  tmp <- suppressMessages(pathview(gene.data = final_df, gene.idtype = "SYMBOL",
-                                   pathway.id = rownames(enrichment_res)[i], species = "hsa", out.suffix = path_suffix, 
-                                   keys.align = "y", kegg.native = TRUE, key.pos = "topright", same.layer = FALSE, silent = TRUE))
-  if (is.list(tmp)) {
-    
-    tmp <- tmp$plot.data.gene$all.mapped
-    tmp <- tmp[tmp!=""]
-    tmp <- unlist(strsplit(tmp, split = ","))
-    tmp <- unique(tmp)
-    tmp <- select(org.Hs.eg.db, tmp, "SYMBOL", "ENTREZID")[,2]
-    
-    enrichment_res$Somatic_Mutation[i] <- paste(tmp[tmp %in% genes_df$Gene], collapse = ", ")
-    enrichment_res$SCNA_down[i] <- paste(tmp[tmp %in% cnv_down], collapse = ", ")
-    enrichment_res$SCNA_up[i] <- paste(tmp[tmp %in% cnv_up], collapse = ", ")
+if (any(duplicated(cnv_df$Gene))) {
+  tmp_df <- c()
+  for (i in seq_len(nrow(cnv_df))) {
+    if (sum(cnv_df$Gene == cnv_df$Gene[i]) == 1) {
+      tmp_df <- rbind(tmp_df, cnv_df[i, ])
+    } else {
+      tmp <- cnv_df[cnv_df$Gene == cnv_df$Gene[i], ]
+      tmp$ratio <- mean(tmp$ratio)
+      tmp_df <- rbind(tmp_df, tmp[1, ])
+    }
   }
+  cnv_df <- tmp_df
 }
 
-write.csv(enrichment_res, "enrichment_results.csv", row.names = T)
+HQ_SCNA_df <- data.frame(Gene = cnv_df$Gene,
+                         Change = ifelse(cnv_df$ratio > 1, 1, -1),
+                         PVAL = 0.05)
 
-setwd("..")
+HQ_SCNA_res <- run_pathfindR(HQ_SCNA_df,
+                            plot_enrichment_chart = FALSE,
+                            visualize_enriched_terms = FALSE,
+                            output_dir = "pathfindR_results/HQ_SCNA")
+write.csv(HQ_SCNA_res, "pathfindR_results/HQ_SCNA/SCNA_enrichment_results.csv")
+
+clustered <- cluster_enriched_terms(HQ_SCNA_res, 
+                                    plot_clusters_graph = FALSE, 
+                                    plot_dend = FALSE)
+
+png("pathfindR_results/HQ_SCNA/enrichment_chart.png", width = 500, height = 700)
+enrichment_chart(clustered, plot_by_cluster = TRUE)
+dev.off()

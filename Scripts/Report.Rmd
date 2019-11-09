@@ -614,22 +614,41 @@ kable_styling(k_tbl, latex_options = "scale_down")
 
 \newpage
 
-# IX. KEGG Pathway Enrichment Analysis
+# IX. pathfindR - KEGG Pathway Enrichment Analysis
 
-Genes that harbor non-synonymous exonic mutations and/or homozygous deletion or multi-copy amplification (3+) are included in the enrichment analysis.
+Pathway enrichment analysis is frequently utilized for studying the mechanisms underlying oncological processes. For this analysis KEGG pathway enrichment analysis was performed using the active-subnetwork-oriented enrichment approach of `pathfindR`. `pathfindR` leverages interaction information from a protein-protein interaction network (PIN) to identify distinct active subnetworks ^[An active subnetwork can be defined as a group of interconnected genes in a PIN that predominantly consists of significantly altered genes] and then perform enrichment analyses on these subnetworks. 
 
-### IX. a. KEGG - Pathways in Cancer
+
+
+### IX. a. Enrichment Results for High-impact Somatic SNV/indels
+
+Genes that harbor non-synonymous exonic mutations are included in the enrichment analysis.
 
 \begin{center}
-\includegraphics[width=500pt]{./pathways/{hsa05200.CANCER.multi}.png}
+\includegraphics[width=500pt]{./pathfindR_results/HQ_mutations/{enrichment_chart}.png}
 \end{center}
 
-The right half of a gene indicates copy number ratio (scaled between -1 and 1) while the left half indicates somatic mutation status (1 if mutant).
+```{r, enr_res_SCNA, echo = F, comment=NA}
+enr_res <- read.csv("pathfindR_results/HQ_mutations/mut_enrichment_results.csv", row.names = 1)
+enr_res$Down_regulated <- NULL
+colnames(enr_res)[7] <- "Somatic SNV/indel"
+kable_styling(kable(enr_res,
+                    format = "latex", booktabs = TRUE), 
+              latex_options = "scale_down")
+```
 
-### IX. b. KEGG - Pathway Enrichment Results
 
-```{r, enr_res, echo = F, comment=NA}
-enr_res <- read.csv("pathways/enrichment_results.csv", row.names = 1)
+### IX. b. Enrichment Results for High-impact SCNA
+
+Genes that harbor homozygous deletion or multi-copy amplification (3+) are included in the enrichment analysis.
+
+\begin{center}
+\includegraphics[width=500pt]{./pathfindR_results/HQ_SCNA/{enrichment_chart}.png}
+\end{center}
+
+```{r, enr_res_SCNA, echo = F, comment=NA}
+enr_res <- read.csv("pathfindR_results/HQ_SCNA/SCNA_enrichment_results.csv", row.names = 1)
+colnames(enr_res)[7:8] <- c("Amplification", "Deletion")
 kable_styling(kable(enr_res,
                     format = "latex", booktabs = TRUE), 
               latex_options = "scale_down")
