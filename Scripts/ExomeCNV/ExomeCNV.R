@@ -38,6 +38,11 @@ if(!suppressPackageStartupMessages(require(foreach))) {
 # set workdir to currentdir/ExomeCNV
 setwd("./ExomeCNV/")
 
+chr.list <- c("chr1", "chr2", "chr3", "chr4", "chr5", "chr6", 
+              "chr7", "chr8", "chr9", "chr10", "chr11", "chr12", 
+              "chr13", "chr14", "chr15", "chr16", "chr17", "chr18",
+              "chr19", "chr20", "chr21", "chr22", "chrX", "chrY")
+
 # LOH Calling -------------------------------------------------------------
 load("./baf/BAF_data.Rdata")
 
@@ -62,11 +67,6 @@ LOH.regions$difference <- abs(LOH.regions$tumor_b - LOH.regions$normal_b)
 write.csv(LOH.regions, file = "LOH_regions.csv", row.names = F)
 
 # CNV Calling -------------------------------------------------------------
-chr.list <- c("chr1", "chr2", "chr3", "chr4", "chr5", "chr6", 
-              "chr7", "chr8", "chr9", "chr10", "chr11", "chr12", 
-              "chr13", "chr14", "chr15", "chr16", "chr17", "chr18",
-              "chr19", "chr20", "chr21", "chr22", "chrX", "chrY")
-
 ###### Load in coverage files
 read.coverage.gatk.fix <- function(file){
   gatk = read.table(file, header = TRUE)

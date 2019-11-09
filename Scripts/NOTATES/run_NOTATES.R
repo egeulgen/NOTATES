@@ -330,6 +330,8 @@ cnv_by_gene$av_cov <- as.numeric(cnv_by_gene$av_cov)
 cnv_by_gene$ratio <- as.numeric(cnv_by_gene$ratio)
 cnv_by_gene$CN <- sapply(cnv_by_gene$ratio, copy_num_call)
 
+write.csv(cnv_by_gene, "SCNA/all_genes.csv", row.names = F)
+
 cnv_by_gene_unfilted <- cnv_by_gene
 
 ### Glioma important SCNAs
@@ -434,7 +436,7 @@ loh_by_gene_unfiltered <- loh_by_gene
 if (any(loh_by_gene$Gene %in% somatic_vars_unfiltered$Hugo_Symbol)) {
   tmp <- loh_by_gene[loh_by_gene$Gene %in% somatic_vars_unfiltered$Hugo_Symbol,]
   write.csv(tmp, "LOH/d_hit_loh.csv", row.names = F)
-  loh_by_gene <- loh_by_gene[!loh_by_gene$Gene %in% tmp$Gene]
+  loh_by_gene <- loh_by_gene[!loh_by_gene$Gene %in% tmp$Gene, ]
 }
 
 ### CGC genes
