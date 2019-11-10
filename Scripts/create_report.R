@@ -32,10 +32,11 @@ file.copy(file.path(args[2], "Report.Rmd"),
 render(input = reportRMD_fname, 
        params = list(ID = args[1], 
                      script_dir = path.expand(args[2]), 
-                     exome_length = as.numeric(args[3]), 
-                     type = args[4],
-                     primary_tm = as.logical(args[5]),
-                     tumor_sample = args[6]),
+                     exome_length = as.numeric(args[3]),
+                     exome_bed = args[4],
+                     type = args[5],
+                     primary_tm = as.logical(args[6]),
+                     tumor_sample = args[7]),
        output_format = "pdf_document")
 
 # Clean up

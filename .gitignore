@@ -10,5 +10,5 @@ Scripts/num_bases.R
 *.Rproj
 Scripts/man_run.sh
 Scripts/*TMB_table.RDS
-
 *.icloud
+Scripts/*_SCNA_burden_table.RDS

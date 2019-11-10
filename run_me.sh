@@ -214,10 +214,10 @@ bash "$THetA"/bin/CreateExomeInput -s ExomeCNV/CNV.segment.copynumber.txt \
 rm tumor.final.pileup normal.final.pileup
 
 echo "############################################### Running THetA    " $(date)
-# bash "$THetA"/bin/RunTHetA THetA/CNV.input \
-# 	--DIR THetA/output --NUM_PROCESSES 8
-bash "$THetA"/bin/RunTHetA THetA/CNV.input --TUMOR_FILE THetA/tumor_SNP.txt \
-	--NORMAL_FILE THetA/normal_SNP.txt --DIR THetA/output --NUM_PROCESSES 8
+bash "$THetA"/bin/RunTHetA THetA/CNV.input \
+	--DIR THetA/output --NUM_PROCESSES 8
+# bash "$THetA"/bin/RunTHetA THetA/CNV.input --TUMOR_FILE THetA/tumor_SNP.txt \
+# 	--NORMAL_FILE THetA/normal_SNP.txt --DIR THetA/output --NUM_PROCESSES 8
 
 ################################################################################
 #################################### QC ########################################
@@ -254,7 +254,8 @@ Rscript "$scripts_dir"/MSIpred_prep.R $patientID
 python "$scripts_dir"/MSIpred_analysis.py $simple_repeats $exome_length
 
 echo "######################## Creating Report                         " $(date)
-Rscript "$scripts_dir"/create_report.R $patientID $scripts_dir $exome_length $tumor_type $primary_cond $tumor_sample
+Rscript "$scripts_dir"/create_report.R $patientID $scripts_dir \
+	$exome_length $Bait_Intervals $tumor_type $primary_cond $tumor_sample
 
 echo "######################## Finished 							   " $(date)
 exit 0
