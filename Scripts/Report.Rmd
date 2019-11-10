@@ -88,7 +88,7 @@ Any pathogenic/likely-pathogenic germline SNV/indel that affects any of the gene
 
 [^1]: Kalia SS, Adelman K, Bale SJ, et al. Recommendations for reporting of secondary findings in clinical exome and genome sequencing, 2016 update (ACMG SF v2.0): a policy statement of the American College of Medical Genetics and Genomics. Genet Med. 2017;19(2):249-255.
 
-```{r, ACMG, echo = F, comment=NA}
+```{r ACMG, echo = F, comment = NA}
 if(file.exists("./NOTATES/Germline/ACMG.csv")) {
   ACMG_df <- read.csv("./NOTATES/Germline/ACMG.csv")
   rownames(ACMG_df) <- ACMG_df$ID
@@ -107,7 +107,7 @@ if(file.exists("./NOTATES/Germline/ACMG.csv")) {
 
 Cancer Gene Census (CGC) from the Catalogue of Somatic Mutations in Cancer (COSMIC) database is a catalogue of genes which contain mutations that have been causally linked to cancer [(https://cancer.sanger.ac.uk/census)](https://cancer.sanger.ac.uk/census). This subsection filters the germline SNV/indels for genes that are reported in CGC. 
 
-```{r, CGC, echo = F, comment=NA}
+```{r CGC, echo = F, comment=NA}
 if(file.exists("./NOTATES/Germline/CGC.csv")) {
   gCGC_df <- read.csv("./NOTATES/Germline/CGC.csv")
   kable_styling(kable(gCGC_df,
@@ -126,7 +126,7 @@ Genes in which germline mutations confer highly or moderately increased risks of
 
 [^2]: Rahman N. Realizing the promise of cancer predisposition genes. Nature. 2014;505(7483):302-8.
 
-```{r, CPG, echo = F, comment=NA}
+```{r CPG, echo = F, comment=NA}
 if(file.exists("./NOTATES/Germline/CPG.csv")) {
   CPG_df <- read.csv("./NOTATES/Germline/CPG.csv")
   kable_styling(kable(CPG_df,
@@ -145,7 +145,7 @@ Fanconi anemia is characterized by the inability to repair DNA interstrand cross
 
 [^3]: Niraj J, Farkkila A, D'andrea AD. The Fanconi Anemia Pathway in Cancer. Annu Rev Cancer Biol. 2019;3:457-478.
 
-```{r, FAP, echo = F, comment=NA}
+```{r FAP, echo = F, comment=NA}
 if(file.exists("./NOTATES/Germline/FAP.csv")) {
   FAP_df <- read.csv("./NOTATES/Germline/FAP.csv")
   kable_styling(kable(FAP_df,
@@ -161,7 +161,7 @@ if(file.exists("./NOTATES/Germline/FAP.csv")) {
 
 Germline variations in other manually curated genes (alterations of which may carry clinical importance) are reported under this subsection.
 
-```{r, OTH, echo = F, comment=NA}
+```{r OTH, echo = F, comment=NA}
 if(file.exists("./NOTATES/Germline/OTHER.csv")) {
   OTH_df <- read.csv("./NOTATES/Germline/OTHER.csv")
   kable_styling(kable(OTH_df,
@@ -177,7 +177,7 @@ if(file.exists("./NOTATES/Germline/OTHER.csv")) {
 
 `r if(params$type == "glioma") {"This subsection is distinct from the previous portion of the germline alterations section. Here, germline alterations are filtered for “coding single nucleotide polymorphisms (SNPs)” which were previously shown in genome wide association studies (GWAS) to have an association with gliomas and were listed in the GWAS catalog [(https://www.ebi.ac.uk/gwas/efotraits/EFO_0005543)](https://www.ebi.ac.uk/gwas/efotraits/EFO_0005543)"}`
 
-```{r, common, echo = F, comment=NA}
+```{r common, echo = F, comment=NA}
 if (params$type == "glioma") {
   if(file.exists("./NOTATES/Germline/common_var.csv")) {
     common_df <- read.csv("./NOTATES/Germline/common_var.csv")
@@ -238,6 +238,7 @@ if (!file.exists(TMB_tbl_path)) {
 } else {
   TMB_df <- readRDS(TMB_tbl_path)
 }
+
 ## add to TMB table if not present
 if(!params$ID %in% TMB_df$ID) {
   high_conseq <- c("Frame_Shift_Del", "Frame_Shift_Ins", "Splice_Site", 
@@ -256,41 +257,40 @@ if(!params$ID %in% TMB_df$ID) {
   saveRDS(TMB_df, TMB_tbl_path)
 }
 
-  ## Scatter plots of TMB over all analyses
-  # rank TMB vals
-  TMB_df <- TMB_df[order(TMB_df$TMB),]
-  TMB_df$x_val <- 1:nrow(TMB_df)
-  
-  # prep for facets
-  TMB_df$for_facet <- ifelse(TMB_df$primary, "Primary", "Primary\n+\nRecurrent")
-  pr_tms <- TMB_df[TMB_df$for_facet == "Primary", ]
-  pr_tms$for_facet <- "Primary\n+\nRecurrent"
-  TMB_df_plot <- as.data.frame(rbind(TMB_df, pr_tms))
-  
-  # calculate height of median line segment
-  x_shift <- max(nrow(TMB_df_plot) / 7, 3)
-  
-  suppressPackageStartupMessages(library(ggplot2))
-  p <- ggplot(TMB_df_plot, aes(x=x_val, y=TMB, group = subset))
-  p <- p + geom_point(size=2, aes(shape=subset, color=subset))
-  p <- p + scale_color_manual(values=c('#56B4E9','#E69F00', 'gray60'))
-  p <- p + geom_segment(aes(x = median(TMB_df_plot$x_val) - x_shift, 
-                            y = median(TMB_df_plot$TMB), 
-                            xend = median(TMB_df_plot$x_val) + x_shift, 
-                            yend = median(TMB_df_plot$TMB)), 
-                        colour = "red")
-  p <- p + coord_flip()
-  p <- p + theme(axis.title.y=element_blank(),
-                 axis.text.y=element_blank(),
-                 axis.ticks.y=element_blank())
-  p <- p + scale_y_log10(breaks = scales::trans_breaks("log10", function(x) 10^x),
-                         labels = scales::trans_format("log10", scales::math_format(10^.x)))
-  p <- p + ylab("Mutational Load")
-  p <- p + geom_point(data=TMB_df_plot[TMB_df_plot$ID == params$ID, ], 
-                      aes(x=x_val, y=TMB), colour="red", size=4, shape = 1)
-  p <- p + facet_grid(rows = vars(for_facet))
-  p
-}
+## Scatter plots of TMB over all analyses
+# rank TMB vals
+TMB_df <- TMB_df[order(TMB_df$TMB),]
+TMB_df$x_val <- 1:nrow(TMB_df)
+
+# prep for facets
+TMB_df$for_facet <- ifelse(TMB_df$primary, "Primary", "Primary\n+\nRecurrent")
+pr_tms <- TMB_df[TMB_df$for_facet == "Primary", ]
+pr_tms$for_facet <- "Primary\n+\nRecurrent"
+TMB_df_plot <- as.data.frame(rbind(TMB_df, pr_tms))
+
+# calculate height of median line segment
+x_shift <- max(nrow(TMB_df_plot) / 7, 3)
+
+suppressPackageStartupMessages(library(ggplot2))
+p <- ggplot(TMB_df_plot, aes(x=x_val, y=TMB, group = subset))
+p <- p + geom_point(size=2, aes(shape=subset, color=subset))
+p <- p + scale_color_manual(values=c('#56B4E9','#E69F00', 'gray60'))
+p <- p + geom_segment(aes(x = median(TMB_df_plot$x_val) - x_shift, 
+                          y = median(TMB_df_plot$TMB), 
+                          xend = median(TMB_df_plot$x_val) + x_shift, 
+                          yend = median(TMB_df_plot$TMB)), 
+                      colour = "red")
+p <- p + coord_flip()
+p <- p + theme(axis.title.y=element_blank(),
+               axis.text.y=element_blank(),
+               axis.ticks.y=element_blank())
+p <- p + scale_y_log10(breaks = scales::trans_breaks("log10", function(x) 10^x),
+                       labels = scales::trans_format("log10", scales::math_format(10^.x)))
+p <- p + ylab("Mutational Load")
+p <- p + geom_point(data=TMB_df_plot[TMB_df_plot$ID == params$ID, ], 
+                    aes(x=x_val, y=TMB), colour="red", size=4, shape = 1)
+p <- p + facet_grid(rows = vars(for_facet))
+p
 ```
 
 `r if(params$type == "glioma") {paste0("TMBs (mutations/Mb) of all previously reported tumors, including the current tumor, circled in red are presented in the above scatter plots, separately displayed for (a) primary (untreated tumors only, top panel, n =", nrow(pr_tms), ") and (b) primary + recurrent tumors (untreated tumors and tumors previously undergone treatment, bottom panel, n=", nrow(TMB_df), "). The red vertical lines indicate median TMB for each panel. The table below displays the median TMBs per glioma molecular subsets over all previous analyses for primary and primary+recurrent tumors separately.")}`
@@ -561,7 +561,7 @@ if(file.exists("./NOTATES/LOH/CGC_loh.csv"))
 
 In this section, the list of genes with somatic SNV/indel(s) as well as SCNA and/or LOH events are reported. A double hit strongly suggests a relevant tumor-suppressor gene.
 
-```{r, dhit_tbl, echo = F, comment=NA}
+```{r dhit_tbl, echo = F, comment=NA}
 if(file.exists("./NOTATES/double_hit.csv"))
 {
   dhit_tbl <- read.csv("./NOTATES/double_hit.csv")
@@ -603,7 +603,7 @@ THetA (Tumor Heterogeneity Analysis) is an algorithm that estimates the tumor pu
 \includegraphics[width=200pt]{mut_signatures_pie.pdf}
 \end{center}
 
-```{r, mut_sigs, echo = F, comment=NA}
+```{r mut_sigs, echo = F, comment=NA}
 mut_sigs <- read.csv("./mut_signatures.csv", row.names = 1)
 k_tbl <- kable(mut_sigs, format = "latex", booktabs = TRUE)
 k_tbl <- column_spec(k_tbl, 3, width = "30em")
@@ -625,10 +625,10 @@ Pathway enrichment analysis is frequently utilized for studying the mechanisms u
 Genes that harbor non-synonymous exonic mutations are included in the enrichment analysis.
 
 \begin{center}
-\includegraphics[width=500pt]{./pathfindR_results/HQ_mutations/{enrichment_chart}.png}
+\includegraphics[width=300pt]{./pathfindR_results/HQ_mutations/{enrichment_chart}.png}
 \end{center}
 
-```{r, enr_res_SCNA, echo = F, comment=NA}
+```{r enr_res_mut, echo = F, comment=NA}
 enr_res <- read.csv("pathfindR_results/HQ_mutations/mut_enrichment_results.csv", row.names = 1)
 enr_res$Down_regulated <- NULL
 colnames(enr_res)[7] <- "Somatic SNV/indel"
@@ -643,10 +643,10 @@ kable_styling(kable(enr_res,
 Genes that harbor homozygous deletion or multi-copy amplification (3+) are included in the enrichment analysis.
 
 \begin{center}
-\includegraphics[width=500pt]{./pathfindR_results/HQ_SCNA/{enrichment_chart}.png}
+\includegraphics[width=300pt]{./pathfindR_results/HQ_SCNA/{enrichment_chart}.png}
 \end{center}
 
-```{r, enr_res_SCNA, echo = F, comment=NA}
+```{r enr_res_SCNA, echo = F, comment=NA}
 enr_res <- read.csv("pathfindR_results/HQ_SCNA/SCNA_enrichment_results.csv", row.names = 1)
 colnames(enr_res)[7:8] <- c("Amplification", "Deletion")
 kable_styling(kable(enr_res,
