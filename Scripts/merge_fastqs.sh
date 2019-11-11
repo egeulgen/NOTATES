@@ -1,8 +1,8 @@
 #!/bin/bash
 ##################################################
 ## Project: NOTATES
-## Script purpose: Configuration file for the NOT
-## Whole Exome Sequencing pipeline
+## Script purpose: Deternine Lanes and merge fastq
+## files per lane
 ## Date: Oct 22, 2019
 ## Author: Ege Ulgen
 ##################################################
