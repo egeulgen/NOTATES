@@ -62,9 +62,9 @@ dev.off()
 LOH.regions <- the.loh[the.loh$LOH, ]
 LOH.regions$tumor_b <- LOH.regions$tumor.baf/LOH.regions$tumor.coverage
 LOH.regions$normal_b <- LOH.regions$normal.baf/LOH.regions$normal.coverage
-LOH.regions$difference <- abs(LOH.regions$tumor_b - LOH.regions$normal_b)
+LOH.regions$abs_difference <- abs(LOH.regions$tumor_b - LOH.regions$normal_b)
 # LOH.regions <- LOH.regions[LOH.regions$difference > 0.4,]
-write.csv(LOH.regions, file = "LOH_regions.csv", row.names = F)
+write.csv(LOH.regions, file = "LOH_regions.csv", row.names = FALSE)
 
 # CNV Calling -------------------------------------------------------------
 ###### Load in coverage files

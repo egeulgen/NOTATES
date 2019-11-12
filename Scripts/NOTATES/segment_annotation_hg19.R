@@ -2,7 +2,7 @@
 ## Project: NOTATES
 ## Script purpose: Annotation of genes within segments 
 ## and the cytobands containing the segments
-## Date: Oct 27, 2019
+## Date: Nov 11, 2019
 ## Author: Ege Ulgen
 ##################################################
 
@@ -22,6 +22,8 @@ if (!suppressPackageStartupMessages(require(GenomicRanges))) {
 }
 
 options(stringsAsFactors = FALSE)
+
+# SCNA Annotation ---------------------------------------------------------
 
 #' Annotate Genes within Segments (hg19)
 #'
@@ -151,7 +153,138 @@ annotate_cytb <- function(segment_df, cytobands_df) {
               Segment_cytbs = segment_cytbs))
 }
 
+# LOH annotation ----------------------------------------------------------
 
+#' LOH - Annotate Genes overlapping Segments (hg19)
+#'
+#' @param segment_df data frame of segments (first 3 columns must be segment's chr, start and end)
+#'
+#' @return a list containing 2 objects: \describe{
+#'   \item{Gene_segments}{list of segments per gene, each element is a vector of segment intervals}
+#'   \item{Segment_genes}{list of genes per segment, each element containg the genes in the given segment}
+#' }
+loh_annotate_genes <- function(segment_df) {
+  segment_gr <- makeGRangesFromDataFrame(segment_df)
+  hg19_genes_gr <- genes(TxDb.Hsapiens.UCSC.hg19.knownGene)
+  
+  # find regions overlapping genes
+  overlapGenes <- findOverlaps(query = hg19_genes_gr, 
+                               subject = segment_gr, 
+                               type = "any",
+                               ignore.strand = TRUE)
+  
+  #####  list genes within each segment
+  tmp <- factor(subjectHits(overlapGenes),
+                levels = seq_len(subjectLength(overlapGenes)))
+  res <- splitAsList(mcols(hg19_genes_gr)[["gene_id"]][queryHits(overlapGenes)], tmp)
+  res <- as.list(res)
+  
+  all_syms_tbl <- as.data.frame(org.Hs.egSYMBOL)
+  segment_genes <- lapply(res, function(x) {
+    if (length(x) == 0)
+      return(NULL)
+    # convert to gene symbol
+    syms <- all_syms_tbl$symbol[match(x, all_syms_tbl$gene_id)]
+    syms <- syms[!is.na(syms)]
+    return(syms)
+  })
+  
+  ##### list overlapping segments for each gene
+  segment_gr$seg_idx <- seq_len(nrow(segment_df))
+  
+  tmp <- factor(queryHits(overlapGenes),
+                levels = seq_len(queryLength(overlapGenes)))
+  res <- splitAsList(mcols(segment_gr)[["seg_idx"]][subjectHits(overlapGenes)], tmp)
+  res <- as.list(res)
+  
+  # exclude genes with no segments
+  cnts <- vapply(res, length, 1L)
+  res <- res[cnts != 0]
+  
+  # fetch gene ids using idx
+  names(res) <- mcols(hg19_genes_gr)[["gene_id"]][as.numeric(names(res))]
+  
+  # convert ids to symbols
+  tmp <- all_syms_tbl$symbol[match(names(res), all_syms_tbl$gene_id)]
+  res <- res[!is.na(tmp)]
+  names(res) <- all_syms_tbl$symbol[match(names(res), all_syms_tbl$gene_id)]
+  
+  gene_segments <- lapply(res, function(x) {
+    tmp <- segment_df[x, ]
+    seg_pos_vec <- apply(tmp, 1, function(y) paste0(y[1], ":", y[2], "-", y[3]))
+    seg_pos_vec <- unname(seg_pos_vec)
+    return(seg_pos_vec)
+  })
+  
+  return(list(Gene_segments = gene_segments, 
+              Segment_genes = segment_genes))
+}
+
+
+#' LOH - Annotate Segments Overlapping Cytobands (hg19)
+#'
+#' @param segment_df data frame of segments (first 3 columns must be segment's chr, start and end)
+#' @param cytobands_df data frame of cytobands (can be obtained through UCSC)
+#' 
+#' @return a list containing 2 objects: \describe{
+#'   \item{Cytb_segments}{list of segments per cytoband, each element is a vector of segment intervals}
+#'   \item{Segment_cytbs}{list of cytobands overlapped by the given segment, each element is a vector of cytobands for the segment}
+#' }
+loh_annotate_cytb <- function(segment_df, cytobands_df) {
+  
+  ## Segments GRanges object
+  segment_gr <- makeGRangesFromDataFrame(segment_df)
+  segment_gr$seg_idx <- seq_len(nrow(segment_df))
+  
+  ## Cytobands GRanges object
+  cytb_gr <- makeGRangesFromDataFrame(cytobands_df,
+                                      starts.in.df.are.0based = TRUE,
+                                      keep.extra.columns = TRUE)
+  
+  # find regions overlapping genes
+  olap <- findOverlaps(query = cytb_gr, 
+                       subject = segment_gr, 
+                       type = "any",
+                       ignore.strand = TRUE)
+  
+  ##### list cytoband(s) overlapping each segment
+  tmp <- factor(subjectHits(olap),
+                levels = seq_len(subjectLength(olap)))
+  res <- splitAsList(mcols(cytb_gr)[["Cytb_name"]][queryHits(olap)], tmp)
+  res <- as.list(res)
+  
+  segment_cytbs <- lapply(res, function(x) {
+    if (length(x) == 0)
+      return(NULL)
+    return(x)
+  })
+  
+  ##### list overlapping segments for each cytoband
+  tmp <- factor(queryHits(olap),
+                levels = seq_len(queryLength(olap)))
+  res <- splitAsList(mcols(segment_gr)[["seg_idx"]][subjectHits(olap)], tmp)
+  res <- as.list(res)
+  
+  # exclude genes with no segments
+  cnts <- vapply(res, length, 1L)
+  res <- res[cnts != 0]
+  
+  # fetch gene ids using idx
+  names(res) <- mcols(cytb_gr)[["Cytb_name"]][as.numeric(names(res))]
+  
+  cytb_segments <- lapply(res, function(x) {
+    tmp <- segment_df[x, ]
+    seg_pos_vec <- apply(tmp, 1, function(y) paste0(y[1], ":", y[2], "-", y[3]))
+    seg_pos_vec <- unname(seg_pos_vec)
+    return(seg_pos_vec)
+  })
+  
+  return(list(Cytb_segments = cytb_segments, 
+              Segment_cytbs = segment_cytbs))
+}
+
+
+# Common ------------------------------------------------------------------
 
 #' Shorten Cytoband Annotation
 #'
@@ -166,7 +299,7 @@ shorten_cyt_anno <- function(cyt, cytobands_df)
     return(cyt)
   if(is.null(cyt))
     return(NA)
-
+  
   tmp <- subset(cytobands_df, Chr == sub("[p-q].*", "", cyt[1]))
   
   tmp_P <- tmp$Cytb_name[grepl("p", tmp$Cytb_name)]
@@ -187,5 +320,5 @@ shorten_cyt_anno <- function(cyt, cytobands_df)
   if (cyt[1] == tmp_Q_start & cyt[length(cyt)] == tmp_Q_end) 
     return(paste0(sub("[p-q].*", "", cyt[1]), "q"))
   ## multiple segments
-    return(paste0(cyt[1], "-", cyt[length(cyt)]))
+  return(paste0(cyt[1], "-", cyt[length(cyt)]))
 }

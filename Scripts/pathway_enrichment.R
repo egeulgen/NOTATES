@@ -2,7 +2,7 @@
 ## Project: NOTATES
 ## Script purpose: Script for performing KEGG pathway
 ## enrichment analysis (ORA) using high-confidence genes
-## Date: Nov 10, 2019
+## Date: Nov 11, 2019
 ## Author: Ege Ulgen
 ##################################################
 
@@ -72,13 +72,20 @@ HQ_mut_res <- run_pathfindR(HQ_mut_df,
                             output_dir = "pathfindR_results/HQ_mutations")
 write.csv(HQ_mut_res, "pathfindR_results/HQ_mutations/mut_enrichment_results.csv")
 
-clustered <- cluster_enriched_terms(HQ_mut_res, 
-                                    plot_clusters_graph = FALSE, 
-                                    plot_dend = FALSE)
-
-png("pathfindR_results/HQ_mutations/enrichment_chart.png", width = 500, height = 700)
-enrichment_chart(clustered, plot_by_cluster = TRUE)
-dev.off()
+### Plot enrichment chart
+if (nrow(HQ_mut_res) != 0) {
+  png("pathfindR_results/HQ_mutations/enrichment_chart.png", width = 500, height = 400)
+  if (nrow(HQ_mut_res) > 1) {
+    clustered <- cluster_enriched_terms(HQ_mut_res, 
+                                        plot_clusters_graph = FALSE, 
+                                        plot_dend = FALSE)
+    g <- enrichment_chart(clustered, plot_by_cluster = TRUE)
+  } else {
+    g <- enrichment_chart(HQ_mut_res, plot_by_cluster = TRUE)
+  }
+  print(g)
+  dev.off()
+}
 
 
 # High impact SCNAs -------------------------------------------------------
@@ -109,10 +116,18 @@ HQ_SCNA_res <- run_pathfindR(HQ_SCNA_df,
                             output_dir = "pathfindR_results/HQ_SCNA")
 write.csv(HQ_SCNA_res, "pathfindR_results/HQ_SCNA/SCNA_enrichment_results.csv")
 
-clustered <- cluster_enriched_terms(HQ_SCNA_res, 
-                                    plot_clusters_graph = FALSE, 
-                                    plot_dend = FALSE)
+### Plot enrichment chart\
+if (nrow(HQ_SCNA_res) != 0) {
+  png("./pathfindR_results/HQ_SCNA/enrichment_chart.png", width = 500, height = 700)
+  if (nrow(HQ_SCNA_res) > 1) {
+    clustered <- cluster_enriched_terms(HQ_SCNA_res, 
+                                        plot_clusters_graph = FALSE, 
+                                        plot_dend = FALSE)
+    g <- enrichment_chart(clustered, plot_by_cluster = TRUE)
+  } else {
+    g <- enrichment_chart(HQ_SCNA_res, plot_by_cluster = TRUE)
+  }
+  print(g)
+  dev.off()
+}
 
-png("pathfindR_results/HQ_SCNA/enrichment_chart.png", width = 500, height = 700)
-enrichment_chart(clustered, plot_by_cluster = TRUE)
-dev.off()

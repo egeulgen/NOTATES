@@ -698,17 +698,38 @@ Pathway enrichment analysis is frequently utilized for studying the mechanisms u
 
 Genes that harbor non-synonymous exonic mutations are included in the enrichment analysis.
 
+
 \begin{center}
-\includegraphics[width=300pt]{./pathfindR_results/HQ_mutations/{enrichment_chart}.png}
+\IfFileExists{pathfindR_results/HQ_mutations/enrichment_chart.png}{\includegraphics[width=300pt]{pathfindR_results/HQ_mutations/enrichment_chart.png}}{}
 \end{center}
 
-```{r enr_res_mut}
-enr_res <- read.csv("pathfindR_results/HQ_mutations/mut_enrichment_results.csv", row.names = 1)
-enr_res$Down_regulated <- NULL
-colnames(enr_res)[7] <- "Somatic SNV/indel"
-kable_styling(kable(enr_res,
-                    format = "latex", booktabs = TRUE), 
-              latex_options = "scale_down")
+```{r enr_res_mut, message=FALSE, warning=FALSE}
+read_result <- function(f_name) {
+  res <- tryCatch(
+    {
+      read.csv(f_name, row.names = 1)
+    }, error = function(cond) {
+      message(paste("Cannot read file:", f_name))
+      message("Here's the original error message:")
+      message(cond)
+      return(NA)
+    })
+  return(res)
+}
+
+enr_res_file <- "pathfindR_results/HQ_mutations/mut_enrichment_results.csv"
+enr_res <- read_result(enr_res_file)
+
+if (is.data.frame(enr_res)) {
+  enr_res$Down_regulated <- NULL
+  colnames(enr_res)[7] <- "Somatic SNV/indel"
+  kable_styling(kable(enr_res,
+                      format = "latex", booktabs = TRUE), 
+                latex_options = "scale_down")
+} else {
+  cat("There are no enriched KEGG pathways.")
+}
+
 ```
 
 
@@ -716,14 +737,33 @@ kable_styling(kable(enr_res,
 
 Genes that harbor homozygous deletion or multi-copy amplification (3+) are included in the enrichment analysis.
 
+
 \begin{center}
-\includegraphics[width=300pt]{./pathfindR_results/HQ_SCNA/{enrichment_chart}.png}
+\IfFileExists{pathfindR_results/HQ_SCNA/enrichment_chart.png}{\includegraphics[width=300pt]{pathfindR_results/HQ_SCNA/enrichment_chart.png}}{}
 \end{center}
 
-```{r enr_res_SCNA}
-enr_res <- read.csv("pathfindR_results/HQ_SCNA/SCNA_enrichment_results.csv", row.names = 1)
-colnames(enr_res)[7:8] <- c("Amplification", "Deletion")
-kable_styling(kable(enr_res,
-                    format = "latex", booktabs = TRUE), 
-              latex_options = "scale_down")
+```{r enr_res_SCNA, message=FALSE, warning=FALSE}
+read_result <- function(f_name) {
+  res <- tryCatch(
+    {
+      read.csv(f_name, row.names = 1)
+    }, error = function(cond) {
+      message(paste("Cannot read file:", f_name))
+      message("Here's the original error message:")
+      message(cond)
+      return(NA)
+    })
+  return(res)
+}
+enr_res_file <- "pathfindR_results/HQ_SCNA/SCNA_enrichment_results.csv"
+enr_res <- read_result(enr_res_file)
+
+if (is.data.frame(enr_res)) {
+  colnames(enr_res)[7:8] <- c("Amplification", "Deletion")
+  kable_styling(kable(enr_res,
+                      format = "latex", booktabs = TRUE), 
+                latex_options = "scale_down")
+} else {
+  cat("There are no enriched KEGG pathways.")
+}
 ```

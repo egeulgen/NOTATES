@@ -3,7 +3,7 @@
 ## Script purpose: Script for sequentially filtering
 ## germline and somatic alterations for reporting of
 ## clinically-relevant findings
-## Date: Oct 23, 2019
+## Date: Nov 11, 2019
 ## Author: Ege Ulgen
 ##################################################
 
@@ -138,7 +138,7 @@ flags <- c("TTN", "MUC16", "OBSCN", "AHNAK2", "SYNE1", "FLG",
            "MUC5B", "DNAH17", "PLEC", "DST", "SYNE2", "NEB", "HSPG2", 
            "LAMA5", "AHNAK", "HMCN1", "USH2A", "DNAH11", "MACF1", 
            "MUC17")
-somatic_vars <- somatic_vars[!somatic_vars$Hugo_Symbol %in% flags]
+somatic_vars <- somatic_vars[!somatic_vars$Hugo_Symbol %in% flags,]
 
 # Change "" protein changes to NA
 somatic_vars$Protein_Change[somatic_vars$Protein_Change == ""] <- NA
@@ -378,8 +378,8 @@ write.csv(broad, "SCNA/broad.csv", row.names = FALSE)
 dir.create("LOH")
 # read in loh file
 loh <- read.csv("../ExomeCNV/LOH_regions.csv", header = TRUE)
-loh <- loh[loh$difference > 0.4,]
-loh <- loh[,c("chr", "position.start", "position.end", "normal_b", "tumor_b", "difference")]
+loh <- loh[loh$abs_difference > 0.4, ]
+loh <- loh[, c("chr", "position.start", "position.end", "normal_b", "tumor_b", "abs_difference")]
 
 cond1 <- loh$position.start == loh$position.end
 if (any(cond1)) {
@@ -395,10 +395,9 @@ if (any(cond2)) {
   loh$position.start[cond2] <- tmp2
 }
 
-
 #find genes that are overlapped by segment and segments that overlap genes
-loh_genes_overlap <- annotate_genes(loh)
-loh_cytb_overlap <- annotate_cytb(loh, cytobands_df)
+loh_genes_overlap <- loh_annotate_genes(loh)
+loh_cytb_overlap <- loh_annotate_cytb(loh, cytobands_df)
 
 loh$length <- loh$position.end - loh$position.start + 1
 loh$genes <- sapply(loh_genes_overlap$Segment_genes, function(x) ifelse(length(x) > 100, "100",
