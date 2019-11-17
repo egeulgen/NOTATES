@@ -7,36 +7,11 @@
 ##################################################
 
 # Install package(s) if necessary -----------------------------------------
-if(!suppressPackageStartupMessages(require(KEGGREST))) {
-  if (!requireNamespace("BiocManager", quietly = TRUE))
-    install.packages("BiocManager")
-  BiocManager::install("KEGGREST")
-  suppressPackageStartupMessages(library(KEGGREST))
-}
-
-if(!suppressPackageStartupMessages(require(KEGGgraph))) {
-  if (!requireNamespace("BiocManager", quietly = TRUE))
-    install.packages("BiocManager")
-  BiocManager::install("KEGGgraph")
-  suppressPackageStartupMessages(library(KEGGgraph))
-}
-
-if(!suppressPackageStartupMessages(require(AnnotationDbi))) {
-  if (!requireNamespace("BiocManager", quietly = TRUE))
-    install.packages("BiocManager")
-  BiocManager::install("AnnotationDbi")
-  suppressPackageStartupMessages(library(AnnotationDbi))
-}
-
-if(!suppressPackageStartupMessages(require(org.Hs.eg.db))) {
-  if (!requireNamespace("BiocManager", quietly = TRUE))
-    install.packages("BiocManager")
-  BiocManager::install("org.Hs.eg.db")
-  suppressPackageStartupMessages(library(org.Hs.eg.db))
-}
-
 if(!suppressPackageStartupMessages(require(pathfindR))) {
-  install.packages("pathfindR")
+  if (!suppressPackageStartupMessages(require(pak))) {
+    install.packages("pak")
+  }
+  pak::pkg_install("egeulgen/pathfindR")
   suppressPackageStartupMessages(library(pathfindR))
 }
 

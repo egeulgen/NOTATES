@@ -13,6 +13,7 @@
 
 name=$1
 sample=$2
+kit_name=$3
 
 cd ./$name
 lanes=$(cat ./lanes.txt)
@@ -26,7 +27,7 @@ do
 	RG='@RG'
 	RG=$RG'\tID:'$sample
 	RG=$RG'\tSM:'$name
-	RG=$RG'\tPL:ILLUMINA\tLB:library'
+	RG=$RG'\tPL:ILLUMINA\tLB:'$kit_name
 
 	## Alignment
 	echo '############'"$name"': Aligning reads from lane: '$lane "    " $(date)

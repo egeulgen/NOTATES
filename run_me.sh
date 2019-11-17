@@ -9,7 +9,7 @@
 patientID=$1
 normal_name=$2
 tumor_name=$3
-cap_kit=$4
+kit_name=$4
 tumor_type=$5
 primary_cond=$6
 tumor_sample=$7
@@ -18,7 +18,7 @@ tumor_sample=$7
 main_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 ### Source the configuration file
-source "$main_dir"/notates.config "verbose" $cap_kit
+source "$main_dir"/notates.config "verbose" $kit_name
 
 ################################################################################
 ############################## Checkpoint for backup ###########################
@@ -92,10 +92,10 @@ bash "$scripts_dir"/fastqc.sh $tumor_name
 ################################################################################
 
 ####### Mapping and preprocessing for normal
-bash "$scripts_dir"/mapping_preprocessing.sh $normal_name "normal"
+bash "$scripts_dir"/mapping_preprocessing.sh $normal_name "normal" $kit_name
 
 ####### Mapping and preprocessing for tumor
-bash "$scripts_dir"/mapping_preprocessing.sh $tumor_name "tumor"
+bash "$scripts_dir"/mapping_preprocessing.sh $tumor_name "tumor" $kit_name
 
 ################################################################################
 ############################## Variant Calling #################################
