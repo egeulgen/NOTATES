@@ -4,7 +4,7 @@
 ## Project: NOTATES
 ## Script purpose: Prepare necesarry data and 
 ## identify SCNAs using ExomeCNV
-## Date: Oct 27, 2019
+## Date: Dec 6, 2019
 ## Author: Ege Ulgen
 ##################################################
 
@@ -18,9 +18,9 @@ echo "############################### Normal: Creating coverage file    " $(date
 $JAVA "$GATK3" \
 	-T DepthOfCoverage \
 	-omitBaseOutput -omitLocusTable \
-	-R $genome \
+	-R "$genome" \
 	-I normal.final.bam \
-	--intervals $Bait_Intervals \
+	--intervals "$Target_Intervals" \
 	-ct 1 -ct 5 -ct 10 -ct 25 -ct 50 -ct 100 \
 	-o ./ExomeCNV/DepthOfCoverage/normal.coverage
 
@@ -28,9 +28,9 @@ echo "############################### Tumor: Creating coverage file     " $(date
 $JAVA "$GATK3" \
 	-T DepthOfCoverage \
 	-omitBaseOutput -omitLocusTable \
-	-R $genome \
+	-R "$genome" \
 	-I tumor.final.bam \
-	--intervals $Bait_Intervals \
+	--intervals "$Target_Intervals" \
 	-ct 1 -ct 5 -ct 10 -ct 25 -ct 50 -ct 100 \
 	-o ./ExomeCNV/DepthOfCoverage/tumor.coverage
 
@@ -43,44 +43,55 @@ expr1='vc.getGenotype("'"$normal_name"'").isHet()'
 expr2='vc.getGenotype("'"$normal_name"'").getPhredScaledQual()>=30.0'
 expr3='vc.getGenotype("'"$normal_name"'").getDP()>=20'
 
-$GATK SelectVariants -R $genome \
-	-V ./Germline/filtered_germline_variants.vcf.gz -select-type SNP \
+$GATK SelectVariants \
+	-R "$genome" \
+	-V ./Germline/filtered_germline_variants.vcf.gz \
+	-select-type SNP \
 	--selectExpressions "$expr1" \
 	--selectExpressions "$expr2" \
 	--selectExpressions "$expr3" \
-	--exclude-filtered --restrict-alleles-to BIALLELIC \
+	--exclude-filtered \
+	--restrict-alleles-to BIALLELIC \
 	-O ./ExomeCNV/baf/normal_HQ_SNPs.vcf
 
 ## Call variants at the same HQ-filtered Het SNP sites in Tumor
 # HC
-$GATK HaplotypeCaller -R $genome -I tumor.final.bam \
+$GATK HaplotypeCaller \
+	-R "$genome" \
+	-I tumor.final.bam \
 	--intervals ./ExomeCNV/baf/normal_HQ_SNPs.vcf \
 	-O ./ExomeCNV/baf/raw_tumor_HC.vcf.gz
 
 # Filter
-$GATK VariantFiltration -R $genome -V ./ExomeCNV/baf/raw_tumor_HC.vcf.gz \
+$GATK VariantFiltration \
+	-R $genome \
+	-V ./ExomeCNV/baf/raw_tumor_HC.vcf.gz \
 	--filter-expression "QD < 2.0 || MQ < 40.0 || FS > 60.0 || SOR > 4.0 || MQRankSum < -12.5 || ReadPosRankSum < -8.0" \
-	--filter-name "HQ_SNP_filter" -O ./ExomeCNV/baf/filtered_tumor_HC.vcf.gz
+	--filter-name "HQ_SNP_filter" \
+	-O ./ExomeCNV/baf/filtered_tumor_HC.vcf.gz
 
-rm ./ExomeCNV/baf/raw_tumor_HC.vcf.gz ./ExomeCNV/baf/raw_tumor_HC.vcf.gz.tbi
+rm ./ExomeCNV/baf/raw_tumor_HC.vcf.gz*
 
 # Select variants
 expr1='vc.getGenotype("'"$tumor_name"'").getPhredScaledQual() >= 30.0'
 expr2='vc.getGenotype("'"$tumor_name"'").getDP() >= 20'
 
-$GATK SelectVariants -R $genome \
-	-V ./ExomeCNV/baf/filtered_tumor_HC.vcf.gz -select-type SNP \
+$GATK SelectVariants \
+	-R $genome \
+	-V ./ExomeCNV/baf/filtered_tumor_HC.vcf.gz \
+	-select-type SNP \
 	--selectExpressions "$expr1" \
 	--selectExpressions "$expr2" \
-	--exclude-filtered --restrict-alleles-to BIALLELIC \
+	--exclude-filtered \
+	--restrict-alleles-to BIALLELIC \
 	-O ./ExomeCNV/baf/tumor_HQ_SNPs.vcf
 
-rm ./ExomeCNV/baf/filtered_tumor_HC.vcf.gz ./ExomeCNV/baf/filtered_tumor_HC.vcf.gz.tbi
+rm ./ExomeCNV/baf/filtered_tumor_HC.vcf.gz*
 
-Rscript "$scripts_dir"'/ExomeCNV/VCF_parser_BAF.R'
+Rscript "$scripts_dir"/ExomeCNV/VCF_parser_BAF.R
 
 ####### ExomeCNV
 echo "############################################# Running R script for ExomeCNV    " $(date)
-Rscript "$scripts_dir"'/ExomeCNV/ExomeCNV.R' $read_length
+Rscript "$scripts_dir"/ExomeCNV/ExomeCNV.R "$read_length" "$num_threads"
 
 exit 0

@@ -7,13 +7,14 @@
 ## mate info.(picard) and  marking duplicates 
 ## per lane. Combination of all anes (if >1 lane) 
 ## and BQSR (GATK)
-## Date: Jun 1, 2018
+## Date: Dec 6, 2019
 ## Author: Ege Ulgen
 ##################################################
 
-name=$1
-sample=$2
-kit_name=$3
+analysisID=$1
+sample_name=$2
+sample_type=$3
+kit_name=$4
 
 cd ./$name
 lanes=$(cat ./lanes.txt)
@@ -24,52 +25,43 @@ lanes=$(cat ./lanes.txt)
 for lane in $lanes
 do
 	## Read Group Information
-	RG='@RG'
-	RG=$RG'\tID:'$sample
-	RG=$RG'\tSM:'$name
-	RG=$RG'\tPL:ILLUMINA\tLB:'$kit_name
+	readGroup='@RG\\tID:"$analysisID"\tPL:ILLUMINA\tLB:"$kit_name"\tSM:"$sample_name"'
 
 	## Alignment
-	echo '############'"$name"': Aligning reads from lane: '$lane "    " $(date)
-	bwa mem -M -t 16 -R $RG $genome \
-		$lane'_R1.fastq.gz' $lane'_R2.fastq.gz' > $lane'.sam'
+	echo '############'"$sample_name"': Aligning reads from lane: '$lane "    " $(date)
+	bwa mem -M -t "$num_threads" -R "$readGroup" "$genome" \
+		"$lane"_R1.fastq.gz "$lane"_R2.fastq.gz > "$lane".sam
 
-	rm $lane'_R1.fastq.gz'
-	rm $lane'_R2.fastq.gz'
-
-	## Clean SAM
-	echo '################'"$name"': Cleaning SAM of lane: '$lane "    " $(date)
-	$JAVA $PICARD CleanSam INPUT=$lane'.sam' OUTPUT=$lane'.clean.sam'
-	
-	rm $lane'.sam'
+	rm "$lane"_R1.fastq.gz
+	rm "$lane"_R2.fastq.gz
 
 	## SAM to BAM
-	echo '##########'"$name"': SAM to BAM & Sort for lane: '$lane "    " $(date)
+	echo '##########'"$sample_name"': SAM to BAM & Sort for lane: '$lane "    " $(date)
 	$JAVA $PICARD SortSam SORT_ORDER=coordinate \
-		INPUT=$lane'.clean.sam' OUTPUT=$lane'.bam' CREATE_INDEX=true
+		INPUT="$lane".sam OUTPUT="$lane".bam CREATE_INDEX=true
 	
-	rm $lane'.clean.sam'
+	rm "$lane".sam
 
 	## Fix Mate Information
-	echo '####'"$name"': Fixing mate information for lane: '$lane "    " $(date)
+	echo '####'"$sample_name"': Fixing mate information for lane: '$lane "    " $(date)
 	$JAVA $PICARD FixMateInformation SO=coordinate \
-		INPUT=$lane'.bam' OUTPUT=$lane'.fixed.bam' ADD_MATE_CIGAR=TRUE
+		INPUT="$lane".bam OUTPUT="$lane".fixed.bam ADD_MATE_CIGAR=TRUE
 	
-	rm $lane'.bam' $lane'.bai'
+	rm "$lane".bam "$lane".bai
 
 	## Mark Duplicates - first pass by lane
-	echo '##########'"$name"': Marking duplicates of lane: '$lane "    " $(date)
-	$JAVA $PICARD MarkDuplicates INPUT=$lane'.fixed.bam' \
-		OUTPUT=$lane'.marked.bam' \
-		METRICS_FILE='./QC/'$lane'_MarkDup_metrics.txt' CREATE_INDEX=true
+	echo '##########'"$sample_name"': Marking duplicates of lane: '$lane "    " $(date)
+	$JAVA $PICARD MarkDuplicates INPUT="$lane".fixed.bam \
+		OUTPUT="$lane".marked.bam \
+		METRICS_FILE=./QC/"$lane"_MarkDup_metrics.txt CREATE_INDEX=true
 	
-	rm $lane'.fixed.bam'
+	rm "$lane".fixed.bam
 done
 
 ####### Mark Duplicates - combine all lanes
 if [ $(wc -w <<< "$lanes") != 1 ]
 	then
-	echo '######'"$name"': Marking duplicates and merging BAM files    ' $(date)
+	echo '######'"$sample_name"': Marking duplicates and merging BAM files    ' $(date)
 
 	perlane=(${lanes// / })
 	bams=("${perlane[@]/%/.marked.bam}")
@@ -77,31 +69,31 @@ if [ $(wc -w <<< "$lanes") != 1 ]
 
 	input=("${bams[@]/#/INPUT=}")
 
-	$JAVA $PICARD MarkDuplicates ${input[@]} OUTPUT="$sample"'.marked.bam' \
+	$JAVA $PICARD MarkDuplicates "${input[@]}" OUTPUT="$sample_type".marked.bam \
 		METRICS_FILE='./QC/MarkDup_metrics.txt' CREATE_INDEX=true
 	
 	rm ${bams[@]} ${bais[@]}
 else
-	echo '#########'"$name"': Renaming the marked BAM file (only a single lane)'
+	echo '#########'"$sample_name"': Renaming the marked BAM file (only a single lane)'
 	
-	mv $lanes'.marked.bam' "$sample"'.marked.bam'
-	mv $lanes'.marked.bai' "$sample"'.marked.bai'
-	mv './QC/'"$lanes"'_MarkDup_metrics.txt' './QC/MarkDup_metrics.txt'
+	mv "$lanes".marked.bam "$sample_type".marked.bam
+	mv "$lanes".marked.bai "$sample_type".marked.bai
+	mv ./QC/"$lanes"_MarkDup_metrics.txt ./QC/MarkDup_metrics.txt
 fi
 
 ################################### Quality score recalibration
-echo '##############################################'"$name"': BQSR    ' $(date)
-$GATK BaseRecalibrator -R $genome \
-	--intervals $Bait_Intervals --interval-padding 100 \
-	-I "$sample"'.marked.bam' \
-	--known-sites $dbSNP --known-sites $Mills_1kG --known-sites $ThousandG \
-	-O '../'"$sample"'.recal_data.table'
+echo '##############################################'"$sample_name"': BQSR    ' $(date)
+$GATK BaseRecalibrator -R "$genome" \
+	--intervals "$Target_Intervals" --interval-padding 100 \
+	-I "$sample_type".marked.bam \
+	--known-sites "$dbSNP" --known-sites "$Mills_1kG" --known-sites "$ThousandG" \
+	-O '../'"$sample_type"'.recal_data.table'
 
-$GATK ApplyBQSR -R $genome \
-	-I "$sample"'.marked.bam' \
-	--bqsr-recal-file '../'"$sample"'.recal_data.table' \
-	-O '../'"$sample"'.final.bam'
+$GATK ApplyBQSR -R "$genome" \
+	-I "$sample_type".marked.bam \
+	--bqsr-recal-file ../"$sample_type".recal_data.table \
+	-O ../"$sample_type".final.bam
 
-rm '../'"$sample"'.recal_data.table' "$sample"'.marked.bam' "$sample"'.marked.bai'
+rm ../"$sample_type".recal_data.table "$sample_type".marked.bam "$sample_type".marked.bai
 
 cd ..

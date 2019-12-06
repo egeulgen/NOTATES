@@ -49,11 +49,16 @@ write.csv(HQ_mut_res, "pathfindR_results/HQ_mutations/mut_enrichment_results.csv
 
 ### Plot enrichment chart
 if (nrow(HQ_mut_res) != 0) {
+  HQ_mut_res$Up_regulated <- as.character(HQ_mut_res$Up_regulated)
+  HQ_mut_res$Down_regulated <- as.character(HQ_mut_res$Down_regulated)
   png("pathfindR_results/HQ_mutations/enrichment_chart.png", width = 500, height = 400)
+  
   if (nrow(HQ_mut_res) > 1) {
     clustered <- cluster_enriched_terms(HQ_mut_res, 
                                         plot_clusters_graph = FALSE, 
                                         plot_dend = FALSE)
+    clustered$Up_regulated <- as.character(clustered$Up_regulated)
+    clustered$Down_regulated <- as.character(clustered$Down_regulated)
     g <- enrichment_chart(clustered, plot_by_cluster = TRUE)
   } else {
     g <- enrichment_chart(HQ_mut_res, plot_by_cluster = TRUE)
@@ -93,6 +98,8 @@ write.csv(HQ_SCNA_res, "pathfindR_results/HQ_SCNA/SCNA_enrichment_results.csv")
 
 ### Plot enrichment chart\
 if (nrow(HQ_SCNA_res) != 0) {
+  HQ_SCNA_res$Up_regulated <- as.character(HQ_SCNA_res$Up_regulated)
+  HQ_SCNA_res$Down_regulated <- as.character(HQ_SCNA_res$Down_regulated)
   png("./pathfindR_results/HQ_SCNA/enrichment_chart.png", width = 500, height = 700)
   if (nrow(HQ_SCNA_res) > 1) {
     clustered <- cluster_enriched_terms(HQ_SCNA_res, 

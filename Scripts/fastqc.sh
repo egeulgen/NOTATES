@@ -3,7 +3,7 @@
 ##################################################
 ## Project: NOTATES
 ## Script purpose: Wrapper for FASTQC analysis per lane
-## Date: Oct 22, 2016
+## Date: Dec 6, 2019
 ## Author: Ege Ulgen
 ##################################################
 
@@ -18,6 +18,6 @@ lanes=$(cat ./lanes.txt)
 for lane in $lanes
 do
 	echo "$lane"
-	fastqc --nogroup $lane'_R1.fastq.gz' $lane'_R2.fastq.gz' --outdir=./QC
+	fastqc --nogroup "$lane"_R1.fastq.gz "$lane"_R2.fastq.gz --outdir=./QC
 done
 cd ..

@@ -2,7 +2,7 @@
 ################################################################################
 ######################### NeuroOncology Technologies ###########################
 ###################### Whole-Exome Sequencing Pipeline #########################
-########################### Ege Ulgen, Oct 2019 ################################
+########################### Ege Ulgen, Dec 2019 ################################
 ################################################################################
 #set -ueo pipefail
 
@@ -18,7 +18,7 @@ tumor_sample=$7
 main_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 ### Source the configuration file
-source "$main_dir"/notates.config "verbose" $kit_name
+source "$main_dir"/notates.config "verbose" "$kit_name"
 
 ################################################################################
 ############################## Checkpoint for backup ###########################
@@ -72,30 +72,30 @@ echo "The tumor sample type is: ""$tumor_sample"
 ################################################################################
 echo "Merging fastq files (if necessary)"
 ####### Merge Seperate Files for normal
-bash "$scripts_dir"/merge_fastqs.sh $normal_name
+bash "$scripts_dir"/merge_fastqs.sh "$normal_name"
 
 ####### Merge Seperate Files for Tumor
-bash "$scripts_dir"/merge_fastqs.sh $tumor_name
+bash "$scripts_dir"/merge_fastqs.sh "$tumor_name"
 
 ################################################################################
 ######################## Examine Sequence Read Quality #########################
 ################################################################################
 echo "############################################## Running FASTQC    " $(date)
 ####### Merge Seperate Files for normal
-bash "$scripts_dir"/fastqc.sh $normal_name
+bash "$scripts_dir"/fastqc.sh "$normal_name"
 
 ####### Merge Seperate Files for Tumor
-bash "$scripts_dir"/fastqc.sh $tumor_name
+bash "$scripts_dir"/fastqc.sh "$tumor_name"
 
 ################################################################################
 ######################### Mapping and Pre-processing ########################### 
 ################################################################################
 
 ####### Mapping and preprocessing for normal
-bash "$scripts_dir"/mapping_preprocessing.sh $normal_name "normal" $kit_name
+bash "$scripts_dir"/mapping_preprocessing.sh "$patientID" "$normal_name" "normal" "$kit_name"
 
 ####### Mapping and preprocessing for tumor
-bash "$scripts_dir"/mapping_preprocessing.sh $tumor_name "tumor" $kit_name
+bash "$scripts_dir"/mapping_preprocessing.sh "$patientID" "$tumor_name" "tumor" "$kit_name"
 
 ################################################################################
 ############################## Variant Calling #################################
@@ -105,10 +105,10 @@ bash "$scripts_dir"/mapping_preprocessing.sh $tumor_name "tumor" $kit_name
 echo "############## Running Haplotype Caller for Germline Variants    " $(date)
 mkdir Germline
 $GATK HaplotypeCaller \
-	-R $genome \
+	-R "$genome" \
 	-I normal.final.bam \
-	--dbsnp $dbSNP \
-	--intervals $Bait_Intervals --interval-padding 100 \
+	--dbsnp "$dbSNP" \
+	--intervals "$Target_Intervals" --interval-padding 100 \
 	-O Germline/raw.snps.indels.vcf.gz
 
 ################################### Mutect #####################################
@@ -119,7 +119,7 @@ $GATK Mutect2 \
 	-I tumor.final.bam \
 	-I normal.final.bam -normal "$normal_name" \
 	--germline-resource "$gnomad_vcf" \
-	--intervals "$Bait_Intervals" --interval-padding 100 \
+	--intervals "$Target_Intervals" --interval-padding 100 \
 	-O Mutect2/Mutect_raw.vcf.gz
 
 ################################################################################
@@ -131,17 +131,17 @@ bash "$scripts_dir"/Germline/germline_filter.sh
 
 ##################### Somatic Variant Filtering ###############################
 $GATK GetPileupSummaries \
-	-R $genome \
+	-R "$genome" \
 	-I tumor.final.bam \
-	-V $small_exac_common \
-	--intervals $small_exac_common \
+	-V "$small_exac_common" \
+	--intervals "$small_exac_common" \
 	-O tumor_pileups.table
 
 $GATK GetPileupSummaries \
-	-R $genome \
+	-R "$genome" \
 	-I normal.final.bam \
-	-V $small_exac_common \
-	--intervals $small_exac_common \
+	-V "$small_exac_common" \
+	--intervals "$small_exac_common" \
 	-O normal_pileups.table
 
 $GATK CalculateContamination \
@@ -151,7 +151,7 @@ $GATK CalculateContamination \
 	-O contamination.table
 
 $GATK FilterMutectCalls \
-	-R $genome \
+	-R "$genome" \
 	-V Mutect2/Mutect_raw.vcf.gz \
 	--contamination-table contamination.table \
 	--tumor-segmentation segments.tsv \
@@ -171,7 +171,7 @@ $GATK FilterByOrientationBias \
 	-P artifact_metrics.pre_adapter_detail_metrics \
 	-O Mutect2/Mutect_filt_twice.vcf.gz
 
-$GATK SelectVariants -R $genome \
+$GATK SelectVariants -R "$genome" \
 	-V Mutect2/Mutect_filt_twice.vcf.gz \
 	--exclude-filtered \
 	-O Mutect2/Filtered_mutect.vcf.gz
@@ -210,29 +210,29 @@ echo "################################## Preparing input for THetA     " $(date)
 ## ExomeCNV output to THetA input
 bash "$THetA"/bin/CreateExomeInput -s ExomeCNV/CNV.segment.copynumber.txt \
 	-t tumor.final.bam -n normal.final.bam \
-	--FA $genome --EXON_FILE $Bait_Intervals --QUALITY 30 --DIR THetA
+	--FA $genome --EXON_FILE "$Target_Intervals" --QUALITY 30 --DIR THetA
 rm tumor.final.pileup normal.final.pileup
 
 echo "############################################### Running THetA    " $(date)
 bash "$THetA"/bin/RunTHetA THetA/CNV.input \
-	--DIR THetA/output --NUM_PROCESSES 8
+	--DIR THetA/output --NUM_PROCESSES "$num_threads"
 # bash "$THetA"/bin/RunTHetA THetA/CNV.input --TUMOR_FILE THetA/tumor_SNP.txt \
-# 	--NORMAL_FILE THetA/normal_SNP.txt --DIR THetA/output --NUM_PROCESSES 8
+# 	--NORMAL_FILE THetA/normal_SNP.txt --DIR THetA/output --NUM_PROCESSES "$num_threads"
 
 ################################################################################
 #################################### QC ########################################
 ################################################################################
 ## Alignment Summary Metrics
-$JAVA $PICARD CollectAlignmentSummaryMetrics \
+"$JAVA" "$PICARD" CollectAlignmentSummaryMetrics \
 	METRIC_ACCUMULATION_LEVEL=ALL_READS REFERENCE_SEQUENCE=$genome \
-	INPUT=normal.final.bam OUTPUT=$normal_name/QC/alignment_summary_metrics.txt
+	INPUT=normal.final.bam OUTPUT="$normal_name"/QC/alignment_summary_metrics.txt
 
-$JAVA $PICARD CollectAlignmentSummaryMetrics \
+"$JAVA" "$PICARD" $PICARD CollectAlignmentSummaryMetrics \
 	METRIC_ACCUMULATION_LEVEL=ALL_READS REFERENCE_SEQUENCE=$genome \
-	INPUT=tumor.final.bam OUTPUT=$tumor_name/QC/alignment_summary_metrics.txt
+	INPUT=tumor.final.bam OUTPUT="$tumor_name"/QC/alignment_summary_metrics.txt
 
 ## QC Wrapper
-Rscript "$scripts_dir"/QC_table_prep.R $normal_name $tumor_name
+Rscript "$scripts_dir"/QC_table_prep.R "$normal_name" "$tumor_name"
 
 ################################################################################
 ################################# NOTATES ######################################
@@ -255,7 +255,7 @@ python "$scripts_dir"/MSIpred_analysis.py $simple_repeats $exome_length
 
 echo "######################## Creating Report                         " $(date)
 Rscript "$scripts_dir"/create_report.R $patientID $scripts_dir \
-	$exome_length $Bait_Intervals $tumor_type $primary_cond $tumor_sample
+	$exome_length $Target_Intervals $tumor_type $primary_cond $tumor_sample
 
 echo "######################## Finished 							   " $(date)
 exit 0

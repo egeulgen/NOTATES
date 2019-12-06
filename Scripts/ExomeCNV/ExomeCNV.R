@@ -2,7 +2,7 @@
 ## Project: NOTATES
 ## Script purpose: Script for identifying SCNAs 
 ## using ExomeCNV
-## Date: Nov 5, 2019
+## Date: Dec 6, 2019
 ## Author: Ege Ulgen
 ##################################################
 
@@ -10,6 +10,7 @@ options(stringsAsFactors = TRUE)
 # set read length
 args <- commandArgs(trailingOnly=TRUE)
 read_length <- as.numeric(args[1])
+n_processes <- as.numeric(args[2])
 
 # Install required packages (if needed) -----------------------------------
 if(!suppressPackageStartupMessages(require(DNAcopy))){
@@ -107,8 +108,7 @@ admix_rate <- admix_rate$contamination
 ### Call CNV on each exon (using classify.eCNV), one chromosome at a time. We recommend high min.spec (0.9999) 
 ### and option="spec" to be conservative against false positive. This is because whatever is called 
 ### at exon level will persist through merging step
-# Determine number of processes
-n_processes <- detectCores()
+
 # Initiate the clusters
 cl <- makeCluster(n_processes)
 registerDoParallel(cl)
