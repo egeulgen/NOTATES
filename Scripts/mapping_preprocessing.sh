@@ -16,16 +16,17 @@ sample_name=$2
 sample_type=$3
 kit_name=$4
 
-cd ./$name
+cd ./$sample_name
 lanes=$(cat ./lanes.txt)
 
 ####### Alignment, Clean SAM, SAM to BAM conversion, Fix Mate Information, and 
 ####### Mark Duplicates - by lane
+mkdir QC
 
 for lane in $lanes
 do
 	## Read Group Information
-	readGroup='@RG\\tID:"$analysisID"\tPL:ILLUMINA\tLB:"$kit_name"\tSM:"$sample_name"'
+	readGroup="@RG\\tID:"$analysisID"\tPL:ILLUMINA\tLB:"$kit_name"\tSM:"$sample_name""
 
 	## Alignment
 	echo '############'"$sample_name"': Aligning reads from lane: '$lane "    " $(date)
@@ -53,7 +54,7 @@ do
 	echo '##########'"$sample_name"': Marking duplicates of lane: '$lane "    " $(date)
 	$JAVA $PICARD MarkDuplicates INPUT="$lane".fixed.bam \
 		OUTPUT="$lane".marked.bam \
-		METRICS_FILE=./QC/"$lane"_MarkDup_metrics.txt CREATE_INDEX=true
+		METRICS_FILE=QC/"$lane"_MarkDup_metrics.txt CREATE_INDEX=true
 	
 	rm "$lane".fixed.bam
 done
@@ -70,7 +71,7 @@ if [ $(wc -w <<< "$lanes") != 1 ]
 	input=("${bams[@]/#/INPUT=}")
 
 	$JAVA $PICARD MarkDuplicates "${input[@]}" OUTPUT="$sample_type".marked.bam \
-		METRICS_FILE='./QC/MarkDup_metrics.txt' CREATE_INDEX=true
+		METRICS_FILE=QC/MarkDup_metrics.txt CREATE_INDEX=true
 	
 	rm ${bams[@]} ${bais[@]}
 else
@@ -78,7 +79,7 @@ else
 	
 	mv "$lanes".marked.bam "$sample_type".marked.bam
 	mv "$lanes".marked.bai "$sample_type".marked.bai
-	mv ./QC/"$lanes"_MarkDup_metrics.txt ./QC/MarkDup_metrics.txt
+	mv QC/"$lanes"_MarkDup_metrics.txt QC/MarkDup_metrics.txt
 fi
 
 ################################### Quality score recalibration

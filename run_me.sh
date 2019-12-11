@@ -223,11 +223,11 @@ bash "$THetA"/bin/RunTHetA THetA/CNV.input \
 #################################### QC ########################################
 ################################################################################
 ## Alignment Summary Metrics
-"$JAVA" "$PICARD" CollectAlignmentSummaryMetrics \
+$JAVA $PICARD CollectAlignmentSummaryMetrics \
 	METRIC_ACCUMULATION_LEVEL=ALL_READS REFERENCE_SEQUENCE=$genome \
 	INPUT=normal.final.bam OUTPUT="$normal_name"/QC/alignment_summary_metrics.txt
 
-"$JAVA" "$PICARD" $PICARD CollectAlignmentSummaryMetrics \
+$JAVA $PICARD CollectAlignmentSummaryMetrics \
 	METRIC_ACCUMULATION_LEVEL=ALL_READS REFERENCE_SEQUENCE=$genome \
 	INPUT=tumor.final.bam OUTPUT="$tumor_name"/QC/alignment_summary_metrics.txt
 

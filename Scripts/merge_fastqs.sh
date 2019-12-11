@@ -41,7 +41,7 @@ do
 		then
 		echo "Merging fastq files for: ""$name"" lane: ""$lane"" R2  " $(date)
 		ls | grep "$lane"_R2_ |xargs cat >> "$lane"_R2.fastq.gz
-		ls | grep "$lane"_R2_ |xargs rms
+		ls | grep "$lane"_R2_ |xargs rm
 	else
 		mv "$R2_files" "$lane"_R2.fastq.gz
 	fi
