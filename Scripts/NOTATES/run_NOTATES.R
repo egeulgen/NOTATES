@@ -400,7 +400,7 @@ loh_genes_overlap <- loh_annotate_genes(loh)
 loh_cytb_overlap <- loh_annotate_cytb(loh, cytobands_df)
 
 loh$length <- loh$position.end - loh$position.start + 1
-loh$genes <- sapply(loh_genes_overlap$Segment_genes, function(x) ifelse(length(x) > 100, "100",
+loh$genes <- sapply(loh_genes_overlap$Segment_genes, function(x) ifelse(length(x) > 100, ">100",
                                                                              paste(x, collapse = ", ")))
 loh$cytoband <- sapply(loh_cytb_overlap$Segment_cytbs, function(x) shorten_cyt_anno(x, cytobands_df))
 

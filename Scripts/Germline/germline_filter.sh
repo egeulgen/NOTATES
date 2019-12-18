@@ -31,7 +31,6 @@ rm raw_snps.vcf.gz
 rm raw_snps.vcf.gz.tbi
 
 echo "################################## Selecting Germline nonSNPs    " $(date)
-### using --select-type-to-exclude SNP, in order to filter MIXED type with InDels
 $GATK SelectVariants \
 	-R "$genome" \
 	-V raw.snps.indels.vcf.gz \

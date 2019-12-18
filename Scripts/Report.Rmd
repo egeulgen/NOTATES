@@ -603,10 +603,8 @@ kable_styling(kable(loh,
 if(file.exists("./NOTATES/LOH/d_hit_loh.csv"))
 {
   loh_dhit <- read.csv("./NOTATES/LOH/d_hit_loh.csv")
-  kable_styling(kable(loh_dhit,
-                      format = "latex", 
-                      booktabs = TRUE,
-                      align = "c"))
+  k_tbl <- kable(loh_dhit, format = "latex", booktabs = TRUE, align = "c")
+  kable_styling(k_tbl, latex_options = "scale_down")
 }else
 {
   cat("No event to report.")
@@ -620,10 +618,8 @@ if(file.exists("./NOTATES/LOH/d_hit_loh.csv"))
 if(file.exists("./NOTATES/LOH/CGC_loh.csv"))
 {
   loh_cgc <- read.csv("./NOTATES/LOH/CGC_loh.csv")
-  kable_styling(kable(loh_cgc,
-                      format = "latex", 
-                      booktabs = TRUE,
-                      align = "c"))
+  k_tbl <- kable(loh_cgc, format = "latex", booktabs = TRUE, align = "c")
+  kable_styling(k_tbl, latex_options = "scale_down")
 } else {
   cat("No event to report.")
 }
@@ -639,10 +635,8 @@ In this section, the list of genes with somatic SNV/indel(s) as well as SCNA and
 if(file.exists("./NOTATES/double_hit.csv"))
 {
   dhit_tbl <- read.csv("./NOTATES/double_hit.csv")
-  kable_styling(kable(dhit_tbl,
-                      format = "latex", 
-                      booktabs = TRUE,
-                      align = "c"))
+  k_tbl <- kable(dhit_tbl, format = "latex", booktabs = TRUE, align = "c")
+  kable_styling(k_tbl, latex_options = "scale_down")
 } else {
   cat("No event to report.")
 }
