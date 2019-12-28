@@ -1,8 +1,8 @@
 ##################################################
 ## Project: NOTATES
 ## Script purpose: Script for performing KEGG pathway
-## enrichment analysis (ORA) using high-confidence genes
-## Date: Nov 11, 2019
+## enrichment analysis with pathfindR using high-confidence genes
+## Date: December 28, 2019
 ## Author: Ege Ulgen
 ##################################################
 
@@ -40,11 +40,19 @@ somatic_vars <- somatic_vars[somatic_vars$Variant_Classification %in% high_conse
 
 HQ_mut_df <- data.frame(GENE = somatic_vars$Hugo_Symbol,
                         PVAL = 0.05)
-  
-HQ_mut_res <- run_pathfindR(HQ_mut_df,
-                            plot_enrichment_chart = FALSE,
-                            visualize_enriched_terms = FALSE,
-                            output_dir = "pathfindR_results/HQ_mutations")
+
+HQ_mut_res <- tryCatch({
+  res <- run_pathfindR(HQ_mut_df,
+                       plot_enrichment_chart = FALSE,
+                       visualize_enriched_terms = FALSE,
+                       output_dir = "pathfindR_results/HQ_mutations")
+  res
+}, error = function(e) {
+  message("Cannot perform SNV/indel enrichment analysis!")
+  message("Here's the original error message:")
+  message(e)
+  return(data.frame())
+})
 write.csv(HQ_mut_res, "pathfindR_results/HQ_mutations/mut_enrichment_results.csv")
 
 ### Plot enrichment chart
@@ -90,10 +98,18 @@ HQ_SCNA_df <- data.frame(Gene = cnv_df$Gene,
                          Change = ifelse(cnv_df$ratio > 1, 1, -1),
                          PVAL = 0.05)
 
-HQ_SCNA_res <- run_pathfindR(HQ_SCNA_df,
-                            plot_enrichment_chart = FALSE,
-                            visualize_enriched_terms = FALSE,
-                            output_dir = "pathfindR_results/HQ_SCNA")
+HQ_SCNA_res <- tryCatch({
+  res <- run_pathfindR(HQ_SCNA_df,
+                       plot_enrichment_chart = FALSE,
+                       visualize_enriched_terms = FALSE,
+                       output_dir = "pathfindR_results/HQ_SCNA")
+  res
+}, error = function(e) {
+  message("Cannot perform SCNA enrichment analysis!")
+  message("Here's the original error message:")
+  message(e)
+  return(data.frame())
+})
 write.csv(HQ_SCNA_res, "pathfindR_results/HQ_SCNA/SCNA_enrichment_results.csv")
 
 ### Plot enrichment chart\
