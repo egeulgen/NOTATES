@@ -39,14 +39,16 @@ do
 	## SAM to BAM
 	echo '##########'"$sample_name"': SAM to BAM & Sort for lane: '$lane "    " $(date)
 	$JAVA $PICARD SortSam SORT_ORDER=coordinate \
-		INPUT="$lane".sam OUTPUT="$lane".bam CREATE_INDEX=true
+		INPUT="$lane".sam OUTPUT="$lane".bam CREATE_INDEX=true \
+		USE_JDK_DEFLATER=true USE_JDK_INFLATER=true
 	
 	rm "$lane".sam
 
 	## Fix Mate Information
 	echo '####'"$sample_name"': Fixing mate information for lane: '$lane "    " $(date)
 	$JAVA $PICARD FixMateInformation SO=coordinate \
-		INPUT="$lane".bam OUTPUT="$lane".fixed.bam ADD_MATE_CIGAR=TRUE
+		INPUT="$lane".bam OUTPUT="$lane".fixed.bam ADD_MATE_CIGAR=TRUE \
+		USE_JDK_DEFLATER=true USE_JDK_INFLATER=true
 	
 	rm "$lane".bam "$lane".bai
 
@@ -54,7 +56,8 @@ do
 	echo '##########'"$sample_name"': Marking duplicates of lane: '$lane "    " $(date)
 	$JAVA $PICARD MarkDuplicates INPUT="$lane".fixed.bam \
 		OUTPUT="$lane".marked.bam \
-		METRICS_FILE=QC/"$lane"_MarkDup_metrics.txt CREATE_INDEX=true
+		METRICS_FILE=QC/"$lane"_MarkDup_metrics.txt CREATE_INDEX=true \
+		USE_JDK_DEFLATER=true USE_JDK_INFLATER=true
 	
 	rm "$lane".fixed.bam
 done
@@ -71,7 +74,8 @@ if [ $(wc -w <<< "$lanes") != 1 ]
 	input=("${bams[@]/#/INPUT=}")
 
 	$JAVA $PICARD MarkDuplicates "${input[@]}" OUTPUT="$sample_type".marked.bam \
-		METRICS_FILE=QC/MarkDup_metrics.txt CREATE_INDEX=true
+		METRICS_FILE=QC/MarkDup_metrics.txt CREATE_INDEX=true \
+		USE_JDK_DEFLATER=true USE_JDK_INFLATER=true
 	
 	rm ${bams[@]} ${bais[@]}
 else

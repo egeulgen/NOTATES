@@ -225,11 +225,13 @@ bash "$THetA"/bin/RunTHetA THetA/CNV.input \
 ## Alignment Summary Metrics
 $JAVA $PICARD CollectAlignmentSummaryMetrics \
 	METRIC_ACCUMULATION_LEVEL=ALL_READS REFERENCE_SEQUENCE=$genome \
-	INPUT=normal.final.bam OUTPUT="$normal_name"/QC/alignment_summary_metrics.txt
+	INPUT=normal.final.bam OUTPUT="$normal_name"/QC/alignment_summary_metrics.txt \
+	USE_JDK_DEFLATER=true USE_JDK_INFLATER=true
 
 $JAVA $PICARD CollectAlignmentSummaryMetrics \
 	METRIC_ACCUMULATION_LEVEL=ALL_READS REFERENCE_SEQUENCE=$genome \
-	INPUT=tumor.final.bam OUTPUT="$tumor_name"/QC/alignment_summary_metrics.txt
+	INPUT=tumor.final.bam OUTPUT="$tumor_name"/QC/alignment_summary_metrics.txt \
+	USE_JDK_DEFLATER=true USE_JDK_INFLATER=true
 
 ## QC Wrapper
 Rscript "$scripts_dir"/QC_table_prep.R "$normal_name" "$tumor_name"

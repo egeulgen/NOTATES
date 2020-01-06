@@ -96,7 +96,7 @@ if (any(duplicated(cnv_df$Gene))) {
 
 HQ_SCNA_df <- data.frame(Gene = cnv_df$Gene,
                          Change = ifelse(cnv_df$ratio > 1, 1, -1),
-                         PVAL = 0.05)
+                         PVAL = rep(0.05, length(cnv_df$Gene)))
 
 HQ_SCNA_res <- tryCatch({
   res <- run_pathfindR(HQ_SCNA_df,
@@ -128,4 +128,3 @@ if (nrow(HQ_SCNA_res) != 0) {
   print(g)
   dev.off()
 }
-

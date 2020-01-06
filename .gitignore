@@ -13,3 +13,5 @@ Scripts/*TMB_table.RDS
 *.icloud
 Scripts/*_SCNA_burden_table.RDS
 second_tm.sh
+Scripts/cosmic_sbs_details.csv
+Scripts/CGC_latest.csv
