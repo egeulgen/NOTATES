@@ -348,8 +348,8 @@ if(any(cnv_by_gene$Gene %in% curated_CNA$Gene)) {
     }
     tmp <- tmp[tmp$keep,]
     cnv_by_gene <- cnv_by_gene[!cnv_by_gene$Segments %in% tmp$Segments,]
-    
-    write.csv(tmp[,-ncol(tmp)], "SCNA/important_CNVs.csv", row.names = F)
+    if (nrow(tmp) != 0)
+      write.csv(tmp[,-ncol(tmp)], "SCNA/important_CNVs.csv", row.names = F)
   }
 }
 
