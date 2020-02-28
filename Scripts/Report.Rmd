@@ -564,8 +564,13 @@ if(file.exists("./NOTATES/SCNA/broad.csv")) {
   broad_cna <- read.csv("./NOTATES/SCNA/broad.csv")
   colnames(broad_cna)[1] <- "chromosome:start-end"
   kable_styling(kable(broad_cna,
-                      format = "latex", booktabs = TRUE), 
-                latex_options = "scale_down")
+                      format = "latex", booktabs = TRUE,
+                      align = "c", longtable = TRUE,
+                      row.names = FALSE, 
+                      linesep = "\\addlinespace"), 
+                latex_options = c("hold_position", 
+                                  "repeat_header"),
+                full_width = TRUE)
 } else {
   cat("No variation to report.")
 }
@@ -618,8 +623,13 @@ if(file.exists("./NOTATES/LOH/d_hit_loh.csv"))
 if(file.exists("./NOTATES/LOH/CGC_loh.csv"))
 {
   loh_cgc <- read.csv("./NOTATES/LOH/CGC_loh.csv")
-  k_tbl <- kable(loh_cgc, format = "latex", booktabs = TRUE, align = "c")
-  kable_styling(k_tbl, latex_options = "scale_down")
+  k_tbl <- kable(loh_cgc, format = "latex", booktabs = TRUE, 
+                 align = "c", longtable = TRUE,
+                 row.names = FALSE, 
+                 linesep = "\\addlinespace")
+  kable_styling(k_tbl, latex_options = c("hold_position", 
+                                         "repeat_header"),
+                full_width = TRUE)
 } else {
   cat("No event to report.")
 }

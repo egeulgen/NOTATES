@@ -366,9 +366,10 @@ if(any(cnv_by_gene$Gene %in% CGC_df$Gene.Symbol)) {
 }
 
 ### Broad SCNAs
-broad <- cnv[!is.na(cnv$cytoband),-1]
-broad <- broad[,c(15,2,9,11)]
-write.csv(broad, "SCNA/broad.csv", row.names = FALSE)
+broad <- cnv[!is.na(cnv$cytoband), -1]
+broad <- broad[, c(15,2,9,11)]
+if (nrow(broad) != 0)
+  write.csv(broad, "SCNA/broad.csv", row.names = FALSE)
 
 # LOH - exomeCNV ---------------------------------------------------------------------
 dir.create("LOH")
