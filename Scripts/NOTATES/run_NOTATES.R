@@ -266,12 +266,8 @@ cnv <- subset(cnv, !is.na(sens))
 # discard CN == 2
 cnv <- subset(cnv, copy.number != 2)
   
-# -0.25 and 0.2 for cut-off
-#The inner cutoffs of +0.2 and -0.25 are sensitive 
-#enough to detect a single-copy gain or loss in a 
-#diploid tumor with purity (or subclone cellularity) as low as 30%. 
-
-cnv <- cnv[cnv$logR <= -0.25 | cnv$logR >= 0.2,]
+# -0.25 and 0.25 for cut-off for lowering FPs
+cnv <- cnv[cnv$logR <= -0.25 | cnv$logR >= 0.25,]
 # cnv <- cnv[cnv$ratio <= 0.5 | cnv$ratio >= 1.5,]
 
 copy_num_call <- function(ratio){
