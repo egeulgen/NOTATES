@@ -267,7 +267,7 @@ cnv <- subset(cnv, !is.na(sens))
 cnv <- subset(cnv, copy.number != 2)
   
 # -0.25 and 0.25 for cut-off for lowering FPs
-cnv <- cnv[cnv$logR <= -0.25 | cnv$logR >= 0.25,]
+cnv <- cnv[cnv$logR <= -0.25 | cnv$logR >= 0.25, ]
 # cnv <- cnv[cnv$ratio <= 0.5 | cnv$ratio >= 1.5,]
 
 copy_num_call <- function(ratio){

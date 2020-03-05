@@ -460,13 +460,24 @@ Only SCNAs with a $log_2(Tumor/Normal)$ ratio $\le$ -0.25 or $\ge$ 0.2 were used
 Below are 4 metrics associated with SCNA Burden:
 
 ```{r SCNA_burden}
-######### intersect SCNA segments with exome segments
+chr_list <- c("chr1", "chr2", "chr3", "chr4", "chr5", "chr6", 
+              "chr7", "chr8", "chr9", "chr10", "chr11", "chr12", 
+              "chr13", "chr14", "chr15", "chr16", "chr17", "chr18",
+              "chr19", "chr20", "chr21", "chr22")
+
 segs_df <- read.csv("NOTATES/SCNA/exomeCNV.csv")
+segs_df <- segs_df[segs_df$chr %in% chr_list, ]
+segs_df <- segs_df[!is.na(segs_df$logR), ]
+segs_df <- segs_df[segs_df$logR > .25 | segs_df$logR < -.25, ]
+
 segs_gr <- makeGRangesFromDataFrame(segs_df, 
                                     seqnames.field = "chr", 
                                     start.field = "probe_start", 
                                     end.field = "probe_end")
+
 exome_df <- read.delim(params$exome_bed, header = FALSE)
+exome_df <- exome_df[exome_df$V1 %in% chr_list, ]
+
 exome_gr <- makeGRangesFromDataFrame(exome_df, 
                                      seqnames.field = "V1", 
                                      start.field = "V2", 
@@ -475,20 +486,32 @@ instersection_gr <- intersect(segs_gr, exome_gr)
 
 ######### Calculate SCNA burden metrics
 intersection_df <- as.data.frame(instersection_gr)
-intersection_df$len <- intersection_df$end - intersection_df$start
 ### 1. Total altered Length (Mb)
-tot_altered_len <- sum(intersection_df$len) / 1e6
+tot_altered_len <- sum(intersection_df$width) / 1e6
 ### 2. Altered Ratio
-altered_ratio <- tot_altered_len / as.numeric(params$exome_length)
+altered_ratio <- tot_altered_len / (sum(exome_df$V3 - exome_df$V2 + 1) / 1e6)
 ### 3. Total Num. Segments
 num_segs <- nrow(segs_df)
 ### 4. Average Altered Length (kb)
 ave_alt_len <- tot_altered_len * 1e3 / num_segs
+### 5. WGII
+ratio_by_chr <- c()
+for (chrm in chr_list) {
+  seg_chr_df <- intersection_df[intersection_df$seqnames == chrm, ]
+  kit_chr_df <- exome_df[exome_df$V1 == chrm, ]
+  
+  chr_width <- sum(kit_chr_df$V3 - kit_chr_df$V2 + 1)
+  ratio_by_chr <- c(ratio_by_chr, 
+                    sum(seg_chr_df$width) / chr_width)
+}
+wgii <- mean(ratio_by_chr)
+
 
 cnv_burden <- data.frame(tot_altered_len,
                          altered_ratio,
                          num_segs,
-                         ave_alt_len)
+                         ave_alt_len,
+                         wgii)
 
 ######### Report metrics
 cnv_burden2 <- cbind(round(tot_altered_len, 2), 
@@ -518,7 +541,6 @@ if (!file.exists(SCNA_burden_tbl_path)) {
 
 ## add to SCNA burden table if not present
 if(!params$ID %in% scna_burden_df$ID) {
-  
   current_df <- data.frame(ID = params$ID, 
                            primary = params$primary_tm)
   current_df <- cbind(current_df, cnv_burden)
