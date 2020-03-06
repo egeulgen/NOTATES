@@ -35,6 +35,10 @@ somatic_SNVs <- read.delim("./Oncotator/annotated.sSNVs.tsv", comment.char="#")
 # Subsetting for (MuTect's default) HQ filters
 somatic_SNVs <- subset(somatic_SNVs, 
                        alt_allele_seen=="True")
+# filter for VAF > 0.05
+somatic_SNVs <- somatic_SNVs[somatic_SNVs$tumor_f > 0.05, ]
+
+
 somatic_SNVs$Sample <- sample_id
 somatic_SNVs <- somatic_SNVs[,c("Sample","Chromosome", "Start_position","Reference_Allele", "Tumor_Seq_Allele2")]
 somatic_SNVs$Chromosome <- paste0("chr", somatic_SNVs$Chromosome)
