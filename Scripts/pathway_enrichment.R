@@ -24,6 +24,9 @@ somatic_vars <- read.delim("./Oncotator/annotated.sSNVs.tsv", stringsAsFactors=F
 somatic_vars <- subset(somatic_vars, 
                        alt_allele_seen=="True")
 
+# filter for VAF > 0.05
+somatic_vars <- somatic_vars[somatic_vars$tumor_f > 0.05, ]
+
 # Exclude variants in FLAGs
 flags <- c("TTN", "MUC16", "OBSCN", "AHNAK2", "SYNE1", "FLG", 
            "MUC5B", "DNAH17", "PLEC", "DST", "SYNE2", "NEB", "HSPG2", 
