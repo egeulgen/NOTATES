@@ -515,11 +515,11 @@ cnv_burden <- data.frame(tot_altered_len,
 
 ######### Report metrics
 cnv_burden2 <- cbind(round(tot_altered_len, 2), 
-                     round(altered_ratio * 100, 2), 
+                     round(wgii * 100, 2), 
                      as.character(num_segs), 
                      round(ave_alt_len, 2))
 colnames(cnv_burden2) <- c("Total Altered Length (Mbp)", 
-                           "Altered Proportion of Exome (%)", 
+                           "Weighted Genome Instability Index (%)", 
                            "Total Number of Alterations", 
                            "Average Length of Alterations (kbp)")
 kable_styling(kable(t(cnv_burden2),
