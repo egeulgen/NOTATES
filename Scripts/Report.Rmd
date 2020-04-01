@@ -14,6 +14,8 @@ header-includes:
 - \posttitle{\end{center}}
 - \usepackage{float}
 - \usepackage{booktabs}
+- \usepackage{tabu}
+- \usepackage{longtable}
 - \usepackage[table]{xcolor}
 title: \ \ NeuroOncology Technologies (NOT)
 author: "Whole Exome Sequencing Report"
@@ -277,10 +279,10 @@ suppressPackageStartupMessages(library(ggplot2))
 p <- ggplot(TMB_df_plot, aes(x=x_val, y=TMB, group = subset))
 p <- p + geom_point(size=2, aes(shape=subset, color=subset))
 p <- p + scale_color_manual(values=c('#56B4E9','#E69F00', 'gray60'))
-p <- p + geom_segment(aes(x = median(TMB_df_plot$x_val) - x_shift, 
-                          y = median(TMB_df_plot$TMB), 
-                          xend = median(TMB_df_plot$x_val) + x_shift, 
-                          yend = median(TMB_df_plot$TMB)), 
+p <- p + geom_segment(aes(x = median(x_val) - x_shift, 
+                          y = median(TMB), 
+                          xend = median(x_val) + x_shift, 
+                          yend = median(TMB)), 
                       colour = "red")
 p <- p + coord_flip()
 p <- p + theme(axis.title.y=element_blank(),
@@ -504,18 +506,18 @@ for (chrm in chr_list) {
   ratio_by_chr <- c(ratio_by_chr, 
                     sum(seg_chr_df$width) / chr_width)
 }
-wgii <- mean(ratio_by_chr)
+WGII <- mean(ratio_by_chr)
 
 
 cnv_burden <- data.frame(tot_altered_len,
                          altered_ratio,
                          num_segs,
                          ave_alt_len,
-                         wgii)
+                         WGII)
 
 ######### Report metrics
 cnv_burden2 <- cbind(round(tot_altered_len, 2), 
-                     round(wgii * 100, 2), 
+                     round(WGII * 100, 2), 
                      as.character(num_segs), 
                      round(ave_alt_len, 2))
 colnames(cnv_burden2) <- c("Total Altered Length (Mbp)", 
