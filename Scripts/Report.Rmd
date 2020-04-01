@@ -455,7 +455,7 @@ if(file.exists("./NOTATES/Somatic_SNV/KEGG_selected.csv")) {
 
 # IV. Somatic Copy Number Alterations (SCNAs)
 
-Only SCNAs with a $log_2(Tumor/Normal)$ ratio $\le$ -0.25 or $\ge$ 0.2 were used in analysis.
+Only SCNAs with a $log_2(Tumor/Normal)$ ratio $\le$ -0.25 or $\ge$ 0.25 were used in analysis.
 
 ### IV. a. SCNA Burden
 
