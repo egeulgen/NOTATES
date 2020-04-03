@@ -143,16 +143,16 @@ if(file.exists("./NOTATES/Germline/CPG.csv")) {
 ```
 
 
-### II. d. Variations in Fanconi Anemia Pathway genes
+### II. d. Variations in DNA Damage Repair Genes
 
-Fanconi anemia is characterized by the inability to repair DNA interstrand cross-links (ICLs) and results in cancer predisposition[^3]. Genes belonging to this pathway, alterations of which would lead to “BRCA-ness" phenotype are reported in this subsection. 
+In this subsection, germline variants reported as "pathogenic" in ClinVar in Human DNA Repair Genes [^3] are presented.
 
-[^3]: Niraj J, Farkkila A, D'andrea AD. The Fanconi Anemia Pathway in Cancer. Annu Rev Cancer Biol. 2019;3:457-478.
+[^3]: Mdanderson.org. 2020. Human DNA Repair Genes. [online] Available at: <https://www.mdanderson.org/documents/Labs/Wood-Laboratory/human-dna-repair-genes.html>.
 
-```{r FAP}
-if(file.exists("./NOTATES/Germline/FAP.csv")) {
-  FAP_df <- read.csv("./NOTATES/Germline/FAP.csv")
-  kable_styling(kable(FAP_df,
+```{r DDR}
+if(file.exists("./NOTATES/Germline/DDR.csv")) {
+  DDR_df <- read.csv("./NOTATES/Germline/DDR.csv")
+  kable_styling(kable(DDR_df,
                       format = "latex", 
                       booktabs = TRUE,
                       align = "c"))

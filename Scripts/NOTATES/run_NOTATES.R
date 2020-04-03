@@ -3,7 +3,7 @@
 ## Script purpose: Script for sequentially filtering
 ## germline and somatic alterations for reporting of
 ## clinically-relevant findings
-## Date: Nov 11, 2019
+## Date: Apr 3, 2020
 ## Author: Ege Ulgen
 ##################################################
 
@@ -92,15 +92,16 @@ if(any(grepl("CPG",germline_mutations$Filter_Group))) {
   
   write.csv(tmp, "./Germline/CPG.csv", row.names = F)
 }
-### Fanconi Anemia Pathway
-if(any(grepl("FAP",germline_mutations$Filter_Group))) {
-  tmp <- germline_mutations[grepl("FAP", germline_mutations$Filter_Group),]
+### DNA Damage Repair
+if(any(grepl("DDR", germline_mutations$Filter_Group))) {
+  tmp <- germline_mutations[grepl("DDR", germline_mutations$Filter_Group),]
   tmp <- tmp[, germline_cols]
   colnames(tmp) <- renamed_g_cols
-  tmp <- tmp[, colnames(tmp) != "Disease(s)"]
-  germline_mutations <- germline_mutations[!grepl("FAP", germline_mutations$Filter_Group),]
+  colnames(tmp)[colnames(tmp) == "Disease(s)"] <- "Function"
   
-  write.csv(tmp, "./Germline/FAP.csv", row.names = F)
+  germline_mutations <- germline_mutations[!grepl("DDR", germline_mutations$Filter_Group),]
+  
+  write.csv(tmp, "./Germline/DDR.csv", row.names = F)
 }
 ### Other
 if(nrow(germline_mutations) != 0) {
