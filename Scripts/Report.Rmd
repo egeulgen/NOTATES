@@ -149,7 +149,7 @@ In this subsection, germline variants reported as "pathogenic" in ClinVar in Hum
 
 [^3]: Mdanderson.org. 2020. Human DNA Repair Genes. [online] Available at: <https://www.mdanderson.org/documents/Labs/Wood-Laboratory/human-dna-repair-genes.html>.
 
-```{r DDR}
+```{r DDR_germ}
 if(file.exists("./NOTATES/Germline/DDR.csv")) {
   DDR_df <- read.csv("./NOTATES/Germline/DDR.csv")
   kable_styling(kable(DDR_df,
