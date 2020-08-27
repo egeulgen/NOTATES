@@ -54,8 +54,8 @@ $JAVA "$GATK3" \
 	-T CombineVariants \
 	-R "$genome" \
 	--variant germline_snps.vcf.gz \
-	--variant ./germline_indels.vcf.gz \
-	-o ./filtered_germline_variants.vcf.gz \
+	--variant germline_indels.vcf.gz \
+	-o filtered_germline_variants.vcf.gz \
 	--genotypemergeoption UNSORTED
 
 rm germline_snps.vcf.gz* germline_indels.vcf.gz*
