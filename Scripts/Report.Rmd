@@ -107,7 +107,7 @@ if(file.exists("./NOTATES/Germline/ACMG.csv")) {
 }
 ```
 
-### II. b. Variations in Cancer Gene Census genes
+### II. b. Variations in Cancer Gene Census Genes
 
 Cancer Gene Census (CGC) from the Catalogue of Somatic Mutations in Cancer (COSMIC) database is a catalogue of genes which contain mutations that have been causally linked to cancer [(https://cancer.sanger.ac.uk/census)](https://cancer.sanger.ac.uk/census). This subsection filters the germline SNV/indels for genes that are reported in CGC. 
 
@@ -348,7 +348,7 @@ kable_styling(kable(class_tbl,
                     align = "c"))
 ```
 
-`r if(params$type == "glioma") {"### III. c. Important SNV/indels in Glioma"} else {"### III. c. Important  SNV/indels in Medulloblastoma"}`
+`r if(params$type == "glioma") {"### III. c. Variants in Established Glioma Genes"} else {"### III. c. Variants in Established Medulloblastoma Genes"}`
 
 `r if(params$type == "glioma") {"This subsection contains somatic SNV/indels in genes that have been reported in the TCGA pan-glioma study of Ceccarelli et al. [^5] which analyzed 1122 WHO grade II-III and IV diffuse-gliomas."} else {"This is the intersection of somaticSNV/indels in this case with a list of genes manually curated because of their importance in medulloblastomas."}`
 
@@ -371,7 +371,7 @@ if(file.exists("./NOTATES/Somatic_SNV/important_SNVs.csv")) {
 }
 ```
 
-### III. d. CGC gene + COSMIC hotspot
+### III. d. Hotspot Variants in Cancer Gene Census Genes
 
 This subsection presents somatic SNV/indels which fulfill the following criteria:
 
@@ -393,7 +393,7 @@ if(file.exists("./NOTATES/Somatic_SNV/COSMIC_hotspot.csv")) {
 }
 ```
 
-### III. e. CGC gene only
+### III. e. Other Variants in Cancer Gene Census Genes
 
 This subsection lists somatic variants where the gene harboring the variants is listed in the Catalogue of Somatic Mutations in Cancer (COSMIC) - CGC, which is a catalogue of genes which contain mutations that have been causally linked to cancer [(https://cancer.sanger.ac.uk/census)](https://cancer.sanger.ac.uk/census).
 
@@ -413,7 +413,7 @@ if(file.exists("./NOTATES/Somatic_SNV/CGC_genes.csv")) {
 }
 ```
 
-### III. f. Other possibly important somatic SNV/indels
+### III. f. Other Possibly Important Somatic SNV/indels
 
 Somatic SNV/indels in DNA damage repair genes that were presented on [https://www.mdanderson.org/documents/Labs/Wood-Laboratory/human-dna-repair-genes.html](https://www.mdanderson.org/documents/Labs/Wood-Laboratory/human-dna-repair-genes.html):
 
@@ -551,7 +551,7 @@ if(!params$ID %in% scna_burden_df$ID) {
 }
 ```
 
-`r if(params$type == "glioma") {"### IV. b. Important SCNAs in Glioma"} else {"### IV. b. Important SCNAs in Medulloblastoma"}`
+`r if(params$type == "glioma") {"### IV. b. Established SCNAs in Glioma"} else {"### IV. b. Established SCNAs in Medulloblastoma"}`
 
 `r if(params$type == "glioma") {"This is the intersection of SCNAs in this case with a list of SCNAs manually curated because of their importance in gliomas."} else {"This is the intersection of SCNAs in this case with a list of SCNAs manually curated because of their importance in medulloblastomas."}`
 
@@ -602,7 +602,7 @@ if(file.exists("./NOTATES/SCNA/broad.csv")) {
 
 \newpage
 
-### IV. e. SCNA by Chromosome
+### IV. e. Plots of SCNA Segments by Chromosome
 
 \begin{center}
   \makebox[\textwidth]{\includegraphics[width=\paperwidth]{./ExomeCNV/{CNV.cnv}.png}}
@@ -626,7 +626,7 @@ kable_styling(kable(loh,
                 latex_options = "scale_down")
 ```
 
-### V. b. LOH + somatic SNV/Indel
+### V. b. LOH + Somatic SNV/Indel
 
 ```{r loh_dhit}
 if(file.exists("./NOTATES/LOH/d_hit_loh.csv"))
@@ -641,7 +641,7 @@ if(file.exists("./NOTATES/LOH/d_hit_loh.csv"))
 ```
 
 
-### V. c. LOH Events in CGC genes 
+### V. c. LOH Events in Cancer Gene Census Genes 
 
 ```{r loh_cgc}
 if(file.exists("./NOTATES/LOH/CGC_loh.csv"))
