@@ -1,12 +1,14 @@
 # NOTATES v1.2
 
 ## Major Changes
+- replaced "Fanconi Anemia" genes with "DDR genes" in germline variant reporting
 - Updated table of DNA Damage Repair genes
 - Updated ClinVar pathogenic variants for germline variants
 
 ## Minor changes and bug fixes
 - in `Report.Rmd`, changed some subsections' titles
 - in `Report.Rmd`, turned all subsection titles to title-case
+- fixed issue in enrichment visualization
 
 ***
 
