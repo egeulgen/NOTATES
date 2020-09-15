@@ -3,12 +3,12 @@
 ## Script purpose: Script for sequentially filtering
 ## germline and somatic alterations for reporting of
 ## clinically-relevant findings
-## Date: Apr 3, 2020
+## Date: Sep 15, 2020
 ## Author: Ege Ulgen
 ##################################################
 
-dir.create("./NOTATES/")
-setwd("./NOTATES/")
+dir.create("NOTATES")
+setwd("NOTATES")
 
 options(stringsAsFactors = FALSE)
 
@@ -24,34 +24,34 @@ if (length(mb_arg) == 0)
 
 # Necessary resources -----------------------------------------------------
 # CGC
-CGC_df <- read.csv(paste0(notates_dir, "/../CGC_latest.csv"))
+CGC_df <- read.csv(file.path(dirname(notates_dir), "CGC_latest.csv"))
 
 # Curated Databases
-dna_repair_df <- read.csv(paste0(notates_dir, "/curated_dbs/DNA_damage_repair_22feb16.csv"))
-irinotecan_df <- read.csv(paste0(notates_dir, "/curated_dbs/irinotecan_response_genes_22feb16.csv"))
-tmz_df <- read.csv(paste0(notates_dir, "/curated_dbs/temozolamide_resistance_genes_22feb16.csv"))
+dna_repair_df <- read.csv(file.path(notates_dir, "curated_dbs", "DNA_damage_repair_1jul20.csv"))
+irinotecan_df <- read.csv(file.path(notates_dir, "curated_dbs", "irinotecan_response_genes_22feb16.csv"))
+tmz_df <- read.csv(file.path(notates_dir, "curated_dbs", "temozolamide_resistance_genes_22feb16.csv"))
 if (mb_arg == 'glioma') {
-  KEGG_df <- read.csv(paste0(notates_dir, "/curated_dbs/important_KEGG_pws_19mar19.csv"))
+  KEGG_df <- read.csv(file.path(notates_dir, "curated_dbs", "important_KEGG_pws_19mar19.csv"))
 } else {
-  KEGG_df <- read.csv(paste0(notates_dir, "/curated_dbs/important_KEGG_pws_MB_19mar19.csv"))
+  KEGG_df <- read.csv(file.path(notates_dir, "curated_dbs", "important_KEGG_pws_MB_19mar19.csv"))
 }
 
 # Curated Alterations
 if (mb_arg == 'glioma') {
-  curated_SNV <- read.csv(paste0(notates_dir, "/curated_alterations/glioma_important_SNV_May25_17.csv"))
-  curated_CNA <- read.csv(paste0(notates_dir, "/curated_alterations/glioma_important_CNA_May25_17.csv"))
+  curated_SNV <- read.csv(file.path(notates_dir, "curated_alterations", "glioma_important_SNV_May25_17.csv"))
+  curated_CNA <- read.csv(file.path(notates_dir, "curated_alterations", "glioma_important_CNA_May25_17.csv"))
 } else {
-  curated_SNV <- read.csv(paste0(notates_dir, "/curated_alterations/MB_important_SNV_Mar19_19.csv"))
+  curated_SNV <- read.csv(file.path(notates_dir, "curated_alterations", "MB_important_SNV_Mar19_19.csv"))
   curated_SNV$Genomic_Alt[is.na(curated_SNV$Genomic_Alt)] <- ""
   curated_SNV$Protein_Alt[is.na(curated_SNV$Protein_Alt)] <- ""
   # keep only >= 5 times affected
   curated_SNV <- curated_SNV[curated_SNV$Note >= 5, ]
-  curated_CNA <- read.csv(paste0(notates_dir, "/curated_alterations/MB_important_CNA_Mar19_19.csv"))
+  curated_CNA <- read.csv(file.path(notates_dir, "curated_alterations", "MB_important_CNA_Mar19_19.csv"))
 }
 
 # Germline Mutations ------------------------------------------------------
-dir.create("./Germline")
-germline_mutations <- read.csv("../Germline/output/germline_variant_report.csv")
+dir.create("Germline")
+germline_mutations <- read.csv(file.path(dirname(getwd()), "Germline", "output", "germline_variant_report.csv"))
 
 germline_cols <- c("Hugo_Symbol", "id", "Chromosome", "Start_position",
                    "Filter_Comment", "Variant_Classification",
@@ -69,7 +69,7 @@ if(any(grepl("ACMG",germline_mutations$Filter_Group))) {
   colnames(tmp) <- renamed_g_cols
   germline_mutations <- germline_mutations[!grepl("ACMG", germline_mutations$Filter_Group),]
   
-  write.csv(tmp, "./Germline/ACMG.csv", row.names = F)
+  write.csv(tmp, "Germline/ACMG.csv", row.names = F)
 }
 ### Cancer Gene Census
 if(any(grepl("CGC",germline_mutations$Filter_Group))) {
@@ -80,7 +80,7 @@ if(any(grepl("CGC",germline_mutations$Filter_Group))) {
   
   germline_mutations <- germline_mutations[!grepl("CGC", germline_mutations$Filter_Group),]
   
-  write.csv(tmp, "./Germline/CGC.csv", row.names = F)
+  write.csv(tmp, "Germline/CGC.csv", row.names = F)
 }
 ### Cancer Predisposition Gene
 if(any(grepl("CPG",germline_mutations$Filter_Group))) {
@@ -90,7 +90,7 @@ if(any(grepl("CPG",germline_mutations$Filter_Group))) {
   tmp <- tmp[, colnames(tmp) != "Disease(s)"]
   germline_mutations <- germline_mutations[!grepl("CPG", germline_mutations$Filter_Group),]
   
-  write.csv(tmp, "./Germline/CPG.csv", row.names = F)
+  write.csv(tmp, "Germline/CPG.csv", row.names = F)
 }
 ### DNA Damage Repair
 if(any(grepl("DDR", germline_mutations$Filter_Group))) {
@@ -101,7 +101,7 @@ if(any(grepl("DDR", germline_mutations$Filter_Group))) {
   
   germline_mutations <- germline_mutations[!grepl("DDR", germline_mutations$Filter_Group),]
   
-  write.csv(tmp, "./Germline/DDR.csv", row.names = F)
+  write.csv(tmp, "Germline/DDR.csv", row.names = F)
 }
 ### Other
 if(nrow(germline_mutations) != 0) {
@@ -110,20 +110,20 @@ if(nrow(germline_mutations) != 0) {
   colnames(tmp) <- renamed_g_cols
   tmp <- tmp[, colnames(tmp) != "Disease(s)"]
   
-  write.csv(tmp, "./Germline/OTHER.csv", row.names = FALSE)
+  write.csv(tmp, "Germline/OTHER.csv", row.names = FALSE)
 }
 
 ### Common Variants
-common_var <- read.csv("../Germline/output/common_variant_report.csv")
+common_var <- read.csv(file.path(dirname(getwd()), "Germline","output", "common_variant_report.csv"))
 common_var <- common_var[,c("id","Hugo_Symbol","Variant_Classification",
                             "gCCV_Risk_allele","Reference_Allele","Normal_Seq_Allele2",
                             "Ref_depth", "Alt_depth", "allele_frequency")]
 colnames(common_var) <-  c("rs_id","Gene","Effect","Risk Allele", "Ref", "Alt", "Ref_depth", "Alt_depth", "AF")
-write.csv(common_var, "./Germline/common_var.csv", row.names = FALSE)
+write.csv(common_var, "Germline/common_var.csv", row.names = FALSE)
 
 # Somatic Mutations -------------------------------------------------------
-dir.create("./Somatic_SNV")
-somatic_vars <- read.delim("../Oncotator/annotated.sSNVs.tsv", comment.char="#")
+dir.create("Somatic_SNV")
+somatic_vars <- read.delim(file.path(dirname(getwd()), "Oncotator", "annotated.sSNVs.tsv"), comment.char="#")
 somatic_vars <- somatic_vars[order(somatic_vars$tumor_f, decreasing = TRUE), ]
 
 # Subsetting for (MuTect's default) HQ filters
@@ -213,7 +213,7 @@ if(any(somatic_vars$Hugo_Symbol %in% curated_SNV$Gene)) {
 ### in CGC and COSMIC hotspot
 if(any(somatic_vars$Hugo_Symbol %in% CGC_df$Gene.Symbol)) {
   cgc_id <- which(somatic_vars$Hugo_Symbol %in% CGC_df$Gene.Symbol)
-  hotspot_id <- which(somatic_vars$Hugo_Symbol %in% CGC_df$Gene.Symbol & somatic_vars$COSMIC_n_overlapping_mutations>0) # should this be >10 or more?
+  hotspot_id <- which(somatic_vars$Hugo_Symbol %in% CGC_df$Gene.Symbol & somatic_vars$COSMIC_n_overlapping_mutations>0)
   if(length(hotspot_id) > 0) {
     cgc_id <- setdiff(cgc_id, hotspot_id)
     tmp <- somatic_vars[hotspot_id,]
@@ -256,9 +256,9 @@ colnames(cytobands_df) <- c("Chr", "Start", "End", "Cytb_name", "stain")
 cytobands_df$Cytb_name <- paste0(cytobands_df$Chr, cytobands_df$Cytb_name)
 
 # CNV - exomeCNV ---------------------------------------------------------------------
-dir.create("./SCNA")
+dir.create("SCNA")
 # read in cnv file
-cnv <- read.delim("../ExomeCNV/CNV.cnv.txt", header = TRUE)
+cnv <- read.delim(file.path(dirname(getwd()), "ExomeCNV", "CNV.cnv.txt"), header = TRUE)
 # discard rows with NA spec
 cnv <- subset(cnv, !is.na(spec))
 # discard rows with NA sens
@@ -375,7 +375,7 @@ if (nrow(broad) != 0)
 # LOH - exomeCNV ---------------------------------------------------------------------
 dir.create("LOH")
 # read in loh file
-loh <- read.csv("../ExomeCNV/LOH_regions.csv", header = TRUE)
+loh <- read.csv(file.path(dirname(getwd()), "ExomeCNV", "LOH_regions.csv"), header = TRUE)
 loh <- loh[loh$abs_difference > 0.4, ]
 loh <- loh[, c("chr", "position.start", "position.end", "normal_b", "tumor_b", "abs_difference")]
 

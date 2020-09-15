@@ -2,6 +2,7 @@
 ## to be released as 1.2
 
 ## Major Changes
+- Updated table of DNA Damage Repair genes
 
 ## Minor changes and bug fixes
 
