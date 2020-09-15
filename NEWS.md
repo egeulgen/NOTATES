@@ -3,6 +3,7 @@
 
 ## Major Changes
 - Updated table of DNA Damage Repair genes
+- Updated ClinVar pathogenic variants for germline variants
 
 ## Minor changes and bug fixes
 
