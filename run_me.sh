@@ -242,7 +242,7 @@ Rscript "$scripts_dir"/QC_table_prep.R "$normal_name" "$tumor_name"
 echo "######################## Running R script for Germline Report    " $(date)
 Rscript "$scripts_dir"/Germline/Germline.R
 
-echo "######################## Running R script for NOTATES v4.1       " $(date)
+echo "######################## Running R script for NOTATES Report     " $(date)
 Rscript "$scripts_dir"/NOTATES/run_NOTATES.R $tumor_type
 
 echo "######################## Running R script for Pathway Enrichment " $(date)
