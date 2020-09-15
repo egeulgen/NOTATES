@@ -1,5 +1,4 @@
-# NOTATES v1.2.0.9000
-## to be released as 1.2
+# NOTATES v1.2
 
 ## Major Changes
 - Updated table of DNA Damage Repair genes
