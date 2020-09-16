@@ -86,17 +86,20 @@ kable_styling(kable(contam_df[, -1],
 
 Germline alterations are assessed from the WES sequencing of DNA extracted from blood. Alterations were called using GATK - HaplotypeCaller. Findings were filtered for germline single nucleotide variations (SNVs) and short (typically less than 20 bases-long) insertion-deletion events (indels) that:
 
-1. were not reported as "benign" or "likely benign" in ClinVar
-2. have population Minor Allele Frequency (MAF) < 1% (in 1000 Genomes, ExAC and ESP6500)
-3. have non-synonymous impact (one of "Frame_Shift_Del", "Frame_Shift_Ins", "Splice_Site", "Translation_Start_Site","Nonsense_Mutation", "Nonstop_Mutation", "In_Frame_Del","In_Frame_Ins", "Missense_Mutation", see [http://www.ensembl.org/Help/Glossary?id=535]( http://www.ensembl.org/Help/Glossary?id=535)))
+- were not reported as "benign" or "likely benign" in ClinVar
+- have population Minor Allele Frequency (MAF) < 1% (in 1000 Genomes, ExAC and ESP6500)
+- have non-synonymous impact (one of "Frame_Shift_Del", "Frame_Shift_Ins", "Splice_Site", "Translation_Start_Site","Nonsense_Mutation", "Nonstop_Mutation", "In_Frame_Del","In_Frame_Ins", "Missense_Mutation", see [http://www.ensembl.org/Help/Glossary?id=535]( http://www.ensembl.org/Help/Glossary?id=535)))
+- are not in genes that are often non-pathogenic and passengers but are frequently mutated in most of the public exome studies (named FLAGS) as collected by Shyr et al. [^1]. 
+
+[^1]: Shyr C, Tarailo-graovac M, Gottlieb M, Lee JJ, Van karnebeek C, Wasserman WW. FLAGS, frequently mutated genes in public exomes. BMC Med Genomics. 2014;7:64.
 
 `r if(params$type == "glioma") {" (except for the subsection II. f. Common Variants)"}`. The altered gene, the position of the SNV, the reference nucleotide as well as the altered nucleotide, the mutation type, the read depth of the variation, the estimated allelic frequency and clinical significance (as reported in ClinVar) are reported. The report follows a sequential order where an alteration reported in a subsection is not reported in the following subsections.
 
 ### II. a. ACMG Incidental Findings
 
-Any pathogenic/likely-pathogenic germline SNV/indel that affects any of the genes listed in ACMG SF V2.0[^1] are reported under this subsection.
+Any pathogenic/likely-pathogenic germline SNV/indel that affects any of the genes listed in ACMG SF V2.0[^2] are reported under this subsection.
 
-[^1]: Kalia SS, Adelman K, Bale SJ, et al. Recommendations for reporting of secondary findings in clinical exome and genome sequencing, 2016 update (ACMG SF v2.0): a policy statement of the American College of Medical Genetics and Genomics. Genet Med. 2017;19(2):249-255.
+[^2]: Kalia SS, Adelman K, Bale SJ, et al. Recommendations for reporting of secondary findings in clinical exome and genome sequencing, 2016 update (ACMG SF v2.0): a policy statement of the American College of Medical Genetics and Genomics. Genet Med. 2017;19(2):249-255.
 
 ```{r ACMG}
 if(file.exists("./NOTATES/Germline/ACMG.csv")) {
@@ -133,10 +136,10 @@ if(file.exists("./NOTATES/Germline/CGC.csv")) {
 
 ### II. c. Variations in Cancer Predisposition Genes
 
-Genes in which germline mutations confer highly or moderately increased risks of cancer are called cancer predisposition genes. Germline SNV/indels catalogued in the 2014 Nature publication by Rahman[^2] are reported in this subsection.
+Genes in which germline mutations confer highly or moderately increased risks of cancer are called cancer predisposition genes. Germline SNV/indels catalogued in the 2014 Nature publication by Rahman [^3] are reported in this subsection.
 
 
-[^2]: Rahman N. Realizing the promise of cancer predisposition genes. Nature. 2014;505(7483):302-8.
+[^3]: Rahman N. Realizing the promise of cancer predisposition genes. Nature. 2014;505(7483):302-8.
 
 ```{r CPG}
 if(file.exists("./NOTATES/Germline/CPG.csv")) {
@@ -154,9 +157,9 @@ if(file.exists("./NOTATES/Germline/CPG.csv")) {
 
 ### II. d. Variations in DNA Damage Repair Genes
 
-In this subsection, germline variants reported as "pathogenic" in ClinVar in Human DNA Repair Genes [^3] are presented.
+In this subsection, germline variants reported as "pathogenic" in ClinVar in Human DNA Repair Genes [^4] are presented.
 
-[^3]: Mdanderson.org. 2020. Human DNA Repair Genes. [online] Available at: <https://www.mdanderson.org/documents/Labs/Wood-Laboratory/human-dna-repair-genes.html>.
+[^4]: Mdanderson.org. 2020. Human DNA Repair Genes. [online] Available at: <https://www.mdanderson.org/documents/Labs/Wood-Laboratory/human-dna-repair-genes.html>.
 
 ```{r DDR_germ}
 if(file.exists("./NOTATES/Germline/DDR.csv")) {
@@ -210,9 +213,7 @@ if (params$type == "glioma") {
 
 # III. Somatic Single Nucleotide Variations (SNVs) and Small Insertion/Deletions (Indels)
 
-Somatic mutations were called from the tumor-blood pair in the current analysis using GATK - MuTect2 with a cutoff of 5% variant allele frequency (VAF). Only non-synonymous variants (with variant classifications of High/Moderate variant consequences: "Frame_Shift_Del", "Frame_Shift_Ins", "Splice_Site", "Translation_Start_Site","Nonsense_Mutation", "Nonstop_Mutation", "In_Frame_Del","In_Frame_Ins", "Missense_Mutation", see [http://www.ensembl.org/Help/Glossary?id=535]( http://www.ensembl.org/Help/Glossary?id=535)) were used for reporting. Genes that are often non-pathogenic and passengers but are frequently mutated in most of the public exome studies (named FLAGS) as collected by Shyr et al. were excluded from the report [^4]. 
-
-[^4]: Shyr C, Tarailo-graovac M, Gottlieb M, Lee JJ, Van karnebeek C, Wasserman WW. FLAGS, frequently mutated genes in public exomes. BMC Med Genomics. 2014;7:64.
+Somatic mutations were called from the tumor-blood pair in the current analysis using GATK - MuTect2 with a cutoff of 5% variant allele frequency (VAF). Only non-synonymous variants (with variant classifications of High/Moderate variant consequences: "Frame_Shift_Del", "Frame_Shift_Ins", "Splice_Site", "Translation_Start_Site","Nonsense_Mutation", "Nonstop_Mutation", "In_Frame_Del","In_Frame_Ins", "Missense_Mutation", see [http://www.ensembl.org/Help/Glossary?id=535]( http://www.ensembl.org/Help/Glossary?id=535)) were used for reporting. Genes that are often non-pathogenic and passengers but are frequently mutated in most of the public exome studies (named FLAGS) as collected by Shyr et al. were excluded from the report. 
 
 ### III. a. Tumor Mutational Burden (TMB)
 
@@ -340,14 +341,14 @@ if (params$type == "glioma") {
 
 ### III. b. Microsatellite Instability Status
 
-The microsatellite instability (MSI) status was predicted using the tool MSIpred [5]. MSIpred computes 22 somatic mutational features (predictors of MSI) and using these features, it predicts tumor MSI status as microsatellite instability high (MSI-H) or microsatellite stable (MSS) using a machine learning method, support vector machine (SVM). 
+The microsatellite instability (MSI) status was predicted using the tool MSIpred [^5]. MSIpred computes 22 somatic mutational features (predictors of MSI) and using these features, it predicts tumor MSI status as microsatellite instability high (MSI-H) or microsatellite stable (MSS) using a machine learning method, support vector machine (SVM). 
 
 Additionally, polymerase-epsilon (POLE) deficiency is predicted based on the presence of both of:
 
 1. total count of somatic SNVs / Mb > 60 AND
 2. count of somatic indels in single sequence repeats / Mb < 0.18
 
-[5]: Wang C, Liang C. MSIpred: a python package for tumor microsatellite instability classification from tumor mutation annotation data using a support vector machine. Sci Rep. 2018;8(1):17546.
+[^5]: Wang C, Liang C. MSIpred: a python package for tumor microsatellite instability classification from tumor mutation annotation data using a support vector machine. Sci Rep. 2018;8(1):17546.
 
 
 ```{r classification}
@@ -361,9 +362,9 @@ kable_styling(kable(class_tbl,
 
 `r if(params$type == "glioma") {"### III. c. Variants in Established Glioma Genes"} else {"### III. c. Variants in Established Medulloblastoma Genes"}`
 
-`r if(params$type == "glioma") {"This subsection contains somatic SNV/indels in genes that have been reported in the TCGA pan-glioma study of Ceccarelli et al. [^5] which analyzed 1122 WHO grade II-III and IV diffuse-gliomas."} else {"This is the intersection of somaticSNV/indels in this case with a list of genes manually curated because of their importance in medulloblastomas."}`
+`r if(params$type == "glioma") {"This subsection contains somatic SNV/indels in genes that have been reported in the TCGA pan-glioma study of Ceccarelli et al. [^6] which analyzed 1122 WHO grade II-III and IV diffuse-gliomas."} else {"This is the intersection of somaticSNV/indels in this case with a list of genes manually curated because of their importance in medulloblastomas."}`
 
-`r if(params$type == "glioma") {"[^5]: Ceccarelli M, Barthel FP, Malta TM, et al. Molecular Profiling Reveals Biologically Discrete Subsets and Pathways of Progression in Diffuse Glioma. Cell. 2016;164(3):550-63."}`
+`r if(params$type == "glioma") {"[^6]: Ceccarelli M, Barthel FP, Malta TM, et al. Molecular Profiling Reveals Biologically Discrete Subsets and Pathways of Progression in Diffuse Glioma. Cell. 2016;164(3):550-63."}`
 
 
 ```{r imp_som_var}
@@ -578,7 +579,7 @@ if(file.exists("./NOTATES/SCNA/important_CNVs.csv")) {
 }
 ```
 
-### IV. c. SCNAs in Cancer Gene Census genes
+### IV. c. SCNAs in Cancer Gene Census Genes
 
 ```{r cgc_cna}
 if(file.exists("./NOTATES/SCNA/CGC_CNVs.csv")) {
