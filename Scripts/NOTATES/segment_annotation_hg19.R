@@ -2,7 +2,7 @@
 ## Project: NOTATES
 ## Script purpose: Annotation of genes within segments 
 ## and the cytobands containing the segments
-## Date: Nov 11, 2019
+## Date: Sep 16, 2020
 ## Author: Ege Ulgen
 ##################################################
 
@@ -35,7 +35,7 @@ options(stringsAsFactors = FALSE)
 #' }
 annotate_genes <- function(segment_df) {
   segment_gr <- makeGRangesFromDataFrame(segment_df)
-  hg19_genes_gr <- genes(TxDb.Hsapiens.UCSC.hg19.knownGene)
+  hg19_genes_gr <- suppressMessages(genes(TxDb.Hsapiens.UCSC.hg19.knownGene))
   
   # find regions overlapping genes
   overlapGenes <- findOverlaps(query = hg19_genes_gr, 
@@ -165,7 +165,7 @@ annotate_cytb <- function(segment_df, cytobands_df) {
 #' }
 loh_annotate_genes <- function(segment_df) {
   segment_gr <- makeGRangesFromDataFrame(segment_df)
-  hg19_genes_gr <- genes(TxDb.Hsapiens.UCSC.hg19.knownGene)
+  hg19_genes_gr <- suppressMessages(genes(TxDb.Hsapiens.UCSC.hg19.knownGene))
   
   # find regions overlapping genes
   overlapGenes <- findOverlaps(query = hg19_genes_gr, 
