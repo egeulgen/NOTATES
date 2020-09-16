@@ -84,7 +84,13 @@ kable_styling(kable(contam_df[, -1],
 
 # II. Germline Alterations
 
-Germline alterations are assessed from the WES sequencing of DNA extracted from blood. Alterations were called using GATK - HaplotypeCaller. Findings were filtered for germline single nucleotide variations (SNVs) and short (typically less than 20 bases-long) insertion-deletion events (indels) that were reported as “pathogenic” or “likely pathogenic” in ClinVar`r if(params$type == "glioma") {" (except for the subsection II. f. Common Variants)"}`. Variants of unknown significance (VUS) are not reported. The altered gene, the position of the SNV, the reference nucleotide as well as the altered nucleotide, the mutation type, the read depth of the variation and the predicted allelic frequency are reported. The report follows a sequential order where an alteration reported in a subsection is not reported in the following subsections.
+Germline alterations are assessed from the WES sequencing of DNA extracted from blood. Alterations were called using GATK - HaplotypeCaller. Findings were filtered for germline single nucleotide variations (SNVs) and short (typically less than 20 bases-long) insertion-deletion events (indels) that:
+
+1. were not reported as "benign" or "likely benign" in ClinVar
+2. have population Minor Allele Frequency (MAF) < 1% (in 1000 Genomes, ExAC and ESP6500)
+3. have non-synonymous impact (one of "Frame_Shift_Del", "Frame_Shift_Ins", "Splice_Site", "Translation_Start_Site","Nonsense_Mutation", "Nonstop_Mutation", "In_Frame_Del","In_Frame_Ins", "Missense_Mutation", see [http://www.ensembl.org/Help/Glossary?id=535]( http://www.ensembl.org/Help/Glossary?id=535)))
+
+`r if(params$type == "glioma") {" (except for the subsection II. f. Common Variants)"}`. The altered gene, the position of the SNV, the reference nucleotide as well as the altered nucleotide, the mutation type, the read depth of the variation, the estimated allelic frequency and clinical significance (as reported in ClinVar) are reported. The report follows a sequential order where an alteration reported in a subsection is not reported in the following subsections.
 
 ### II. a. ACMG Incidental Findings
 
@@ -101,7 +107,8 @@ if(file.exists("./NOTATES/Germline/ACMG.csv")) {
   kable_styling(kable(ACMG_df,
                       format = "latex", 
                       booktabs = TRUE,
-                      align = "c"))
+                      align = "c"),
+                latex_options="scale_down")
 } else {
   cat("No variation to report.")
 }
@@ -117,7 +124,8 @@ if(file.exists("./NOTATES/Germline/CGC.csv")) {
   kable_styling(kable(gCGC_df,
                       format = "latex", 
                       booktabs = TRUE,
-                      align = "c"))
+                      align = "c"),
+                latex_options="scale_down")
 } else {
   cat("No variation to report.")
 }
@@ -136,7 +144,8 @@ if(file.exists("./NOTATES/Germline/CPG.csv")) {
   kable_styling(kable(CPG_df,
                       format = "latex", 
                       booktabs = TRUE,
-                      align = "c"))
+                      align = "c"),
+                latex_options="scale_down")
 } else {
   cat("No variation to report.")
 }
@@ -155,7 +164,8 @@ if(file.exists("./NOTATES/Germline/DDR.csv")) {
   kable_styling(kable(DDR_df,
                       format = "latex", 
                       booktabs = TRUE,
-                      align = "c"))
+                      align = "c"),
+                latex_options="scale_down")
 } else {
   cat("No variation to report.")
 }
@@ -171,7 +181,8 @@ if(file.exists("./NOTATES/Germline/OTHER.csv")) {
   kable_styling(kable(OTH_df,
                       format = "latex", 
                       booktabs = TRUE,
-                      align = "c"))
+                      align = "c"),
+                latex_options="scale_down")
 } else {
   cat("No variation to report.")
 }

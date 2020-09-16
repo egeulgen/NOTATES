@@ -2,9 +2,12 @@
 ## Project: NOTATES
 ## Script purpose: Script for processing germline
 ## SNP/indels for categorical reporting of variants
-## that are reported as "pathogenic"/"likely-pathogenic"
+## that:
+## 1. are NOT reported as "benign"/"likely-benign"
 ## in ClinVar
-## Date: Oct 23, 2019
+## 2. have MAF < 1%
+## 3. are non-synonymous
+## Date: Sep 16, 2020
 ## Author: Ege Ulgen
 ##################################################
 
@@ -15,8 +18,6 @@ initial.options <- commandArgs(trailingOnly = FALSE)
 script.name <- sub("--file=", "", initial.options[grep("--file=", initial.options)])
 script_dir <- dirname(script.name)
 
-options(stringsAsFactors = FALSE)
-  
 # set working directory
 setwd("./Germline")
 dir.create("output")
@@ -36,7 +37,33 @@ germline$Ref_depth <- vapply(germline$allelic_depth, function(x)
   as.integer(unlist(strsplit(x, split =","))[1]), 1L)
 germline$Alt_depth <- vapply(germline$allelic_depth, function(x) 
   as.integer(unlist(strsplit(x, split =","))[2]), 1L)  
-  
+
+# Add clinical significance
+clin_sig_df <- readRDS(file.path(script_dir, "ClinVar_clinical_sig.RDS"))
+clin_sig_df$lookup <- paste(clin_sig_df$Chrom, 
+                            clin_sig_df$Start, 
+                            clin_sig_df$REF, 
+                            clin_sig_df$ALT)
+
+germline$lookup <- paste(germline$Chromosome, 
+                         germline$Start_position, 
+                         germline$Reference_Allele, 
+                         germline$Tumor_Seq_Allele2)
+germline$Clin_sig <- clin_sig_df$Clinical_Significance[match(germline$lookup, clin_sig_df$lookup)]
+germline$Clin_sig[is.na(germline$Clin_sig)] <- ""
+
+# fix long clin. sig.s
+sig_desc <- "Conflicting_interpretations_of_pathogenicity"
+germline$Clin_sig[grepl(sig_desc, germline$Clin_sig)] <- gsub(sig_desc, "Conflicting", germline$Clin_sig[grepl(sig_desc, germline$Clin_sig)] )
+
+sig_desc <- "Uncertain_significance"
+germline$Clin_sig[grepl(sig_desc, germline$Clin_sig)] <- gsub(sig_desc, "VUS", germline$Clin_sig[grepl(sig_desc, germline$Clin_sig)] )
+
+sig_desc <- "not_provided"
+germline$Clin_sig[grepl(sig_desc, germline$Clin_sig)] <- ""
+
+germline$Clin_sig[germline$Clin_sig == ""] <- "not reported" 
+
 # 0. Seperate Report for Common variants with low penetrance --------------
 # load gCCV table
 common_vars <- read.csv(paste0(script_dir, "/common_variants_list.csv"))
@@ -61,19 +88,28 @@ common_variant_df$gCCV_MAF_1000G <- common_vars$MAF_1kG[idx]
 
 write.csv(common_variant_df, "./output/common_variant_report.csv", row.names = F)
 
-# Preprocess --------------------------------------------------------------
 # I. Extract relevant genes with preset filter groups ---------------------
-filter_df <- read.csv(paste0(script_dir, "/Germline_filter_list.csv"))
+filter_df <- read.csv(file.path(script_dir, "Germline_filter_list.csv"))
 
-cgc_df <- read.csv(paste0(script_dir,"/../CGC_latest.csv"))
+main_scripts_dir <- dirname(script_dir)
+
+cgc_df <- read.csv(file.path(main_scripts_dir, "CGC_latest.csv"))
 cgc_df <- data.frame(Gene.Name = cgc_df$Gene.Symbol,
                      Comment = "",
                      Group = "Cancer Gene Census",
                      Source = "COSMIC",
                      Rank = 3,
                      short_name = "CGC")
-
 filter_df <- rbind(filter_df, cgc_df)
+
+ddr_df <- read.csv(file.path(main_scripts_dir, "NOTATES", "curated_dbs", "DNA_damage_repair_1Jul20.csv"))
+ddr_df <- data.frame(Gene.Name = ddr_df$Gene.Name,
+                     Comment = ddr_df$FUNCTION,
+                     Group = "DNA Damage Repair Gene",
+                     Source = "https://www.mdanderson.org/documents/Labs/Wood-Laboratory/human-dna-repair-genes.html",
+                     Rank = 2,
+                     short_name = "DDR")
+filter_df <- rbind(filter_df, ddr_df)
 
 # lookup indices of genes/variants to be filtered
 idx <- which(germline$Hugo_Symbol %in% filter_df$Gene.Name)
@@ -97,32 +133,34 @@ for (i in 1:nrow(germline_final)) {
   germline_final$Filter_Comment[i] <- paste(tmp_comment, collapse = ", ")
 }
 germline_final <- germline_final[order(germline_final$Rank), ]
-rm(list = setdiff(ls(), c("script_dir", "germline_final")))
 
 write.csv(germline_final,"./output/germline_variants_NO_FILTER.csv", row.names = F)
 
 # II. Evaluate Variants ---------------------------------------------------
-clinvar_pathogenic <- read.table(file.path(script_dir, 
-                                           "ClinVar_pathogenic_positions.txt"), header = FALSE)
-# both 1-based
-germline_final$lookup <- paste(germline_final$Chromosome, 
-                               germline_final$Start_position, 
-                               germline_final$Reference_Allele, 
-                               germline_final$Tumor_Seq_Allele2, 
-                               sep = "_")
-clinvar_pathogenic$lookup <- paste(clinvar_pathogenic$V1,
-                                   clinvar_pathogenic$V2,
-                                   clinvar_pathogenic$V4,
-                                   clinvar_pathogenic$V5,
-                                   sep = "_")
+# filter out benign/likely benign variants
+germline_final <- germline_final[!grepl("benign", germline_final$Clin_sig, ignore.case = TRUE), ]
+germline_final$Clin_sig[is.na(germline_final$Clin_sig)] <- ""
 
-germline_final <- germline_final[germline_final$lookup %in% clinvar_pathogenic$lookup, ]
+# only keep variants with MAF < 1%
+AF_cols <- colnames(germline_final)[grepl("_AF$", colnames(germline_final)) | grepl("_AF_", colnames(germline_final))]
+for (af_column in AF_cols) {
+  germline_final[, af_column] <- suppressWarnings(as.numeric(germline_final[, af_column]))
+  germline_final[is.na(germline_final[, af_column]), af_column] <- -1
+  germline_final <- germline_final[germline_final[, af_column] < 0.01, ]
+}
+
+# only keep non-synonymous variants
+non_syn_classes <- c("Frame_Shift_Del", "Frame_Shift_Ins", "Splice_Site", 
+                     "Translation_Start_Site","Nonsense_Mutation", 
+                     "Nonstop_Mutation", "In_Frame_Del","In_Frame_Ins", 
+                     "Missense_Mutation")
+germline_final <- germline_final[germline_final$Variant_Classification %in% non_syn_classes, ]
 
 # III. Report Relevant Variants -------------------------------------------
 cols_to_keep <- c("Hugo_Symbol", "Chromosome", "Start_position", "End_position", "Variant_Classification", 
                   "Reference_Allele", "Tumor_Seq_Allele1", "Tumor_Seq_Allele2", "id", 
                   "Filter_Group", "Filter_Comment",
-                  "Ref_depth", "Alt_depth", "allele_frequency")
+                  "Ref_depth", "Alt_depth", "allele_frequency", "Clin_sig")
 
 germline_final <- germline_final[, cols_to_keep]
 colnames(germline_final) <- gsub("Tumor", "Germline", colnames(germline_final))

@@ -10,8 +10,6 @@
 dir.create("NOTATES")
 setwd("NOTATES")
 
-options(stringsAsFactors = FALSE)
-
 # dir for data sources (same as the directory where script is located)
 initial_options <- commandArgs(trailingOnly = FALSE)
 script_name <- sub("--file=", "", initial_options[grep("--file=", initial_options)])
@@ -56,11 +54,11 @@ germline_mutations <- read.csv(file.path(dirname(getwd()), "Germline", "output",
 germline_cols <- c("Hugo_Symbol", "id", "Chromosome", "Start_position",
                    "Filter_Comment", "Variant_Classification",
                    "Reference_Allele", "Germline_Seq_Allele2", 
-                   "Ref_depth", "Alt_depth", "allele_frequency")
+                   "Ref_depth", "Alt_depth", "allele_frequency", "Clin_sig")
 renamed_g_cols <- c("Gene", "rs_id", "Chr", "Pos", 
                     "Disease(s)", "Effect", 
                     "Ref", "Alt", 
-                    "Ref_depth", "Alt_depth", "AF")
+                    "Ref_depth", "Alt_depth", "AF", "Significance")
 
 ### ACMG incidental
 if(any(grepl("ACMG",germline_mutations$Filter_Group))) {
