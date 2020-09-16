@@ -1,7 +1,7 @@
 # NOTATES v1.3.0.9000
 # to be released as v1.3.0
 ## Major Changes
-- Changed germline filtering to (1) NOT "benign"/"likely benign" in ClinVar (2) MAF < 1% and (3) Non-syn. impact
+- Changed germline filtering to (1) NOT "benign"/"likely benign" in ClinVar (2) MAF < 1% and (3) Non-syn. impact and (4) NOT in FLAGs
 
 ## Minor changes and bug fixes
 - germline filter list altered so that up-to-date DDR genes are used

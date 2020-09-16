@@ -156,6 +156,13 @@ non_syn_classes <- c("Frame_Shift_Del", "Frame_Shift_Ins", "Splice_Site",
                      "Missense_Mutation")
 germline_final <- germline_final[germline_final$Variant_Classification %in% non_syn_classes, ]
 
+# Exclude variants in FLAGs
+flags <- c("TTN", "MUC16", "OBSCN", "AHNAK2", "SYNE1", "FLG", 
+           "MUC5B", "DNAH17", "PLEC", "DST", "SYNE2", "NEB", "HSPG2", 
+           "LAMA5", "AHNAK", "HMCN1", "USH2A", "DNAH11", "MACF1", 
+           "MUC17")
+germline_final <- germline_final[!germline_final$Hugo_Symbol %in% flags, ]
+
 # III. Report Relevant Variants -------------------------------------------
 cols_to_keep <- c("Hugo_Symbol", "Chromosome", "Start_position", "End_position", "Variant_Classification", 
                   "Reference_Allele", "Tumor_Seq_Allele1", "Tumor_Seq_Allele2", "id", 
