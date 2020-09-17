@@ -18,7 +18,7 @@ header-includes:
 - \usepackage{longtable}
 - \usepackage[table]{xcolor}
 title: \ \ NeuroOncology Technologies (NOT)
-author: "Whole Exome Sequencing Report"
+subtitle: "Whole Exome Sequencing Report"
 ---
 
 ```{r setup, include=FALSE}
@@ -337,7 +337,7 @@ if (params$type == "glioma") {
 }
 ```
 
-> Mutation load (Number of mutations per Mb) for the current tumor sample is: `r current_TMB` 
+> TMB for the current tumor sample is: `r round(current_TMB, 2)` mutations/Mb (`r ifelse(current_TMB > 20, "High \\(>", "Normal \\(<=")` 20 mutations/Mb))
 
 ### III. b. Microsatellite Instability Status
 
