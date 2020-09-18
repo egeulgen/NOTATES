@@ -81,10 +81,10 @@ bash "$scripts_dir"/merge_fastqs.sh "$tumor_name"
 ######################## Examine Sequence Read Quality #########################
 ################################################################################
 echo "############################################## Running FASTQC    " $(date)
-####### Merge Seperate Files for normal
+####### FASTQC for normal
 bash "$scripts_dir"/fastqc.sh "$normal_name"
 
-####### Merge Seperate Files for Tumor
+####### FASTQC for Tumor
 bash "$scripts_dir"/fastqc.sh "$tumor_name"
 
 ################################################################################
@@ -120,6 +120,7 @@ $GATK Mutect2 \
 	-I normal.final.bam -normal "$normal_name" \
 	--germline-resource "$gnomad_vcf" \
 	--intervals "$Target_Intervals" --interval-padding 100 \
+	--f1r2-tar-gz Mutect2/f1r2.tar.gz \
 	-O Mutect2/Mutect_raw.vcf.gz
 
 ################################################################################
@@ -130,6 +131,10 @@ $GATK Mutect2 \
 bash "$scripts_dir"/Germline/germline_filter.sh
 
 ##################### Somatic Variant Filtering ###############################
+$GATK LearnReadOrientationModel \
+	-I Mutect2/f1r2.tar.gz \
+	-O Mutect2/read-orientation-model.tar.gz
+
 $GATK GetPileupSummaries \
 	-R "$genome" \
 	-I tumor.final.bam \
@@ -153,26 +158,13 @@ $GATK CalculateContamination \
 $GATK FilterMutectCalls \
 	-R "$genome" \
 	-V Mutect2/Mutect_raw.vcf.gz \
-	--contamination-table contamination.table \
 	--tumor-segmentation segments.tsv \
-	-O Mutect2/Mutect_filt_once.vcf.gz
-
-$GATK CollectSequencingArtifactMetrics \
-	-I tumor.final.bam \
-	-O artifact_metrics \
-	-R $genome
-
-## G/T: OxoG
-## C/T: FFPE
-$GATK FilterByOrientationBias \
-	-AM 'G/T' \
-	-AM 'C/T' \
-	-V Mutect2/Mutect_filt_once.vcf.gz \
-	-P artifact_metrics.pre_adapter_detail_metrics \
-	-O Mutect2/Mutect_filt_twice.vcf.gz
+	--contamination-table contamination.table \
+	--ob-priors Mutect2/read-orientation-model.tar.gz \
+	-O Mutect2/Mutect_filt_applied.vcf
 
 $GATK SelectVariants -R "$genome" \
-	-V Mutect2/Mutect_filt_twice.vcf.gz \
+	-V Mutect2/Mutect_filt_applied.vcf \
 	--exclude-filtered \
 	-O Mutect2/Filtered_mutect.vcf.gz
 
