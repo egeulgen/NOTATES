@@ -1,0 +1,190 @@
+---
+output: pdf_document
+params:
+  ID: ""
+  script_dir: ""
+  exome_length: ""
+  type: ""
+  primary_tm: ""
+  tumor_sample: ""
+header-includes:
+- \usepackage{float}
+- \usepackage{booktabs}
+- \usepackage{tabu}
+- \usepackage{longtable}
+- \usepackage{titling}
+geometry: "left=2cm,right=2cm,top=.5cm,bottom=2cm"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, comment = NA)
+options(stringsAsFactors = FALSE, Encoding="UTF-8")
+suppressPackageStartupMessages(library(knitr))
+suppressPackageStartupMessages(library(kableExtra))
+
+indication_for_testing <- ifelse(params$type == "glioma", "Diffuse glioma clinical WES analysis",
+                                 ifelse(params$type == "MB", "Medulloblastoma WES clinical WES analysis", "Oncological WES analysis"))
+treatment_status <- ifelse(as.logical(params$primary_tm), "Primary (untreated) tumor", "Recurrent (previously treated) tumor")
+tumor_sample_type <- ifelse(params$tumor_sample == "FFPE", "Formalin-Fixed Paraffin-Embedded (FFPE) tissue specimen", "Fresh tumor tissue, snap-frozen in liquid nitrogen")
+
+QC_df <- read.csv("./QC_table.csv" )
+tumor_25X <- QC_df$Tumor[QC_df$X == "25X"]
+normal_25X <- QC_df$Normal[QC_df$X == "25X"]
+
+msi_class_tbl <- read.csv("MSIpred/MSIpred_prediction.csv", row.names = 1)
+```
+
+```{r logo, fig.align="center", out.width="75%"}
+include_graphics(file.path(params$script_dir, 'NOT_summary_title.png'))
+```
+
+\fontsize{8}{8}
+\selectfont
+
+|                                                        |                                                                           |
+|--------------------------------------------------------|---------------------------------------------------------------------------|
+| **Report date:** `r format(Sys.time(), '%d %B, %Y')`   |                                                                           |
+| **Patient ID: ** `r params$ID`                         | **Tumor Sample: ** `r tumor_sample_type`                                  |
+| **Indication for testing: ** `r indication_for_testing`| **Normal Sample: ** Peripheral venous blood                               |
+| **Treatment status: ** `r treatment_status`            | **DNA extraction method:** QIAGEN DNeasy Blood & Tissue kit               |
+
+\fontsize{10}{10}
+\selectfont
+Whole exome sequencing of this individual's tumor and normal samples were performed and covered `r tumor_25X` (tumor) and `r normal_25X` (normal) of all exonic positions at 25X or more. Selected somatic findings are presented below.
+
+# I. Tumor Mutational Burdem
+
+TMB is defined as the number of somatic mutations per megabase. TMB is a predictive biomarker being studied to evaluate its association with response to immunotherapy.
+
+```{r TMB, fig.width=5, fig.height=1, fig.align="center"}
+somatic_SNVs <- read.delim("./Oncotator/annotated.sSNVs.tsv", comment.char="#")
+somatic_SNVs$tot_depth <- vapply(somatic_SNVs$allelic_depth, 
+                                 function(x) sum(as.numeric(unlist(strsplit(x, ",")))), 
+                                 1, USE.NAMES = FALSE)
+# Filter for depth greater than 20X in tumor samples greater or 10X in normal samples
+thresholds <- ifelse(somatic_SNVs$alt_allele_seen == "True", 20, 10)
+somatic_SNVs$dep_keep <- somatic_SNVs$tot_depth > thresholds
+tmp <- somatic_SNVs[somatic_SNVs$alt_allele_seen == "False" & !somatic_SNVs$dep_keep, ]
+somatic_SNVs$dep_keep[somatic_SNVs$Genome_Change %in% tmp$Genome_Change] <- FALSE
+somatic_SNVs <- somatic_SNVs[somatic_SNVs$dep_keep, ]
+somatic_SNVs <- somatic_SNVs[somatic_SNVs$alt_allele_seen == "True", ]
+# subset for tumor_f > 0.05
+somatic_SNVs <- somatic_SNVs[somatic_SNVs$tumor_f > 0.05, ]
+## Calculate TMB
+mut_num <- nrow(somatic_SNVs)
+current_TMB <- mut_num / as.numeric(params$exome_length)
+TMB_tbl_path <- file.path(params$script_dir, 
+                          paste0(params$type, "_TMB_table.RDS"))
+if (!file.exists(TMB_tbl_path)) {
+  TMB_df <- data.frame()
+} else {
+  TMB_df <- readRDS(TMB_tbl_path)
+}
+## add to TMB table if not present
+if(!params$ID %in% TMB_df$ID) {
+  high_conseq <- c("Frame_Shift_Del", "Frame_Shift_Ins", "Splice_Site", 
+                   "Translation_Start_Site","Nonsense_Mutation", 
+                   "Nonstop_Mutation", "In_Frame_Del","In_Frame_Ins", 
+                   "Missense_Mutation")
+  somatic_SNVs <- somatic_SNVs[somatic_SNVs$Variant_Classification %in% high_conseq,]
+  current_sset <- ifelse("H3F3A" %in% somatic_SNVs$Hugo_Symbol, "H3-mut",
+                         ifelse("IDH1" %in% somatic_SNVs$Hugo_Symbol | "IDH2" %in% somatic_SNVs$Hugo_Symbol, "IDH-mut", "IDH-WT"))
+  
+  TMB_df <- rbind(TMB_df, 
+                  data.frame(ID = params$ID, 
+                             TMB = current_TMB, 
+                             subset = current_sset,
+                             primary = params$primary_tm))
+  saveRDS(TMB_df, TMB_tbl_path)
+}
+## Scatter plots of TMB over all analyses
+# rank TMB vals
+TMB_df <- TMB_df[order(TMB_df$TMB),]
+TMB_df$x_val <- 1:nrow(TMB_df)
+
+TMB_df_plot <- TMB_df
+# calculate height of median line segment
+x_shift <- max(nrow(TMB_df_plot) / 7, 3)
+suppressPackageStartupMessages(library(ggplot2))
+p <- ggplot(TMB_df_plot, aes(x=x_val, y=TMB, group = subset))
+p <- p + geom_point(size=2, aes(shape=subset, color=subset))
+p <- p + scale_color_manual(values=c('#56B4E9','#E69F00', 'gray60'))
+p <- p + geom_segment(aes(x = median(x_val) - x_shift, 
+                          y = median(TMB), 
+                          xend = median(x_val) + x_shift, 
+                          yend = median(TMB)), 
+                      colour = "red")
+p <- p + coord_flip()
+p <- p + theme(axis.title.y = element_blank(),
+               axis.title.x = element_blank(),
+               axis.text.y = element_blank(),
+               axis.ticks.y = element_blank(),
+               legend.title = element_blank())
+p <- p + scale_y_log10(breaks = scales::trans_breaks("log10", function(x) 10^x),
+                       labels = scales::trans_format("log10", scales::math_format(10^.x)))
+p <- p + geom_point(data=TMB_df_plot[TMB_df_plot$ID == params$ID, ], 
+                    aes(x=x_val, y=TMB), colour="red", size=1, shape = 1)
+p
+```
+
+TMB for the current tumor sample is: `r round(current_TMB, 2)`mutations/Mb (`r ifelse(current_TMB > 20, "High \\(>", "Normal \\(<=")` 20 mutations/Mb)). The predicted MSI status of this tumor was **`r msi_class_tbl$Predicted_MSI_Status`**.
+
+# II. Somatic Short Variants
+
+```{r somatic_SNV_indel}
+file_paths <- c("Established gene" = "./NOTATES/Somatic_SNV/important_SNVs.csv",
+                "Hotspot in CGC" = "./NOTATES/Somatic_SNV/COSMIC_hotspot.csv",
+                "CGC gene" = "./NOTATES/Somatic_SNV/CGC_genes.csv",
+                "DDR" = "./NOTATES/Somatic_SNV/DDR_related.csv",
+                "KEGG" = "./NOTATES/Somatic_SNV/KEGG_selected.csv")
+
+all_som_vars <- c()
+for (i in 1:length(file_paths)) {
+  path2file <- file_paths[i]
+  if (file.exists(path2file)) {
+    tmp <- read.csv(path2file)
+    tmp$Category <- names(file_paths)[i]
+    all_som_vars <- rbind(all_som_vars, tmp)
+  }
+}
+selected <- c("Hugo_Symbol", "Variant_Classification", "Protein_Change", "Genome_Change", "tumor_f", "Category")
+all_som_vars <- all_som_vars[, selected]
+colnames(all_som_vars) <- c("Gene", "Classif.", "Protein Change", "Genome Change", "VAF", "Category")
+
+k_tbl <- kable(all_som_vars, format = "latex", booktabs = TRUE)
+kable_styling(k_tbl, font_size = 7)
+```
+
+
+# III. Somatic Copy Number Alterations
+
+```{r n3_or_n2}
+if(!file.exists("./THetA/output/CNV.BEST.results")){
+   n3_chosen <- FALSE
+}else{
+  theta_out <- read.delim("./THetA/output/CNV.BEST.results")
+  n3_chosen <- length(unlist(strsplit(theta_out[1,"mu"], ","))) != 2
+}
+```
+
+\begin{center} 
+\includegraphics[width=500pt]{`r ifelse(n3_chosen,"./THetA/output/CNV.n3.graph.pdf","./THetA/output/CNV.n2.graph.pdf")`}
+\end{center}
+
+```{r scna}
+file_paths <- c("Established SCNA" = "./NOTATES/SCNA/important_CNVs.csv",
+                "CGC gene SCNA" = "./NOTATES/SCNA/CGC_CNVs.csv")
+
+all_scnas <- c()
+for (i in 1:length(file_paths)) {
+  path2file <- file_paths[i]
+  if (file.exists(path2file)) {
+    tmp <- read.csv(path2file)
+    tmp$Category <- names(file_paths)[i]
+    all_scnas <- rbind(all_scnas, tmp)
+  }
+}
+
+k_tbl <- kable(all_scnas, format = "latex", booktabs = TRUE)
+kable_styling(k_tbl, font_size = 7)
+```
