@@ -302,7 +302,7 @@ p <- p + theme(axis.title.y=element_blank(),
                axis.ticks.y=element_blank())
 p <- p + scale_y_log10(breaks = scales::trans_breaks("log10", function(x) 10^x),
                        labels = scales::trans_format("log10", scales::math_format(10^.x)))
-p <- p + ylab("Mutational Load")
+p <- p + ylab("Tumor Mutational Burden")
 p <- p + geom_point(data=TMB_df_plot[TMB_df_plot$ID == params$ID, ], 
                     aes(x=x_val, y=TMB), colour="red", size=4, shape = 1)
 p <- p + facet_grid(rows = vars(for_facet))
