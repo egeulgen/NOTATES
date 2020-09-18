@@ -117,7 +117,7 @@ if(file.exists("./NOTATES/Germline/ACMG.csv")) {
 }
 ```
 
-### II. b. Variations in Cancer Gene Census Genes
+### II. b. Variants in Cancer Gene Census Genes
 
 Cancer Gene Census (CGC) from the Catalogue of Somatic Mutations in Cancer (COSMIC) database is a catalogue of genes which contain mutations that have been causally linked to cancer [(https://cancer.sanger.ac.uk/census)](https://cancer.sanger.ac.uk/census). This subsection filters the germline SNV/indels for genes that are reported in CGC. 
 
@@ -134,7 +134,7 @@ if(file.exists("./NOTATES/Germline/CGC.csv")) {
 }
 ```
 
-### II. c. Variations in Cancer Predisposition Genes
+### II. c. Variants in Cancer Predisposition Genes
 
 Genes in which germline mutations confer highly or moderately increased risks of cancer are called cancer predisposition genes. Germline SNV/indels catalogued in the 2014 Nature publication by Rahman [^3] are reported in this subsection.
 
@@ -155,7 +155,7 @@ if(file.exists("./NOTATES/Germline/CPG.csv")) {
 ```
 
 
-### II. d. Variations in DNA Damage Repair Genes
+### II. d. Variants in DNA Damage Repair Genes
 
 In this subsection, germline variants reported as "pathogenic" in ClinVar in Human DNA Repair Genes [^4] are presented.
 
@@ -174,9 +174,9 @@ if(file.exists("./NOTATES/Germline/DDR.csv")) {
 }
 ```
 
-### II. e. Other Important Germline Variations
+### II. e. Other Important Germline Variants
 
-Germline variations in other manually curated genes (alterations of which may carry clinical importance) are reported under this subsection.
+Germline variants in other manually curated genes (alterations of which may carry clinical importance) are reported under this subsection.
 
 ```{r OTH}
 if(file.exists("./NOTATES/Germline/OTHER.csv")) {
