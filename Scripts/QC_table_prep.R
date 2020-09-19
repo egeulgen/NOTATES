@@ -19,7 +19,7 @@ create_QC_table <- function(sample_name, type, r_type = "Paired-End") {
   
   #### Alignment Metrics
   alignment_metrics <- read.delim(file.path(sample_name, "QC/alignment_summary_metrics.txt"),
-                                  comment.char = "#")
+                                  comment.char = "#", nrows = 3)
   algn_summ_keep <- c("MEAN_READ_LENGTH", # Mean read length
                       "TOTAL_READS", # The total number of reads
                       "PCT_PF_READS", # The percentage of reads that are PF where PF is defined as passing Illumina's filter
