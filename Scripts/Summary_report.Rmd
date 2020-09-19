@@ -16,6 +16,8 @@ header-includes:
 geometry: "left=2cm,right=2cm,top=.5cm,bottom=2cm"
 ---
 
+\pagenumbering{gobble}
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, comment = NA)
 options(stringsAsFactors = FALSE, Encoding="UTF-8")
