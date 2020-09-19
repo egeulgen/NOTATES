@@ -16,6 +16,8 @@ if(!suppressPackageStartupMessages(require(kableExtra)))
   install.packages("kableExtra")
 if(!suppressPackageStartupMessages(require(ggplot2)))
   install.packages("ggplot2")
+if(!suppressPackageStartupMessages(require(pdftools)))
+  install.packages("pdftools")
 
 suppressPackageStartupMessages(library(rmarkdown))
 options(stringsAsFactors = FALSE)
@@ -61,3 +63,7 @@ render(input = reportRMD_fname,
 
 # Clean up
 unlink(reportRMD_fname)
+
+pdftools::pdf_combine(c(paste0("Summary_", args[1], ".pdf"),
+                        paste0("Report_", args[1], ".pdf")), 
+                      output = paste0("final_report_", args[1], ".pdf"))
