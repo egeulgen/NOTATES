@@ -3,7 +3,7 @@
 ##################################################
 ## Project: NOTATES
 ## Script purpose: Filter germline SNP/Indels
-## Date: Dec 6, 2019
+## Date: Sep 18, 2020
 ## Author: Ege Ulgen
 ##################################################
 
@@ -23,9 +23,14 @@ echo "##################################### Filtering Germline SNPs    " $(date)
 $GATK VariantFiltration \
 	-R "$genome" \
 	-V raw_snps.vcf.gz \
-	--filter-expression "QD < 2.0 || MQ < 40.0 || FS > 60.0 || SOR > 4.0 || MQRankSum < -12.5 || ReadPosRankSum < -8.0" \
-	--filter-name "HQ_SNP_filter" \
-	-O ./germline_snps.vcf.gz
+	-filter "QD < 2.0" --filter-name "QD2" \
+	-filter "QUAL < 30.0" --filter-name "QUAL30" \
+	-filter "SOR > 3.0" --filter-name "SOR3" \
+	-filter "FS > 60.0" --filter-name "FS60" \
+	-filter "MQ < 40.0" --filter-name "MQ40" \
+	-filter "MQRankSum < -12.5" --filter-name "MQRankSum-12.5" \
+	-filter "ReadPosRankSum < -8.0" --filter-name "ReadPosRankSum-8" \
+	-O germline_snps.vcf.gz
 
 rm raw_snps.vcf.gz
 rm raw_snps.vcf.gz.tbi
@@ -43,8 +48,11 @@ echo "################################## Filtering Germline nonSNPs    " $(date)
 $GATK VariantFiltration \
 	-R "$genome" \
 	-V raw_indels.vcf.gz \
-	--filter-expression "QD < 2.0 || ReadPosRankSum < -20.0 || FS > 200.0 || SOR > 10.0" \
-	--filter-name "HQ_InDel_filter" -O germline_indels.vcf.gz
+	-filter "QD < 2.0" --filter-name "QD2" \
+	-filter "QUAL < 30.0" --filter-name "QUAL30" \
+	-filter "FS > 200.0" --filter-name "FS200" \
+	-filter "ReadPosRankSum < -20.0" --filter-name "ReadPosRankSum-20" \
+	-O germline_indels.vcf.gz
 
 rm raw_indels.vcf.gz
 rm raw_indels.vcf.gz.tbi
@@ -55,9 +63,14 @@ $JAVA "$GATK3" \
 	-R "$genome" \
 	--variant germline_snps.vcf.gz \
 	--variant germline_indels.vcf.gz \
-	-o filtered_germline_variants.vcf.gz \
+	-o combined_germline_variants.vcf.gz \
 	--genotypemergeoption UNSORTED
 
 rm germline_snps.vcf.gz* germline_indels.vcf.gz*
+
+$GATK SelectVariants -R "$genome" \
+	-V combined_germline_variants.vcf.gz \
+	--exclude-filtered \
+	-O filtered_germline_variants.vcf.gz
 
 cd ..

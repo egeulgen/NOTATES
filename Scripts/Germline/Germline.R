@@ -7,7 +7,7 @@
 ## in ClinVar
 ## 2. have MAF < 1%
 ## 3. are non-synonymous
-## Date: Sep 16, 2020
+## Date: Sep 19, 2020
 ## Author: Ege Ulgen
 ##################################################
 
@@ -24,13 +24,12 @@ dir.create("output")
 
 # Load oncotator-annotated germline SNPs ----------------------------------
 # load annotated SNV file
-germline <- read.delim("../Oncotator/annotated.germline_SNVs.tsv", comment.char = "#")
+germline <- read.delim(file.path(dirname(getwd()), "Oncotator", 
+                                 "annotated.germline_SNVs.tsv"), 
+                       comment.char = "#")
 
 # discard if alt. allele not seen
 germline <- subset(germline, alt_allele_seen == "True")
-
-# Subsetting for Germline HQ filters
-germline <- subset(germline, HQ_SNP_filter=="PASS" & HQ_InDel_filter=="PASS" & LowQual=="PASS")
 
 # Add ref/alt depths
 germline$Ref_depth <- vapply(germline$allelic_depth, function(x) 
