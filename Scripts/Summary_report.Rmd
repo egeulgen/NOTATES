@@ -52,7 +52,7 @@ include_graphics(file.path(params$script_dir, 'NOT_summary_title.png'))
 \selectfont
 Whole exome sequencing of this individual's tumor and normal samples were performed and covered `r tumor_25X` (tumor) and `r normal_25X` (normal) of all exonic positions at 25X or more. Selected somatic findings are presented below.
 
-# I. Tumor Mutational Burdem
+# I. Tumor Mutational Burden
 
 TMB is defined as the number of somatic mutations per megabase. TMB is a predictive biomarker being studied to evaluate its association with response to immunotherapy.
 
@@ -127,7 +127,7 @@ p <- p + geom_point(data=TMB_df_plot[TMB_df_plot$ID == params$ID, ],
 p
 ```
 
-TMB for the current tumor sample is: `r round(current_TMB, 2)`mutations/Mb (`r ifelse(current_TMB > 20, "High \\(>", "Normal \\(<=")` 20 mutations/Mb)). The predicted MSI status of this tumor was **`r msi_class_tbl$Predicted_MSI_Status`**.
+TMB for the current tumor sample is: **`r round(current_TMB, 2)` mutations/Mb** (`r ifelse(current_TMB > 20, "High \\(>", "Normal \\(<=")` 20 mutations/Mb)). The predicted MSI status of this tumor was **`r msi_class_tbl$Predicted_MSI_Status`**.
 
 # II. Somatic Short Variants
 

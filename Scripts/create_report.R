@@ -66,4 +66,4 @@ unlink(reportRMD_fname)
 
 pdftools::pdf_combine(c(paste0("Summary_", args[1], ".pdf"),
                         paste0("Report_", args[1], ".pdf")), 
-                      output = paste0("final_report_", args[1], ".pdf"))
+                      output = paste0("WES_Report_", args[1], ".pdf"))
