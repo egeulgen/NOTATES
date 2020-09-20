@@ -29,9 +29,9 @@ dna_repair_df <- read.csv(file.path(notates_dir, "curated_dbs", "DNA_damage_repa
 irinotecan_df <- read.csv(file.path(notates_dir, "curated_dbs", "irinotecan_response_genes_22feb16.csv"))
 tmz_df <- read.csv(file.path(notates_dir, "curated_dbs", "temozolamide_resistance_genes_22feb16.csv"))
 if (mb_arg == 'glioma') {
-  KEGG_df <- read.csv(file.path(notates_dir, "curated_dbs", "important_KEGG_pws_19mar19.csv"))
+  KEGG_df <- read.csv(file.path(notates_dir, "curated_dbs", "important_KEGG_pws.csv"))
 } else {
-  KEGG_df <- read.csv(file.path(notates_dir, "curated_dbs", "important_KEGG_pws_MB_19mar19.csv"))
+  KEGG_df <- read.csv(file.path(notates_dir, "curated_dbs", "important_KEGG_pws_MB.csv"))
 }
 
 # Curated Alterations

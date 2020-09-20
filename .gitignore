@@ -15,5 +15,5 @@ Scripts/*_SCNA_burden_table.RDS
 second_tm.sh
 Scripts/cosmic_sbs_details.csv
 Scripts/CGC_latest.csv
-Scripts/NOTATES/curated_dbs/important_KEGG_pws_19mar19.csv
-Scripts/NOTATES/curated_dbs/important_KEGG_pws_MB_19mar19.csv
+Scripts/NOTATES/curated_dbs/important_KEGG_pws.csv
+Scripts/NOTATES/curated_dbs/important_KEGG_pws_MB.csv
