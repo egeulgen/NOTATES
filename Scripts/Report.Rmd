@@ -93,7 +93,7 @@ Germline alterations are assessed from the WES sequencing of DNA extracted from 
 
 [^1]: Shyr C, Tarailo-graovac M, Gottlieb M, Lee JJ, Van karnebeek C, Wasserman WW. FLAGS, frequently mutated genes in public exomes. BMC Med Genomics. 2014;7:64.
 
-`r if(params$type == "glioma") {" (except for the subsection II. f. Common Variants)"}`. The altered gene, the position of the SNV, the reference nucleotide as well as the altered nucleotide, the mutation type, the read depth of the variation, the estimated allelic frequency and clinical significance (as reported in ClinVar) are reported. The report follows a sequential order where an alteration reported in a subsection is not reported in the following subsections.
+`r if(params$type == "glioma") {" (except for the subsection \"Common Variants\")"}`. The altered gene, the position of the SNV, the reference nucleotide as well as the altered nucleotide, the mutation type, the read depth of the variation, the estimated allelic frequency and clinical significance (as reported in ClinVar) are reported. The report follows a sequential order where an alteration reported in a subsection is not reported in the following subsections.
 
 ## II. a. ACMG Incidental Findings
 
@@ -174,7 +174,7 @@ if(file.exists("./NOTATES/Germline/DDR.csv")) {
 }
 ```
 
-`r if(params$type == "glioma") {"### II. f. Common Variants"}`
+`r if(params$type == "glioma") {"## II. e. Common Variants"}`
 
 `r if(params$type == "glioma") {"This subsection is distinct from the previous germline alterations subsections. Here, germline alterations are filtered for “single nucleotide polymorphisms (SNPs)” which were previously shown in genome wide association studies (GWAS) to have an association with gliomas and were listed in the GWAS catalog [(https://www.ebi.ac.uk/gwas/efotraits/EFO_0005543)](https://www.ebi.ac.uk/gwas/efotraits/EFO_0005543)"}`
 
