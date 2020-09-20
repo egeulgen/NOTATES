@@ -8,6 +8,7 @@
 
 ## Minor changes and bug fixes
 - germline filter list altered so that up-to-date DDR genes are used
+- minor changes in report text
 
 ***
 
