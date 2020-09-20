@@ -151,7 +151,7 @@ for (i in 1:length(file_paths)) {
 }
 selected <- c("Hugo_Symbol", "Variant_Classification", "Protein_Change", "Genome_Change", "tumor_f", "Category")
 all_som_vars <- all_som_vars[, selected]
-colnames(all_som_vars) <- c("Gene", "Classif.", "Protein Change", "Genome Change", "VAF", "Category")
+colnames(all_som_vars) <- c("Gene", "Classification", "Protein Change", "Genome Change", "VAF", "Category")
 
 k_tbl <- kable(all_som_vars, format = "latex", booktabs = TRUE)
 kable_styling(k_tbl, font_size = 7)
