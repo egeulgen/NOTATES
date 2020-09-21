@@ -13,7 +13,7 @@ Clonal/subclonal copy number aberrations are estimated using THetA2.
 Variant reporting and integration of detected alterations are achieved with custom scripts and curated resources.
 
 ### Dependencies
-The pipeline depends on the following (if not in bin, path/to/tool can be altered in the configuration file configurations.cfg):
+The pipeline depends on the following (if not in bin, path/to/tool can be altered in the configuration file notates.config):
 
 Should be located in bin directory:
 
