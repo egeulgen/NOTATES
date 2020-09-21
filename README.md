@@ -46,7 +46,6 @@ The pipeline utilizes the following resources (`path/to/resource` can be altered
 - dbSNP VCF (can be found in the [GATK bundle])
 - Mills and 1000 Genomes gold standard InDel Sites VCF (can be found in the [GATK bundle])
 - 1000 Genomes phase 1 InDel Sites VCF (can be found in the [GATK bundle])
-- COSMIC VCF - coding and non-coding mutations (follow the instructions on [COSMIC](http://cancer.sanger.ac.uk/cosmic/download), then merge coding and non-coding VCF files and liftover to hg19)
 - Oncotator data sources (latest can be dowloaded from [here](https://personal.broadinstitute.org/lichtens/oncobeta/oncotator_v1_ds_Jan262015.tar.gz))
 
 [GATK bundle]: https://gatk.broadinstitute.org/hc/en-us/articles/360035890811-Resource-bundle
