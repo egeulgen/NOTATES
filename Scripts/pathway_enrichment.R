@@ -8,10 +8,10 @@
 
 # Install package(s) if necessary -----------------------------------------
 if(!suppressPackageStartupMessages(require(pathfindR))) {
-  if (!suppressPackageStartupMessages(require(pak))) {
-    install.packages("pak")
+  if (!suppressPackageStartupMessages(require(devtools))) {
+    install.packages("devtools")
   }
-  pak::pkg_install("egeulgen/pathfindR")
+  devtools::install_github("egeulgen/pathfindR")
   suppressPackageStartupMessages(library(pathfindR))
 }
 
