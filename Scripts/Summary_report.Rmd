@@ -154,7 +154,7 @@ all_som_vars <- all_som_vars[, selected]
 colnames(all_som_vars) <- c("Gene", "Classification", "Protein Change", "Genome Change", "VAF", "Category")
 
 k_tbl <- kable(all_som_vars, format = "latex", booktabs = TRUE)
-kable_styling(k_tbl, font_size = 7)
+kable_styling(k_tbl, font_size = 6)
 ```
 
 
@@ -170,7 +170,7 @@ if(!file.exists("./THetA/output/CNV.BEST.results")){
 ```
 
 \begin{center} 
-\includegraphics[width=500pt]{`r ifelse(n3_chosen,"./THetA/output/CNV.n3.graph.pdf","./THetA/output/CNV.n2.graph.pdf")`}
+\includegraphics[width=300pt]{`r ifelse(n3_chosen,"./THetA/output/CNV.n3.graph.pdf","./THetA/output/CNV.n2.graph.pdf")`}
 \end{center}
 
 ```{r scna}
@@ -188,5 +188,5 @@ for (i in 1:length(file_paths)) {
 }
 
 k_tbl <- kable(all_scnas, format = "latex", booktabs = TRUE)
-kable_styling(k_tbl, font_size = 7)
+kable_styling(k_tbl, font_size = 6)
 ```
