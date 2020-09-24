@@ -1,11 +1,9 @@
 ##################################################
 ## Project: NOTATES
 ## Script purpose: Prepare WES QC metrics table
-## Date: Oct 27, 2019
+## Date: Sep 22, 2020
 ## Author: Ege Ulgen
 ##################################################
-
-options(stringsAsFactors = FALSE)
 
 args <- commandArgs(trailingOnly=TRUE)
 normal_name <- args[1]
