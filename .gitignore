@@ -6,7 +6,6 @@ Analyses
 Patients
 Resources
 Scripts/Germline/curation_not_final
-Scripts/num_bases.R
 *.Rproj
 Scripts/*TMB_table.RDS
 *.icloud
