@@ -7,7 +7,7 @@
 ## mate info.(picard) and  marking duplicates 
 ## per lane. Combination of all anes (if >1 lane) 
 ## and BQSR (GATK)
-## Date: Dec 6, 2019
+## Date: Sep 24, 2020
 ## Author: Ege Ulgen
 ##################################################
 
@@ -16,7 +16,7 @@ sample_name=$2
 sample_type=$3
 kit_name=$4
 
-cd ./$sample_name
+cd $sample_name
 lanes=$(cat ./lanes.txt)
 
 ####### Alignment, Clean SAM, SAM to BAM conversion, Fix Mate Information, and 
@@ -33,12 +33,9 @@ do
 	bwa mem -M -t "$num_threads" -R "$readGroup" "$genome" \
 		"$lane"_R1.fastq.gz "$lane"_R2.fastq.gz > "$lane".sam
 
-	rm "$lane"_R1.fastq.gz
-	rm "$lane"_R2.fastq.gz
-
 	## SAM to BAM
 	echo '##########'"$sample_name"': SAM to BAM & Sort for lane: '$lane "    " $(date)
-	$JAVA $PICARD SortSam SORT_ORDER=coordinate \
+	picard SortSam SORT_ORDER=coordinate \
 		INPUT="$lane".sam OUTPUT="$lane".bam CREATE_INDEX=true \
 		USE_JDK_DEFLATER=true USE_JDK_INFLATER=true
 	
@@ -46,7 +43,7 @@ do
 
 	## Fix Mate Information
 	echo '####'"$sample_name"': Fixing mate information for lane: '$lane "    " $(date)
-	$JAVA $PICARD FixMateInformation SO=coordinate \
+	picard FixMateInformation SO=coordinate \
 		INPUT="$lane".bam OUTPUT="$lane".fixed.bam ADD_MATE_CIGAR=TRUE \
 		USE_JDK_DEFLATER=true USE_JDK_INFLATER=true
 	
@@ -54,7 +51,7 @@ do
 
 	## Mark Duplicates - first pass by lane
 	echo '##########'"$sample_name"': Marking duplicates of lane: '$lane "    " $(date)
-	$JAVA $PICARD MarkDuplicates INPUT="$lane".fixed.bam \
+	picard MarkDuplicates INPUT="$lane".fixed.bam \
 		OUTPUT="$lane".marked.bam \
 		METRICS_FILE=QC/"$lane"_MarkDup_metrics.txt CREATE_INDEX=true \
 		USE_JDK_DEFLATER=true USE_JDK_INFLATER=true
@@ -73,7 +70,7 @@ if [ $(wc -w <<< "$lanes") != 1 ]
 
 	input=("${bams[@]/#/INPUT=}")
 
-	$JAVA $PICARD MarkDuplicates "${input[@]}" OUTPUT="$sample_type".marked.bam \
+	picard MarkDuplicates "${input[@]}" OUTPUT="$sample_type".marked.bam \
 		METRICS_FILE=QC/MarkDup_metrics.txt CREATE_INDEX=true \
 		USE_JDK_DEFLATER=true USE_JDK_INFLATER=true
 	
@@ -88,13 +85,17 @@ fi
 
 ################################### Quality score recalibration
 echo '##############################################'"$sample_name"': BQSR    ' $(date)
-$GATK BaseRecalibrator -R "$genome" \
+gatk BaseRecalibrator \
+	--java-options "$java_options" \
+	-R "$genome" \
 	--intervals "$Target_Intervals" --interval-padding 100 \
 	-I "$sample_type".marked.bam \
 	--known-sites "$dbSNP" --known-sites "$Mills_1kG" --known-sites "$ThousandG" \
 	-O '../'"$sample_type"'.recal_data.table'
 
-$GATK ApplyBQSR -R "$genome" \
+gatk ApplyBQSR \
+	--java-options "$java_options" \
+	-R "$genome" \
 	-I "$sample_type".marked.bam \
 	--bqsr-recal-file ../"$sample_type".recal_data.table \
 	-O ../"$sample_type".final.bam

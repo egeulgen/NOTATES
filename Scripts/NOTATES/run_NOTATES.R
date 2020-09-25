@@ -3,7 +3,7 @@
 ## Script purpose: Script for sequentially filtering
 ## germline and somatic alterations for reporting of
 ## clinically-relevant findings
-## Date: Sep 15, 2020
+## Date: Sep 23, 2020
 ## Author: Ege Ulgen
 ##################################################
 
@@ -121,7 +121,7 @@ write.csv(common_var, "Germline/common_var.csv", row.names = FALSE)
 
 # Somatic Mutations -------------------------------------------------------
 dir.create("Somatic_SNV")
-somatic_vars <- read.delim(file.path(dirname(getwd()), "Oncotator", "annotated.sSNVs.tsv"), comment.char="#")
+somatic_vars <- read.delim(file.path(dirname(getwd()), "Funcotator", "annotated_somatic.maf"), comment.char="#")
 somatic_vars <- somatic_vars[order(somatic_vars$tumor_f, decreasing = TRUE), ]
 
 # Subsetting for (MuTect's default) HQ filters
@@ -245,10 +245,10 @@ if(any(somatic_vars$selected_KEGG != "no")) {
 write.csv(somatic_vars, "Somatic_SNV/Other_coding.csv", row.names = F)
 
 # Helper functions for Cytoband & Gene annotations ------------------------
-source(file.path(notates_dir, "segment_annotation_hg19.R"))
+source(file.path(notates_dir, "segment_annotation.R"))
 
 # read in cytobands file
-cytobands_df <- read.delim(file.path(notates_dir, "hg19_cytoBand.txt"), 
+cytobands_df <- read.delim(file.path(notates_dir, "hg38_cytoBand.txt"), 
                            header = FALSE)
 colnames(cytobands_df) <- c("Chr", "Start", "End", "Cytb_name", "stain")
 cytobands_df$Cytb_name <- paste0(cytobands_df$Chr, cytobands_df$Cytb_name)

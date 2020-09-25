@@ -59,7 +59,7 @@ Whole exome sequencing of this individual's tumor and normal samples were perfor
 TMB is defined as the number of somatic mutations per megabase. TMB is a predictive biomarker being studied to evaluate its association with response to immunotherapy.
 
 ```{r TMB, fig.width=5, fig.height=1, fig.align="center"}
-somatic_SNVs <- read.delim("./Oncotator/annotated.sSNVs.tsv", comment.char="#")
+somatic_SNVs <- read.delim("Funcotator/annotated_somatic.maf", comment.char="#")
 somatic_SNVs$tot_depth <- vapply(somatic_SNVs$allelic_depth, 
                                  function(x) sum(as.numeric(unlist(strsplit(x, ",")))), 
                                  1, USE.NAMES = FALSE)

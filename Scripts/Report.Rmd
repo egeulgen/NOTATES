@@ -208,7 +208,7 @@ This calculation was performed using the following filtering approach:
 2. keeping variants with a sequence depth greater than 20X in the tumor sample greater and 10X in the normal sample
 
 ```{r TMB, fig.width=10, fig.height=3}
-somatic_SNVs <- read.delim("./Oncotator/annotated.sSNVs.tsv", comment.char="#")
+somatic_SNVs <- read.delim("./Funcotator/annotated_somatic.maf", comment.char="#")
 
 somatic_SNVs$tot_depth <- vapply(somatic_SNVs$allelic_depth, 
                                  function(x) sum(as.numeric(unlist(strsplit(x, ",")))), 

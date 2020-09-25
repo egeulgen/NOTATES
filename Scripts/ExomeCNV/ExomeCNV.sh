@@ -4,7 +4,7 @@
 ## Project: NOTATES
 ## Script purpose: Prepare necesarry data and 
 ## identify SCNAs using ExomeCNV
-## Date: Dec 6, 2019
+## Date: Sep 23, 2020
 ## Author: Ege Ulgen
 ##################################################
 
@@ -15,7 +15,7 @@ tumor_name=$2
 echo "########################## Prep for ExomeCNV - Coverage files     " $(date)
 mkdir -p ./ExomeCNV/DepthOfCoverage
 echo "############################### Normal: Creating coverage file    " $(date)
-$JAVA "$GATK3" \
+gatk3 "$java_options"\
 	-T DepthOfCoverage \
 	-omitBaseOutput -omitLocusTable \
 	-R "$genome" \
@@ -25,7 +25,7 @@ $JAVA "$GATK3" \
 	-o ./ExomeCNV/DepthOfCoverage/normal.coverage
 
 echo "############################### Tumor: Creating coverage file     " $(date)
-$JAVA "$GATK3" \
+gatk3 "$java_options"\
 	-T DepthOfCoverage \
 	-omitBaseOutput -omitLocusTable \
 	-R "$genome" \
@@ -43,7 +43,8 @@ expr1='vc.getGenotype("'"$normal_name"'").isHet()'
 expr2='vc.getGenotype("'"$normal_name"'").getPhredScaledQual()>=30.0'
 expr3='vc.getGenotype("'"$normal_name"'").getDP()>=20'
 
-$GATK SelectVariants \
+gatk SelectVariants \
+	--java-options "$java_options" \
 	-R "$genome" \
 	-V ./Germline/filtered_germline_variants.vcf.gz \
 	-select-type SNP \
@@ -56,14 +57,16 @@ $GATK SelectVariants \
 
 ## Call variants at the same HQ-filtered Het SNP sites in Tumor
 # HC
-$GATK HaplotypeCaller \
+gatk HaplotypeCaller \
+	--java-options "$java_options" \
 	-R "$genome" \
 	-I tumor.final.bam \
 	--intervals ./ExomeCNV/baf/normal_HQ_SNPs.vcf \
 	-O ./ExomeCNV/baf/raw_tumor_HC.vcf.gz
 
 # Filter
-$GATK VariantFiltration \
+gatk VariantFiltration \
+	--java-options "$java_options" \
 	-R $genome \
 	-V ./ExomeCNV/baf/raw_tumor_HC.vcf.gz \
 	-filter "QD < 2.0" --filter-name "QD2" \
@@ -81,7 +84,8 @@ rm ./ExomeCNV/baf/raw_tumor_HC.vcf.gz*
 expr1='vc.getGenotype("'"$tumor_name"'").getPhredScaledQual() >= 30.0'
 expr2='vc.getGenotype("'"$tumor_name"'").getDP() >= 20'
 
-$GATK SelectVariants \
+gatk SelectVariants \
+	--java-options "$java_options" \
 	-R $genome \
 	-V ./ExomeCNV/baf/filtered_tumor_HC.vcf.gz \
 	-select-type SNP \
@@ -92,6 +96,8 @@ $GATK SelectVariants \
 	-O ./ExomeCNV/baf/tumor_HQ_SNPs.vcf
 
 rm ./ExomeCNV/baf/filtered_tumor_HC.vcf.gz*
+
+conda activate NOTATES_R
 
 Rscript "$scripts_dir"/ExomeCNV/VCF_parser_BAF.R
 

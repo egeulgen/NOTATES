@@ -20,7 +20,7 @@ script_dir <- arguments[1]
 sample_id <- arguments[2]
 
 # load somatic SNVs -------------------------------------------------------
-somatic_SNVs <- read.delim("./Oncotator/annotated.sSNVs.tsv", comment.char="#")
+somatic_SNVs <- read.delim("Funcotator/annotated_somatic.maf", comment.char="#")
 
 # Subsetting for (MuTect's default) HQ filters
 somatic_SNVs <- subset(somatic_SNVs, 
@@ -39,7 +39,8 @@ sigs.input <- mut.to.sigs.input(mut.ref = somatic_SNVs,
                                 chr = "Chromosome", 
                                 pos = "Start_position", 
                                 ref = "Reference_Allele", 
-                                alt = "Tumor_Seq_Allele2")
+                                alt = "Tumor_Seq_Allele2",
+                                bsg = BSgenome.Hsapiens.UCSC.hg38)
 
 # Determine the signatures contributing to the sample
 signatures <- whichSignatures(tumor.ref = sigs.input,

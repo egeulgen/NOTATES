@@ -2,9 +2,12 @@
 ################################################################################
 ######################### NeuroOncology Technologies ###########################
 ###################### Whole-Exome Sequencing Pipeline #########################
-########################### Ege Ulgen, Dec 2019 ################################
+########################### Ege Ulgen, Sep 2020 ################################
 ################################################################################
-#set -ueo pipefail
+# set -ueo pipefail
+
+CONDA_BASE=$(conda info --base)
+source $CONDA_BASE/etc/profile.d/conda.sh
 
 patientID=$1
 normal_name=$2
@@ -77,6 +80,7 @@ bash "$scripts_dir"/merge_fastqs.sh "$normal_name"
 ####### Merge Seperate Files for Tumor
 bash "$scripts_dir"/merge_fastqs.sh "$tumor_name"
 
+conda activate NOTATES_main
 ################################################################################
 ######################## Examine Sequence Read Quality #########################
 ################################################################################
@@ -104,7 +108,8 @@ bash "$scripts_dir"/mapping_preprocessing.sh "$patientID" "$tumor_name" "tumor" 
 ########################################## HC ##################################
 echo "############## Running Haplotype Caller for Germline Variants    " $(date)
 mkdir Germline
-$GATK HaplotypeCaller \
+gatk HaplotypeCaller \
+	--java-options "$java_options" \
 	-R "$genome" \
 	-I normal.final.bam \
 	--dbsnp "$dbSNP" \
@@ -114,7 +119,8 @@ $GATK HaplotypeCaller \
 ################################### Mutect #####################################
 echo "############################################# Running MuTect2    " $(date)
 mkdir Mutect2
-$GATK Mutect2 \
+gatk Mutect2 \
+	--java-options "$java_options" \
 	-R "$genome" \
 	-I tumor.final.bam \
 	-I normal.final.bam -normal "$normal_name" \
@@ -136,22 +142,33 @@ bash "$scripts_dir"/somatic_filter.sh
 ################################################################################
 ############################ Variant Annoation #################################
 ################################################################################
-source "$oncotator_activate"
-mkdir Oncotator
+mkdir Funcotator
 
-echo "################################# Annotating Somatic variants    " $(date)
-oncotator -v --input_format=VCF --db-dir "$oncotator_ds" --tx-mode CANONICAL \
-	-c "$oncotator_ds"/tx_exact_uniprot_matches.AKT1_CRLF2_FGFR1.txt \
-	Mutect2/Filtered_mutect.vcf.gz \
-	Oncotator/annotated.sSNVs.tsv hg19
+echo "################################ Annotating Somatic Variants    " $(date)
+gatk Funcotator \
+	--java-options "$java_options" \
+	-R "$genome" \
+	-V Mutect2/Filtered_mutect.vcf.gz \
+	--ref-version "$ref_version" \
+	--data-sources-path "$funcotator_ds_somatic" \
+	--output Funcotator/annotated_somatic.maf \
+	--output-file-format MAF \
+	--annotation-default Center:NOT \
+	--annotation-default tumor_barcode:"$tumor_name" \
+	--annotation-default normal_name:"$normal_name" \
+	--transcript-list "$funcotator_ds_somatic"/transcriptList.exact_uniprot_matches.AKT1_CRLF2_FGFR1.txt
 
-echo "################################ Annotating Germline Variants    " $(date)
-oncotator -v --input_format=VCF --db-dir "$oncotator_ds" --tx-mode CANONICAL \
-	-c "$oncotator_ds"/tx_exact_uniprot_matches.AKT1_CRLF2_FGFR1.txt \
-	Germline/filtered_germline_variants.vcf.gz \
-	Oncotator/annotated.germline_SNVs.tsv hg19
-
-deactivate
+echo "################################ Annotating Germline Variants   " $(date)
+gatk Funcotator \
+	--java-options "$java_options" \
+	-R "$genome" \
+	-V Germline/filtered_germline_variants.vcf.gz \
+	--ref-version "$ref_version" \
+	--data-sources-path "$funcotator_ds_germline" \
+	--output Funcotator/annotated_germline.maf \
+	--output-file-format MAF \
+	--annotation-default Center:NOT \
+	--annotation-default normal_name:"$normal_name" 
 
 ################################################################################
 ################################# ExomeCNV #####################################
@@ -161,6 +178,8 @@ bash "$scripts_dir"/ExomeCNV/ExomeCNV.sh $normal_name $tumor_name
 ################################################################################
 ################################## THetA #######################################
 ################################################################################
+
+conda activate NOTATES_python
 mkdir -p THetA/output
 
 echo "################################## Preparing input for THetA     " $(date)
@@ -177,19 +196,32 @@ bash "$THetA"/bin/RunTHetA THetA/CNV.input \
 # 	--NORMAL_FILE THetA/normal_SNP.txt --DIR THetA/output --NUM_PROCESSES "$num_threads"
 
 ################################################################################
+################################## MSIpred #####################################
+################################################################################
+conda activate NOTATES_R
+echo "######################## Running R script for MSIpred            " $(date)
+Rscript "$scripts_dir"/MSIpred_prep.R $patientID
+
+conda activate NOTATES_python
+python "$scripts_dir"/MSIpred_analysis.py $simple_repeats $exome_length
+conda deactivate
+
+################################################################################
 #################################### QC ########################################
 ################################################################################
+conda activate NOTATES_main
 ## Alignment Summary Metrics
-$JAVA $PICARD CollectAlignmentSummaryMetrics \
+picard CollectAlignmentSummaryMetrics \
 	METRIC_ACCUMULATION_LEVEL=ALL_READS REFERENCE_SEQUENCE=$genome \
 	INPUT=normal.final.bam OUTPUT="$normal_name"/QC/alignment_summary_metrics.txt \
 	USE_JDK_DEFLATER=true USE_JDK_INFLATER=true
 
-$JAVA $PICARD CollectAlignmentSummaryMetrics \
+picard CollectAlignmentSummaryMetrics \
 	METRIC_ACCUMULATION_LEVEL=ALL_READS REFERENCE_SEQUENCE=$genome \
 	INPUT=tumor.final.bam OUTPUT="$tumor_name"/QC/alignment_summary_metrics.txt \
 	USE_JDK_DEFLATER=true USE_JDK_INFLATER=true
 
+conda activate NOTATES_R
 ## QC Wrapper
 Rscript "$scripts_dir"/QC_table_prep.R "$normal_name" "$tumor_name"
 
@@ -208,13 +240,10 @@ Rscript "$scripts_dir"/pathway_enrichment.R
 echo "######################## Running R script for DeConstructSigs    " $(date)
 Rscript "$scripts_dir"/DeConstructSigs.R $scripts_dir $patientID
 
-echo "######################## Running R script for MSIpred            " $(date)
-Rscript "$scripts_dir"/MSIpred_prep.R $patientID
-python "$scripts_dir"/MSIpred_analysis.py $simple_repeats $exome_length
-
 echo "######################## Creating Report                         " $(date)
 Rscript "$scripts_dir"/create_report.R $patientID $scripts_dir \
 	$exome_length $Target_Intervals $tumor_type $primary_cond $tumor_sample
 
+conda deactivate
 echo "######################## Finished 							   " $(date)
 exit 0

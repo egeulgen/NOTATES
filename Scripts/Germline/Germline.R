@@ -7,7 +7,7 @@
 ## in ClinVar
 ## 2. have MAF < 1%
 ## 3. are non-synonymous
-## Date: Sep 19, 2020
+## Date: Sep 23, 2020
 ## Author: Ege Ulgen
 ##################################################
 
@@ -22,10 +22,10 @@ script_dir <- dirname(script.name)
 setwd("./Germline")
 dir.create("output")
 
-# Load oncotator-annotated germline SNPs ----------------------------------
+# Load annotated germline variants ----------------------------------------
 # load annotated SNV file
-germline <- read.delim(file.path(dirname(getwd()), "Oncotator", 
-                                 "annotated.germline_SNVs.tsv"), 
+germline <- read.delim(file.path(dirname(getwd()), "Funcotator", 
+                                 "annotated_germline.maf"), 
                        comment.char = "#")
 
 # discard if alt. allele not seen

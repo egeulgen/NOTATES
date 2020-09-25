@@ -13,7 +13,7 @@ if(!suppressPackageStartupMessages(require(pathfindR))) {
 }
 
 # High impact somatic SNV/indels ------------------------------------------
-somatic_vars <- read.delim("./Oncotator/annotated.sSNVs.tsv", stringsAsFactors=F, comment.char="#")
+somatic_vars <- read.delim("./Funcotator/annotated_somatic.maf", stringsAsFactors=F, comment.char="#")
 
 # Subsetting for (MuTect's default) HQ filters
 somatic_vars <- subset(somatic_vars, 

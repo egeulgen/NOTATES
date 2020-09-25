@@ -3,14 +3,15 @@
 ##################################################
 ## Project: NOTATES
 ## Script purpose: Filter germline SNP/Indels
-## Date: Sep 18, 2020
+## Date: Sep 24, 2020
 ## Author: Ege Ulgen
 ##################################################
 
 
 cd Germline
 echo "##################################### Selecting Germline SNPs    " $(date)
-$GATK SelectVariants \
+gatk SelectVariants \
+	--java-options "$java_options" \
 	-R "$genome" \
 	-V raw.snps.indels.vcf.gz \
 	--select-type-to-include SNP \
@@ -20,7 +21,8 @@ $GATK SelectVariants \
 	-O raw_snps.vcf.gz
 
 echo "##################################### Filtering Germline SNPs    " $(date)
-$GATK VariantFiltration \
+gatk VariantFiltration \
+	--java-options "$java_options" \
 	-R "$genome" \
 	-V raw_snps.vcf.gz \
 	-filter "QD < 2.0" --filter-name "QD2" \
@@ -36,7 +38,8 @@ rm raw_snps.vcf.gz
 rm raw_snps.vcf.gz.tbi
 
 echo "################################## Selecting Germline nonSNPs    " $(date)
-$GATK SelectVariants \
+gatk SelectVariants \
+	--java-options "$java_options" \
 	-R "$genome" \
 	-V raw.snps.indels.vcf.gz \
 	--select-type-to-include INDEL \
@@ -45,7 +48,8 @@ $GATK SelectVariants \
 	-O raw_indels.vcf.gz
 
 echo "################################## Filtering Germline nonSNPs    " $(date)
-$GATK VariantFiltration \
+gatk VariantFiltration \
+	--java-options "$java_options" \
 	-R "$genome" \
 	-V raw_indels.vcf.gz \
 	-filter "QD < 2.0" --filter-name "QD2" \
@@ -58,7 +62,7 @@ rm raw_indels.vcf.gz
 rm raw_indels.vcf.gz.tbi
 
 echo "########### Merging Germline SNP and InDels into a single VCF    " $(date)
-$JAVA "$GATK3" \
+gatk3 "$java_options"\
 	-T CombineVariants \
 	-R "$genome" \
 	--variant germline_snps.vcf.gz \
@@ -68,7 +72,9 @@ $JAVA "$GATK3" \
 
 rm germline_snps.vcf.gz* germline_indels.vcf.gz*
 
-$GATK SelectVariants -R "$genome" \
+gatk SelectVariants \
+	--java-options "$java_options" \
+	-R "$genome" \
 	-V combined_germline_variants.vcf.gz \
 	--exclude-filtered \
 	-O filtered_germline_variants.vcf.gz
