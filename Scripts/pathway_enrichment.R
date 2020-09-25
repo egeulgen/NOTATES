@@ -2,20 +2,15 @@
 ## Project: NOTATES
 ## Script purpose: Script for performing KEGG pathway
 ## enrichment analysis with pathfindR using high-confidence genes
-## Date: December 28, 2019
+## Date: Sep 23, 2020
 ## Author: Ege Ulgen
 ##################################################
 
 # Install package(s) if necessary -----------------------------------------
 if(!suppressPackageStartupMessages(require(pathfindR))) {
-  if (!suppressPackageStartupMessages(require(devtools))) {
-    install.packages("devtools")
-  }
   devtools::install_github("egeulgen/pathfindR")
   suppressPackageStartupMessages(library(pathfindR))
 }
-
-options(stringsAsFactors = FALSE)
 
 # High impact somatic SNV/indels ------------------------------------------
 somatic_vars <- read.delim("./Oncotator/annotated.sSNVs.tsv", stringsAsFactors=F, comment.char="#")

@@ -3,24 +3,13 @@
 ##################################################
 ## Project: NOTATES
 ## Script purpose: Wrapper to create PDF report
-## Date: Nov 2, 2019
+## Date: Sep 22, 2020
 ## Author: Ege Ulgen
 ##################################################
 
 # Packages and arg.s ------------------------------------------------------
-if(!suppressPackageStartupMessages(require(rmarkdown)))
-  install.packages("rmarkdown")
-if(!suppressPackageStartupMessages(require(knitr)))
-  install.packages("knitr")
-if(!suppressPackageStartupMessages(require(kableExtra)))
-  install.packages("kableExtra")
-if(!suppressPackageStartupMessages(require(ggplot2)))
-  install.packages("ggplot2")
-if(!suppressPackageStartupMessages(require(pdftools)))
-  install.packages("pdftools")
-
 suppressPackageStartupMessages(library(rmarkdown))
-options(stringsAsFactors = FALSE)
+
 args <- commandArgs(trailingOnly = TRUE)
 
 # Knit PDF summary --------------------------------------------------------

@@ -3,22 +3,14 @@
 ## Script purpose: Script for identifying COSMIC
 ## mutational signatures (SBS v3) in the sample
 ## using deconstructSigs
-## Date: Oct 27, 2019
+## Date: Sep 23, 2020
 ## Author: Ege Ulgen
 ##################################################
 
 # load and install required libraries -------------------------------------
-if(!suppressPackageStartupMessages(require(BSgenome.Hsapiens.UCSC.hg19))) {
-  if (!requireNamespace("BiocManager", quietly = TRUE))
-    install.packages("BiocManager")
-  
-  BiocManager::install("BSgenome.Hsapiens.UCSC.hg19")
-  suppressPackageStartupMessages(library(BSgenome.Hsapiens.UCSC.hg19))
-}
+suppressPackageStartupMessages(library(BSgenome.Hsapiens.UCSC.hg38))
 
 if(!suppressPackageStartupMessages(require(deconstructSigs))) {
-  if(!requireNamespace("devtools"))
-    install.packages("devtools")
   devtools::install_github("raerose01/deconstructSigs")
   suppressPackageStartupMessages(library(deconstructSigs))
 }
@@ -26,8 +18,6 @@ if(!suppressPackageStartupMessages(require(deconstructSigs))) {
 arguments <- commandArgs(trailingOnly = T)
 script_dir <- arguments[1]
 sample_id <- arguments[2]
-
-options(stringsAsFactors = FALSE)
 
 # load somatic SNVs -------------------------------------------------------
 somatic_SNVs <- read.delim("./Oncotator/annotated.sSNVs.tsv", comment.char="#")

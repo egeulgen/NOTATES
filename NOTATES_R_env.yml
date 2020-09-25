@@ -1,0 +1,23 @@
+name: NOTATES_R
+channels:
+  - defaults
+  - bioconda
+  - r
+  - conda-forge
+dependencies:
+  - r-base>=4
+  - bioconductor-genomicranges
+  - bioconductor-bsgenome.hsapiens.ucsc.hg19
+  - bioconductor-bsgenome.hsapiens.ucsc.hg38
+  - bioconductor-txdb.hsapiens.ucsc.hg38.knowngene
+  - bioconductor-org.Hs.eg.db
+  - bioconductor-dnacopy
+  - r-magick
+  - r-foreach
+  - r-doparallel
+  - r-devtools
+  - r-knitr
+  - r-kableextra
+  - r-rmarkdown
+  - r-pdftools
+  - r-ggplot2

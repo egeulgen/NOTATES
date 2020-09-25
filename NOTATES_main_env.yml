@@ -1,0 +1,15 @@
+name: NOTATES_main
+channels:
+  - defaults
+  - conda-forge
+  - bioconda
+dependencies:
+  - gatk
+  - gatk4
+  - sambamba
+  - picard
+  - bwa
+  - fastqc
+  - samtools
+  - pandoc
+  - texlive-core

@@ -2,39 +2,24 @@
 ## Project: NOTATES
 ## Script purpose: Script for identifying SCNAs 
 ## using ExomeCNV
-## Date: Dec 6, 2019
+## Date: Sep 22, 2020
 ## Author: Ege Ulgen
 ##################################################
 
-options(stringsAsFactors = TRUE)
 # set read length
 args <- commandArgs(trailingOnly=TRUE)
 read_length <- as.numeric(args[1])
 n_processes <- as.numeric(args[2])
 
 # Install required packages (if needed) -----------------------------------
-if(!suppressPackageStartupMessages(require(DNAcopy))){
-  if (!requireNamespace("BiocManager", quietly = TRUE))
-    install.packages("BiocManager")
-  
-  BiocManager::install("DNAcopy")
-}
-
 if(!suppressPackageStartupMessages(require(ExomeCNV))) {
   install.packages("https://cran.r-project.org/src/contrib/Archive/ExomeCNV/ExomeCNV_1.4.tar.gz", 
                    repos = NULL, type = "source", method = "libcurl")
   suppressPackageStartupMessages(library(ExomeCNV))
 }
 
-if(!suppressPackageStartupMessages(require(doParallel))) {
-  install.packages("doParallel")
-  suppressPackageStartupMessages(library(doParallel))
-}  
-
-if(!suppressPackageStartupMessages(require(foreach))) {
-  install.packages("foreach")
-  suppressPackageStartupMessages(library(foreach))
-}  
+suppressPackageStartupMessages(library(doParallel))
+suppressPackageStartupMessages(library(foreach))
 
 # set workdir to currentdir/ExomeCNV
 setwd("./ExomeCNV/")

@@ -1,0 +1,10 @@
+name: NOTATES_python
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python=2.7
+  - pandas=0.20.3
+  - intervaltree=2.1.0
+  - scikit-learn=0.19.1
+  - matplotlib
