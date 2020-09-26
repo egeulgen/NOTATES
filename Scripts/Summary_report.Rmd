@@ -60,16 +60,13 @@ TMB is defined as the number of somatic mutations per megabase. TMB is a predict
 
 ```{r TMB, fig.width=5, fig.height=1, fig.align="center"}
 somatic_SNVs <- read.delim("Funcotator/annotated_somatic.maf", comment.char="#")
-somatic_SNVs$tot_depth <- vapply(somatic_SNVs$allelic_depth, 
-                                 function(x) sum(as.numeric(unlist(strsplit(x, ",")))), 
-                                 1, USE.NAMES = FALSE)
+
+somatic_SNVs$tot_depth_tumor <- somatic_SNVs$t_alt_count + somatic_SNVs$t_ref_count
+somatic_SNVs$tot_depth_normal <- somatic_SNVs$n_alt_count + somatic_SNVs$n_ref_count
+
 # Filter for depth greater than 20X in tumor samples greater or 10X in normal samples
-thresholds <- ifelse(somatic_SNVs$alt_allele_seen == "True", 20, 10)
-somatic_SNVs$dep_keep <- somatic_SNVs$tot_depth > thresholds
-tmp <- somatic_SNVs[somatic_SNVs$alt_allele_seen == "False" & !somatic_SNVs$dep_keep, ]
-somatic_SNVs$dep_keep[somatic_SNVs$Genome_Change %in% tmp$Genome_Change] <- FALSE
-somatic_SNVs <- somatic_SNVs[somatic_SNVs$dep_keep, ]
-somatic_SNVs <- somatic_SNVs[somatic_SNVs$alt_allele_seen == "True", ]
+somatic_SNVs <- somatic_SNVs[somatic_SNVs$tot_depth_tumor > 20 & somatic_SNVs$tot_depth_normal > 10, ]
+
 # subset for tumor_f > 0.05
 somatic_SNVs <- somatic_SNVs[somatic_SNVs$tumor_f > 0.05, ]
 ## Calculate TMB
