@@ -10,7 +10,5 @@ args <- commandArgs(trailingOnly=TRUE)
 
 dir.create("MSIpred")
 funcotator_maf <- read.delim("Funcotator/annotated_somatic.maf", comment.char="#")
-funcotator_maf$Chromosome <- paste0("chr", funcotator_maf$Chromosome)
-colnames(funcotator_maf) <- sub("position", "Position", colnames(funcotator_maf))
 funcotator_maf$Tumor_Sample_Barcode <- args[1]
 write.table(funcotator_maf, "MSIpred/somatic_maf.maf", sep = "\t", quote = FALSE, row.names = FALSE) 
