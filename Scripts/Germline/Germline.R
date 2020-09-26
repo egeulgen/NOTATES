@@ -28,14 +28,12 @@ germline <- read.delim(file.path(dirname(getwd()), "Funcotator",
                                  "annotated_germline.maf"), 
                        comment.char = "#")
 
-# discard if alt. allele not seen
-germline <- subset(germline, alt_allele_seen == "True")
-
 # Add ref/alt depths
-germline$Ref_depth <- vapply(germline$allelic_depth, function(x) 
-  as.integer(unlist(strsplit(x, split =","))[1]), 1L)
-germline$Alt_depth <- vapply(germline$allelic_depth, function(x) 
-  as.integer(unlist(strsplit(x, split =","))[2]), 1L)  
+germline$Ref_depth <- germline$t_ref_count
+germline$Alt_depth <- germline$t_alt_count  
+
+# add id column
+germline$id <- ifelse(germline$gnomAD_exome_ID != "", germline$gnomAD_exome_ID, germline$gnomAD_genome_ID)
 
 # Add clinical significance
 clin_sig_df <- readRDS(file.path(script_dir, "ClinVar_clinical_sig.RDS"))
@@ -45,7 +43,7 @@ clin_sig_df$lookup <- paste(clin_sig_df$Chrom,
                             clin_sig_df$ALT)
 
 germline$lookup <- paste(germline$Chromosome, 
-                         germline$Start_position, 
+                         germline$Start_Position, 
                          germline$Reference_Allele, 
                          germline$Tumor_Seq_Allele2)
 germline$Clin_sig <- clin_sig_df$Clinical_Significance[match(germline$lookup, clin_sig_df$lookup)]
@@ -68,12 +66,11 @@ germline$Clin_sig[germline$Clin_sig == ""] <- "not reported"
 common_vars <- read.csv(paste0(script_dir, "/common_variants_list.csv"))
 
 # Create df for variants that predispose to glioma in the sample
-idx <- which(germline$id %in% common_vars$rs_ID)
-common_variant_df <- germline[idx, ]
+common_variant_df <- germline[germline$id %in% common_vars$rs_ID, ]
 
-cols <- c("id", "Hugo_Symbol", "Chromosome", "Start_position", "End_position", "Variant_Classification",
+cols <- c("id", "Hugo_Symbol", "Chromosome", "Start_Position", "End_Position", "Variant_Classification",
           "Reference_Allele", "Tumor_Seq_Allele1", "Tumor_Seq_Allele2", "Ref_depth", "Alt_depth", 
-          "allele_frequency")
+          "AF")
 
 common_variant_df <- common_variant_df[, cols]
 colnames(common_variant_df) <- gsub("Tumor", "Normal", colnames(common_variant_df))
@@ -111,8 +108,7 @@ ddr_df <- data.frame(Gene.Name = ddr_df$Gene.Name,
 filter_df <- rbind(filter_df, ddr_df)
 
 # lookup indices of genes/variants to be filtered
-idx <- which(germline$Hugo_Symbol %in% filter_df$Gene.Name)
-germline_final <- germline[idx, ]
+germline_final <- germline[germline$Hugo_Symbol %in% filter_df$Gene.Name, ]
 
 # annotate filter groups
 germline_final$Rank <- 0
@@ -163,12 +159,12 @@ flags <- c("TTN", "MUC16", "OBSCN", "AHNAK2", "SYNE1", "FLG",
 germline_final <- germline_final[!germline_final$Hugo_Symbol %in% flags, ]
 
 # III. Report Relevant Variants -------------------------------------------
-cols_to_keep <- c("Hugo_Symbol", "Chromosome", "Start_position", "End_position", "Variant_Classification", 
+cols_to_keep <- c("Hugo_Symbol", "Chromosome", "Start_Position", "End_Position", "Variant_Classification", 
                   "Reference_Allele", "Tumor_Seq_Allele1", "Tumor_Seq_Allele2", "id", 
                   "Filter_Group", "Filter_Comment",
-                  "Ref_depth", "Alt_depth", "allele_frequency", "Clin_sig")
+                  "Ref_depth", "Alt_depth", "AF", "Clin_sig")
 
 germline_final <- germline_final[, cols_to_keep]
 colnames(germline_final) <- gsub("Tumor", "Germline", colnames(germline_final))
 
-write.csv(germline_final,"./output/germline_variant_report.csv", row.names = F)
+write.csv(germline_final,"./output/germline_variant_report.csv", row.names = FALSE)
