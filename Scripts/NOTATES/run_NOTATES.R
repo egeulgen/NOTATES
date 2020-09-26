@@ -7,6 +7,7 @@
 ## Author: Ege Ulgen
 ##################################################
 
+
 dir.create("NOTATES")
 setwd("NOTATES")
 
@@ -51,10 +52,10 @@ if (mb_arg == 'glioma') {
 dir.create("Germline")
 germline_mutations <- read.csv(file.path(dirname(getwd()), "Germline", "output", "germline_variant_report.csv"))
 
-germline_cols <- c("Hugo_Symbol", "id", "Chromosome", "Start_position",
+germline_cols <- c("Hugo_Symbol", "id", "Chromosome", "Start_Position",
                    "Filter_Comment", "Variant_Classification",
                    "Reference_Allele", "Germline_Seq_Allele2", 
-                   "Ref_depth", "Alt_depth", "allele_frequency", "Clin_sig")
+                   "Ref_depth", "Alt_depth", "AF", "Clin_sig")
 renamed_g_cols <- c("Gene", "rs_id", "Chr", "Pos", 
                     "Disease(s)", "Effect", 
                     "Ref", "Alt", 
@@ -124,11 +125,6 @@ dir.create("Somatic_SNV")
 somatic_vars <- read.delim(file.path(dirname(getwd()), "Funcotator", "annotated_somatic.maf"), comment.char="#")
 somatic_vars <- somatic_vars[order(somatic_vars$tumor_f, decreasing = TRUE), ]
 
-# Subsetting for (MuTect's default) HQ filters
-somatic_vars <- subset(somatic_vars, 
-                       alt_allele_seen=="True" & 
-                         short_tandem_repeat_membership == "False")
-
 # Filter for tumor_f > 0.05
 somatic_vars <- somatic_vars[somatic_vars$tumor_f > 0.05, ]
 
@@ -143,16 +139,12 @@ somatic_vars <- somatic_vars[!somatic_vars$Hugo_Symbol %in% flags,]
 somatic_vars$Protein_Change[somatic_vars$Protein_Change == ""] <- NA
 
 # keep only needed annotations
-keep <- c("Hugo_Symbol", "Chromosome", "Start_position", "End_position", "Variant_Classification", "Variant_Type", 
-          "Reference_Allele", "Tumor_Seq_Allele1", "Tumor_Seq_Allele2", "tumor_f", "genotype", "dbSNP_RS", "Genome_Change", "Codon_Change",
-          "Protein_Change", "UniProt_AApos", "DNARepairGenes_Role", "FamilialCancerDatabase_Syndromes",
-          "COSMIC_n_overlapping_mutations", "COSMIC_total_alterations_in_gene", "dbNSFP_SIFT_pred", 
-          colnames(somatic_vars)[grepl("^GO_", colnames(somatic_vars))], 
-          colnames(somatic_vars)[grepl("^CGC_", colnames(somatic_vars))])
+somatic_vars$COSMIC_n_overlapping_mutations <- ifelse(somatic_vars$COSMIC_overlapping_mutations == "", 0, vapply(somatic_vars$COSMIC_overlapping_mutations, function(x) stringr::str_count(x, "\\|") + 1, 1))
 
 somatic_vars <- somatic_vars[, c("Hugo_Symbol", "Variant_Classification", "Protein_Change", "Genome_Change",
-                                 "tumor_f", "genotype", "COSMIC_n_overlapping_mutations",
-                                 "COSMIC_total_alterations_in_gene","UniProt_Region","dbNSFP_SIFT_pred")]
+                                 "tumor_f", "COSMIC_n_overlapping_mutations",
+                                 "COSMIC_total_alterations_in_gene","UniProt_Region")]
+somatic_vars$UniProt_Region[somatic_vars$UniProt_Region == "__UNKNOWN__"] <- ""
 
 # Only include somatic snv/indels with Variant Classifications of High/Moderate variant consequences
 high_conseq <- c("Frame_Shift_Del", "Frame_Shift_Ins", "Splice_Site", 
