@@ -116,7 +116,7 @@ if(nrow(germline_mutations) != 0) {
 common_var <- read.csv(file.path(dirname(getwd()), "Germline","output", "common_variant_report.csv"))
 common_var <- common_var[,c("id","Hugo_Symbol","Variant_Classification",
                             "gCCV_Risk_allele","Reference_Allele","Normal_Seq_Allele2",
-                            "Ref_depth", "Alt_depth", "allele_frequency")]
+                            "Ref_depth", "Alt_depth", "AF")]
 colnames(common_var) <-  c("rs_id","Gene","Effect","Risk Allele", "Ref", "Alt", "Ref_depth", "Alt_depth", "AF")
 write.csv(common_var, "Germline/common_var.csv", row.names = FALSE)
 
