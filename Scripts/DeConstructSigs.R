@@ -26,14 +26,14 @@ somatic_SNVs <- read.delim("Funcotator/annotated_somatic.maf", comment.char="#")
 somatic_SNVs <- somatic_SNVs[somatic_SNVs$tumor_f > 0.05, ]
 
 somatic_SNVs$Sample <- sample_id
-somatic_SNVs <- somatic_SNVs[,c("Sample","Chromosome", "Start_position","Reference_Allele", "Tumor_Seq_Allele2")]
+somatic_SNVs <- somatic_SNVs[,c("Sample","Chromosome", "Start_Position","Reference_Allele", "Tumor_Seq_Allele2")]
 somatic_SNVs$Chromosome <- paste0("chr", somatic_SNVs$Chromosome)
 
 # Convert to deconstructSigs input
 sigs.input <- mut.to.sigs.input(mut.ref = somatic_SNVs, 
                                 sample.id = "Sample", 
                                 chr = "Chromosome", 
-                                pos = "Start_position", 
+                                pos = "Start_Position", 
                                 ref = "Reference_Allele", 
                                 alt = "Tumor_Seq_Allele2",
                                 bsg = BSgenome.Hsapiens.UCSC.hg38)
