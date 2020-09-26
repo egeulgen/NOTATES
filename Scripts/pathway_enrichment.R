@@ -15,10 +15,6 @@ if(!suppressPackageStartupMessages(require(pathfindR))) {
 # High impact somatic SNV/indels ------------------------------------------
 somatic_vars <- read.delim("./Funcotator/annotated_somatic.maf", stringsAsFactors=F, comment.char="#")
 
-# Subsetting for (MuTect's default) HQ filters
-somatic_vars <- subset(somatic_vars, 
-                       alt_allele_seen=="True")
-
 # filter for VAF > 0.05
 somatic_vars <- somatic_vars[somatic_vars$tumor_f > 0.05, ]
 
