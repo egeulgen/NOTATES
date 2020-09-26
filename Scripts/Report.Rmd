@@ -16,12 +16,12 @@ header-includes:
 - \usepackage{booktabs}
 - \usepackage{tabu}
 - \usepackage{longtable}
-- \usepackage[table]{xcolor}
 title: \ \ NeuroOncology Technologies (NOT)
 subtitle: "Whole Exome Sequencing Report"
 ---
 
 ```{r setup, include=FALSE}
+options(kableExtra.latex.load_packages = FALSE)
 knitr::opts_chunk$set(echo = FALSE, comment = NA)
 options(stringsAsFactors = FALSE, Encoding="UTF-8")
 suppressPackageStartupMessages(library(knitr))
@@ -59,9 +59,7 @@ colnames(QC_df)[1] <- ""
 kable_styling(kable(QC_df,
                     format = "latex", 
                     booktabs = TRUE,
-                    align = c("r", "c", "c")), 
-              latex_options = "striped",
-              stripe_color = "lightgray")
+                    align = c("r", "c", "c")))
 ```
 
 >>> \* PF is defined as passing Illumina's filter \
@@ -347,9 +345,9 @@ kable_styling(kable(class_tbl,
 if(file.exists("./NOTATES/Somatic_SNV/important_SNVs.csv")) {
   imp_som_var <- read.csv("./NOTATES/Somatic_SNV/important_SNVs.csv", colClasses = c("character"))
   imp_som_var <- imp_som_var[, setdiff(colnames(imp_som_var), 
-                               c("COSMIC_total_alterations_in_gene", "DNA_repair", "selected_KEGG", "genotype"))]
+                               c("COSMIC_total_alterations_in_gene", "DNA_repair", "selected_KEGG"))]
   colnames(imp_som_var) <- c("Gene", "Variant Classification", "Protein", "Genomic Change", "VAF", "COS_n_ov",
-                         "UniProt_Region", "SIFT", "Irino", "TMZ")
+                         "UniProt_Region", "Irino", "TMZ")
   
   k_tbl <- kable(imp_som_var, format = "latex", booktabs = TRUE)
   k_tbl <- column_spec(k_tbl, which(colnames(imp_som_var) == "UniProt_Region"), width = "10em")
@@ -370,9 +368,9 @@ This subsection presents somatic SNV/indels which fulfill the following criteria
 if(file.exists("./NOTATES/Somatic_SNV/COSMIC_hotspot.csv")) {
   hot_som <- read.csv("./NOTATES/Somatic_SNV/COSMIC_hotspot.csv", colClasses = c("character"))
   hot_som <- hot_som[, setdiff(colnames(hot_som), 
-                               c("COSMIC_total_alterations_in_gene", "DNA_repair", "selected_KEGG", "genotype"))]
+                               c("COSMIC_total_alterations_in_gene", "DNA_repair", "selected_KEGG"))]
   colnames(hot_som) <- c("Gene", "Variant Classification", "Protein", "Genomic Change", "VAF", "COS_n_ov",
-                         "UniProt_Region", "SIFT","Irino", "TMZ")
+                         "UniProt_Region","Irino", "TMZ")
   k_tbl <- kable(hot_som, format = "latex", booktabs = TRUE)
   k_tbl <- column_spec(k_tbl, which(colnames(hot_som) == "UniProt_Region"), width = "10em")
   kable_styling(k_tbl, latex_options = "scale_down")
@@ -389,9 +387,9 @@ This subsection lists somatic variants where the gene harboring the variants is 
 if(file.exists("./NOTATES/Somatic_SNV/CGC_genes.csv")) {
   cgc_som <- read.csv("./NOTATES/Somatic_SNV/CGC_genes.csv", colClasses = c("character"))
   cgc_som <- cgc_som[, setdiff(colnames(cgc_som), 
-                               c("COSMIC_total_alterations_in_gene", "DNA_repair", "selected_KEGG", "genotype"))]
+                               c("COSMIC_total_alterations_in_gene", "DNA_repair", "selected_KEGG"))]
   colnames(cgc_som) <- c("Gene", "Variant Classification", "Protein", "Genomic Change","VAF", "COS_n_ov",
-                         "UniProt_Region", "SIFT","Irino", "TMZ")
+                         "UniProt_Region", "Irino", "TMZ")
   k_tbl <- kable(cgc_som, format = "latex", booktabs = TRUE)
   k_tbl <- column_spec(k_tbl, which(colnames(cgc_som) == "UniProt_Region"), width = "10em")
   kable_styling(k_tbl, latex_options = "scale_down")
@@ -410,9 +408,9 @@ if(file.exists("./NOTATES/Somatic_SNV/DDR_related.csv")) {
   ddr_som_var <- read.csv("./NOTATES/Somatic_SNV/DDR_related.csv", colClasses = c("character"))
 
   ddr_som_var <- ddr_som_var[, setdiff(colnames(ddr_som_var),
-                                       c("COSMIC_total_alterations_in_gene", "selected_KEGG", "genotype"))]
+                                       c("COSMIC_total_alterations_in_gene", "selected_KEGG"))]
   colnames(ddr_som_var) <- c("Gene", "Variant Classification", "Protein", "Genomic Change", "VAF", "COS_n_ov",
-                             "UniProt_Region", "SIFT", "DNA_repair", "Irino", "TMZ")
+                             "UniProt_Region", "DNA_repair", "Irino", "TMZ")
   k_tbl <- kable(ddr_som_var, format = "latex", booktabs = TRUE)
   k_tbl <- column_spec(k_tbl, which(colnames(ddr_som_var) == "UniProt_Region"), width = "10em")
   kable_styling(k_tbl, latex_options = "scale_down")
@@ -426,10 +424,9 @@ Somatic SNVs/indels in important KEGG Pathway genes:
 ```{r kegg}
 if(file.exists("./NOTATES/Somatic_SNV/KEGG_selected.csv")) {
   kegg_som_var <- read.csv("./NOTATES/Somatic_SNV/KEGG_selected.csv", colClasses = c("character"))
-  kegg_som_var <- kegg_som_var[, colnames(kegg_som_var) != "genotype"]
-
+  
   colnames(kegg_som_var) <- c("Gene", "Variant Classification", "Protein", "Genomic Change", "VAF", "COS_n_ov",
-                              "COS_tot", "UniProt_Region", "SIFT", "DNA_repair", "Irino", "TMZ", "KEGG")
+                              "COS_tot", "UniProt_Region", "DNA_repair", "Irino", "TMZ", "KEGG")
   
   k_tbl <- kable(kegg_som_var, format = "latex", booktabs = TRUE)
   k_tbl <- column_spec(k_tbl, which(colnames(kegg_som_var) == "UniProt_Region"), width = "10em")
@@ -691,13 +688,16 @@ if(!file.exists("./THetA/output/CNV.BEST.results")){
 }else{
   theta_out <- read.delim("./THetA/output/CNV.BEST.results")
   n3_chosen <- ifelse(length(unlist(strsplit(theta_out[1,"mu"], ","))) == 2, F, T)
+  
+  image_path <- ifelse(n3_chosen,"THetA/output/CNV.n3.graph.pdf","THetA/output/CNV.n2.graph.pdf")
+  renamed_path <- sub("\\.g", "_g", sub("\\.n", "_n", image_path))
 }
 ```
 
 THetA (Tumor Heterogeneity Analysis) is an algorithm that estimates the tumor purity and clonal/sublconal copy number aberrations directly from high-throughput DNA sequencing data.
 
 \begin{center} 
-\includegraphics[width=500pt]{`r ifelse(n3_chosen,"./THetA/output/CNV.n3.graph.pdf","./THetA/output/CNV.n2.graph.pdf")`}
+\includegraphics[width=500pt]{`r renamed_path`}
 \end{center}
 
 \newpage

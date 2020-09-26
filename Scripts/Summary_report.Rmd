@@ -164,10 +164,14 @@ if(!file.exists("./THetA/output/CNV.BEST.results")){
   theta_out <- read.delim("./THetA/output/CNV.BEST.results")
   n3_chosen <- length(unlist(strsplit(theta_out[1,"mu"], ","))) != 2
 }
+
+image_path <- ifelse(n3_chosen,"THetA/output/CNV.n3.graph.pdf","THetA/output/CNV.n2.graph.pdf")
+renamed_path <- sub("\\.g", "_g", sub("\\.n", "_n", image_path))
+file.rename(image_path, renamed_path)
 ```
 
 \begin{center} 
-\includegraphics[width=300pt]{`r ifelse(n3_chosen,"./THetA/output/CNV.n3.graph.pdf","./THetA/output/CNV.n2.graph.pdf")`}
+\includegraphics[width=300pt]{`r renamed_path`}
 \end{center}
 
 ```{r scna}
