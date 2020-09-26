@@ -1,3 +1,15 @@
+# NOTATES v1.4.0
+
+## Major Changes
+- created environment yaml files (conda) for portability
+- changed reference genome to hg38
+- changed annotation tool from oncotator to funcotator
+- added installation instructions
+
+## Minor changes and bug fixes
+
+***
+
 # NOTATES v1.3.0
 
 ## Major Changes

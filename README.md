@@ -1,57 +1,23 @@
 # <img src="Scripts/NOT_logo.png" align="left" height=120/> NOTATES : NOT - Alterations in Tumor Exome Sequencing
-NeuroOncology Technologies(NOT) aims to analyze Whole Exome Sequencing reads of blood-matched tumor samples that belong to brain tumor patients. For the moment, the analysis is focused on gliomas and medulloblastomas (MBs). Therefore, glioma/MB-specific genomic alterations that are expected to affect diagnosis, prognosis and treatment response are assessed in each case, utilizing manually-curated databases of genes and genomic alterations that are related to brain tumor biology.
+NeuroOncology Technologies(NOT) aims to analyze Whole Exome Sequencing data of blood-matched tumor samples that belong to brain tumor patients. For the moment, the analysis is focused on gliomas and medulloblastomas (MBs). Therefore, glioma/MB-specific genomic alterations that are expected to affect diagnosis, prognosis and treatment response are assessed in each case, utilizing manually-curated databases of genes and genomic alterations that are related to brain tumor biology.
 
-## Overview of the Pipeline
+# Overview of the Pipeline
 The pipeline consists of several bash and R scripts, and a wrapper bash script.
 
-The combined germline variation, somatic Single Nucleotide Variant(SNV) and Insertion/Deletion(InDel) discovery pipeline was created based on the GATK Best Practices workflow. Germline SNV and InDels are called using GATK HaplotypeCaller. Somatic SNV and InDels are called using GATK MuTect2. Both germline and somatic variants are annotated via Oncotator.
+The combined germline variation, somatic Single Nucleotide Variant(SNV) and Insertion/Deletion(InDel) discovery pipeline was created based on the GATK Best Practices workflow. Germline SNV and indels are called using GATK HaplotypeCaller. Somatic SNV and indels are called using GATK MuTect2. Both germline and somatic variants are annotated via Funcotator.
 
-Somatic copy number alterations (SCNA) are called using ExomeCNV.
+Somatic copy number alterations (SCNA) and loss of heterozygosity (LOH) events are called using ExomeCNV (Sathirapongsasuti JF, Lee H, Horst BA, et al. Exome sequencing-based copy-number variation and loss of heterozygosity detection: ExomeCNV. Bioinformatics. 2011;27(19):2648-54).
 
-Clonal/subclonal copy number aberrations are estimated using THetA2.
+Clonal/subclonal copy number aberrations are estimated using THetA2 (Oesper L, Satas G, Raphael BJ. Quantifying tumor heterogeneity in whole-genome and whole-exome sequencing data. Bioinformatics. 2014;30(24):3532-40).
 
-Variant reporting and integration of detected alterations are achieved with custom scripts and curated resources.
+MSI status is predicted using MSIpred (Wang C, Liang C. MSIpred: a python package for tumor microsatellite instability classification from tumor mutation annotation data using a support vector machine. Sci Rep. 2018;8(1):17546).
 
-### Dependencies
-The pipeline depends on the following (if not in bin, path/to/tool can be altered in the configuration file notates.config):
+Mutational signatures are estimated using DeconstructSigs (Rosenthal R, Mcgranahan N, Herrero J, Taylor BS, Swanton C. DeconstructSigs: delineating mutational processes in single tumors distinguishes DNA repair deficiencies and patterns of carcinoma evolution. Genome Biol. 2016;17:31).
 
-Should be located in bin directory:
+Pathway enrichment analyses are performed using [pathfindR](https://github.com/egeulgen/pathfindR) (Ulgen E, Ozisik O, Sezerman OU. 2019. pathfindR: An R Package for Comprehensive Identification of Enriched Pathways in Omics Data Through Active Subnetworks. Front. Genet. https://doi.org/10.3389/fgene.2019.00858)
 
-- [JAVA](https://www.java.com/en/download/manual.jsp)
-- [R](https://www.r-project.org)
-- [python 2.7.x](https://www.python.org/downloads/)
-- [FastQC](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/)
-- [SAMTools](http://samtools.sourceforge.net/)
-- [BWA](http://bio-bwa.sourceforge.net/)
+Variant reporting and prioritization of detected alterations are achieved via custom scripts and curated resources.
 
-For the report, the following should be installed:
+# Installation Instructions
 
-- [pandoc](http://pandoc.org/)
-- TeX (MacTeX on Mac OS, TeX Live on Linux)
-
-The the `path/to/tool` for the following should be specified in the configuration file:
-
-- [Picard](http://broadinstitute.github.io/picard/index.html)
-- [GATK](https://software.broadinstitute.org/gatk/)
-- [THetA2](http://compbio.cs.brown.edu/projects/theta/)
-- [Oncotator](https://github.com/broadinstitute/oncotator/releases)
-
-### Resources
-Note that **only hg19 reference and resources with hg19 coordinates are supported** as this is the only reference genome build compatible with oncotator data sources.
-
-The pipeline utilizes the following resources (`path/to/resource` can be altered in the configuration file _configurations.cfg_):
-
-- Reference sequence, prepared for use with BWA and GATK
-- Exome capture kit target intervals (check with your capture kit provider or your sequencing facility)
-- dbSNP VCF (can be found in the [GATK bundle])
-- Mills and 1000 Genomes gold standard InDel Sites VCF (can be found in the [GATK bundle])
-- 1000 Genomes phase 1 InDel Sites VCF (can be found in the [GATK bundle])
-- Oncotator data sources (latest can be dowloaded from [here](https://personal.broadinstitute.org/lichtens/oncobeta/oncotator_v1_ds_Jan262015.tar.gz))
-
-[GATK bundle]: https://gatk.broadinstitute.org/hc/en-us/articles/360035890811-Resource-bundle
-
-Additionaly, the following files should be placed in the designated places:
-
-- Table of Cancer Gene Census genes (to be placed under `Scripts/CGC_latest.csv`) (can be obtained for non-commercial purposes on [https://cancer.sanger.ac.uk/census](https://cancer.sanger.ac.uk/census))
-- The table of COSMIC SBS Signatures descriptions (to be placed under `Scripts/cosmic_sbs_details.csv`, required columns are: Signature, Proposed aetiology, Associated mutation classes and signatures, Comments) (can be obtained for non-commercial purposes on [https://cancer.sanger.ac.uk/cosmic/signatures/index.tt](https://cancer.sanger.ac.uk/cosmic/signatures/index.tt))
-- Tables of selected KEGG pathways (to be placed under `Scripts/NOTATES/curated_dbs/important_KEGG_pws_glioma.csv` for glioma and `Scripts/NOTATES/curated_dbs/important_KEGG_pws_MB.csv` for medulloblastoma, with 2 columns: "Gene" and "pathway") (The R script in `Scripts/NOTATES/curated_dbs/kegg_db_prep.R` can be used to obtain the genes under selected KEGG pathways, only for non-commercial purposes)
+See [here](installation_instructions.md) for installation instructions.
