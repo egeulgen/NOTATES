@@ -27,7 +27,6 @@ somatic_SNVs <- somatic_SNVs[somatic_SNVs$tumor_f > 0.05, ]
 
 somatic_SNVs$Sample <- sample_id
 somatic_SNVs <- somatic_SNVs[,c("Sample","Chromosome", "Start_Position","Reference_Allele", "Tumor_Seq_Allele2")]
-somatic_SNVs$Chromosome <- paste0("chr", somatic_SNVs$Chromosome)
 
 # Convert to deconstructSigs input
 sigs.input <- mut.to.sigs.input(mut.ref = somatic_SNVs, 
