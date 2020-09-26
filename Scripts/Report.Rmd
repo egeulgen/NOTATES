@@ -87,7 +87,7 @@ kable_styling(kable(contam_df[, -1],
 Germline alterations are assessed from the WES sequencing of DNA extracted from blood. Alterations are called using GATK - HaplotypeCaller. Findings are filtered for germline single nucleotide variations (SNVs) and short (typically less than 20 bases-long) insertion-deletion events (indels) that:
 
 - were not reported as "benign" or "likely benign" in ClinVar
-- have population Minor Allele Frequency (MAF) < 1% (in 1000 Genomes, ExAC and ESP6500)
+- have population Minor Allele Frequency (MAF) < 1% (in 1000 Genomes, gnomAD, ExAC and ESP6500)
 - have non-synonymous impact (one of "Frame_Shift_Del", "Frame_Shift_Ins", "Splice_Site", "Translation_Start_Site","Nonsense_Mutation", "Nonstop_Mutation", "In_Frame_Del","In_Frame_Ins", "Missense_Mutation", see [http://www.ensembl.org/Help/Glossary?id=535]( http://www.ensembl.org/Help/Glossary?id=535)))
 - are not in genes that are often non-pathogenic and passengers but are frequently mutated in most of the public exome studies (named FLAGS) as collected by Shyr et al. [^1]. 
 
