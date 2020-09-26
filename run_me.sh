@@ -6,7 +6,7 @@
 ################################################################################
 # set -ueo pipefail
 
-CONDA_BASE=$(conda info --base)
+export CONDA_BASE=$(conda info --base)
 source $CONDA_BASE/etc/profile.d/conda.sh
 
 patientID=$1
@@ -179,6 +179,7 @@ bash "$scripts_dir"/ExomeCNV/ExomeCNV.sh $normal_name $tumor_name
 ################################## THetA #######################################
 ################################################################################
 
+source $CONDA_BASE/etc/profile.d/conda.sh
 conda activate NOTATES_python
 mkdir -p THetA/output
 
@@ -194,14 +195,18 @@ bash "$THetA"/bin/RunTHetA THetA/CNV.input \
 	--DIR THetA/output --NUM_PROCESSES "$num_threads"
 # bash "$THetA"/bin/RunTHetA THetA/CNV.input --TUMOR_FILE THetA/tumor_SNP.txt \
 # 	--NORMAL_FILE THetA/normal_SNP.txt --DIR THetA/output --NUM_PROCESSES "$num_threads"
+conda deactivate
 
 ################################################################################
 ################################## MSIpred #####################################
 ################################################################################
+source $CONDA_BASE/etc/profile.d/conda.sh
 conda activate NOTATES_R
 echo "######################## Running R script for MSIpred            " $(date)
 Rscript "$scripts_dir"/MSIpred_prep.R $patientID
+conda deactivate
 
+source $CONDA_BASE/etc/profile.d/conda.sh
 conda activate NOTATES_python
 python "$scripts_dir"/MSIpred_analysis.py $simple_repeats $exome_length
 conda deactivate
@@ -209,6 +214,7 @@ conda deactivate
 ################################################################################
 #################################### QC ########################################
 ################################################################################
+source $CONDA_BASE/etc/profile.d/conda.sh
 conda activate NOTATES_main
 ## Alignment Summary Metrics
 picard CollectAlignmentSummaryMetrics \
@@ -220,7 +226,9 @@ picard CollectAlignmentSummaryMetrics \
 	METRIC_ACCUMULATION_LEVEL=ALL_READS REFERENCE_SEQUENCE=$genome \
 	INPUT=tumor.final.bam OUTPUT="$tumor_name"/QC/alignment_summary_metrics.txt \
 	USE_JDK_DEFLATER=true USE_JDK_INFLATER=true
+conda deactivate
 
+source $CONDA_BASE/etc/profile.d/conda.sh
 conda activate NOTATES_R
 ## QC Wrapper
 Rscript "$scripts_dir"/QC_table_prep.R "$normal_name" "$tumor_name"

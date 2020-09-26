@@ -97,6 +97,7 @@ gatk SelectVariants \
 
 rm ./ExomeCNV/baf/filtered_tumor_HC.vcf.gz*
 
+source $CONDA_BASE/etc/profile.d/conda.sh
 conda activate NOTATES_R
 
 Rscript "$scripts_dir"/ExomeCNV/VCF_parser_BAF.R
