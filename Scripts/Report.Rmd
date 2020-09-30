@@ -740,7 +740,7 @@ Genes that harbor non-synonymous mutations with a VAF > 5% and not in FLAGS are 
 ```{r enr_res_mut, message=FALSE, warning=FALSE}
 read_result <- function(f_name) {
   res <- tryCatch(
-    {s
+    {
       read.csv(f_name, row.names = 1)
     }, error = function(cond) {
       message(paste("Cannot read file:", f_name))
