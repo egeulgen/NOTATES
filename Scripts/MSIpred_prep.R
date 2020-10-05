@@ -15,4 +15,4 @@ funcotator_maf$Tumor_Sample_Barcode <- args[1]
 nec_cols <- c("Chromosome", "Start_Position", "End_Position", "Variant_Classification", "Variant_Type", "Tumor_Sample_Barcode")
 funcotator_maf <- funcotator_maf[, nec_cols]
 
-write.table(funcotator_maf, "MSIpred/somatic_maf2.maf", sep = "\t", quote = FALSE, row.names = FALSE) 
+write.table(funcotator_maf, "MSIpred/somatic_maf.maf", sep = "\t", quote = FALSE, row.names = FALSE) 
