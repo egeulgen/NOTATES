@@ -615,12 +615,16 @@ All LOH events that pass the filter are reported here.
 
 ```{r loh_regions}
 loh <- read.csv("./NOTATES/LOH/LOH.csv")
-loh$Position <- paste0(loh$Chr, ":", loh$Start, "-", loh$End)
-loh <- loh[,c("Genes", "Position", "N_BAF", "T_BAF", "Absolute_Diff")]
-
-kable_styling(kable(loh,
+if (nrow(loh) == 0) {
+  cat("No variation to report.")
+} else {
+  loh$Position <- paste0(loh$Chr, ":", loh$Start, "-", loh$End)
+  loh <- loh[,c("Genes", "Position", "N_BAF", "T_BAF", "Absolute_Diff")]
+  
+  kable_styling(kable(loh,
                       format = "latex", booktabs = TRUE), 
                 latex_options = "scale_down")
+}
 ```
 
 ## V. b. LOH + Somatic SNV/Indel

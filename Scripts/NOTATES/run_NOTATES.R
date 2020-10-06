@@ -369,68 +369,76 @@ loh <- read.csv(file.path(dirname(getwd()), "ExomeCNV", "LOH_regions.csv"), head
 loh <- loh[loh$abs_difference > 0.4, ]
 loh <- loh[, c("chr", "position.start", "position.end", "normal_b", "tumor_b", "abs_difference")]
 
-cond1 <- loh$position.start == loh$position.end
-if (any(cond1)) {
-  loh$position.end[cond1] <- loh$position.end[cond1] + 1
-}
-
-cond2 <- loh$position.start > loh$position.end
-if (any(cond2)) {
-  tmp1 <- loh$position.start[cond2]
-  tmp2 <- loh$position.end[cond2]
+if (nrow(loh) == 0) {
+  write.csv(loh, "LOH/LOH.csv", row.names = F)
+  loh_by_gene_unfiltered <- data.frame(Gene = NA, 
+                            Segment = NA, Absolute_Diff = NA)  
   
-  loh$position.end[cond2] <- tmp1
-  loh$position.start[cond2] <- tmp2
-}
-
-#find genes that are overlapped by segment and segments that overlap genes
-loh_genes_overlap <- loh_annotate_genes(loh)
-loh_cytb_overlap <- loh_annotate_cytb(loh, cytobands_df)
-
-loh$length <- loh$position.end - loh$position.start + 1
-loh$genes <- sapply(loh_genes_overlap$Segment_genes, function(x) ifelse(length(x) > 100, ">100",
-                                                                             paste(x, collapse = ", ")))
-loh$cytoband <- sapply(loh_cytb_overlap$Segment_cytbs, function(x) shorten_cyt_anno(x, cytobands_df))
-
-loh <- loh[, c("genes", "length", "cytoband", setdiff(colnames(loh), c("genes", "cytoband", "length")))]
-colnames(loh) <- c("Genes", "Length", "Cytoband", "Chr", "Start", "End", "N_BAF", "T_BAF", "Absolute_Diff")
-write.csv(loh, "LOH/LOH.csv", row.names = F)
-
-loh_by_gene <- data.frame(Gene = names(loh_genes_overlap$Gene_segments), 
-                          Segment = NA, Absolute_Diff = NA)
-loh$id <- paste0(loh$Chr,":", loh$Start, "-", loh$End)
-gene_segs <- loh_genes_overlap$Gene_segments
-
-for(i in 1:length(gene_segs)) {
-  genes_segments <- gene_segs[[i]]
-  idx <- match(genes_segments, loh$id)
+} else {
+  cond1 <- loh$position.start == loh$position.end
+  if (any(cond1)) {
+    loh$position.end[cond1] <- loh$position.end[cond1] + 1
+  }
   
-  loh_by_gene$Segment[i] <- loh$id[idx[1]]
-  loh_by_gene$Absolute_Diff[i] <- loh$Absolute_Diff[idx[1]]
-  if(length(idx) > 1) {
-    for(j in 2:length(idx)) {
-      loh_by_gene <- rbind(loh_by_gene, 
-                           data.frame(Gene = loh_by_gene$Gene[i],
-                                      Segment = loh$id[idx[j]],
-                                      Absolute_Diff = loh$Absolute_Diff[idx[j]]))
+  cond2 <- loh$position.start > loh$position.end
+  if (any(cond2)) {
+    tmp1 <- loh$position.start[cond2]
+    tmp2 <- loh$position.end[cond2]
+    
+    loh$position.end[cond2] <- tmp1
+    loh$position.start[cond2] <- tmp2
+  }
+  
+  #find genes that are overlapped by segment and segments that overlap genes
+  loh_genes_overlap <- loh_annotate_genes(loh)
+  loh_cytb_overlap <- loh_annotate_cytb(loh, cytobands_df)
+  
+  loh$length <- loh$position.end - loh$position.start + 1
+  loh$genes <- sapply(loh_genes_overlap$Segment_genes, function(x) ifelse(length(x) > 100, ">100",
+                                                                          paste(x, collapse = ", ")))
+  loh$cytoband <- sapply(loh_cytb_overlap$Segment_cytbs, function(x) shorten_cyt_anno(x, cytobands_df))
+  
+  loh <- loh[, c("genes", "length", "cytoband", setdiff(colnames(loh), c("genes", "cytoband", "length")))]
+  colnames(loh) <- c("Genes", "Length", "Cytoband", "Chr", "Start", "End", "N_BAF", "T_BAF", "Absolute_Diff")
+  write.csv(loh, "LOH/LOH.csv", row.names = F)
+  
+  loh_by_gene <- data.frame(Gene = names(loh_genes_overlap$Gene_segments), 
+                            Segment = NA, Absolute_Diff = NA)
+  loh$id <- paste0(loh$Chr,":", loh$Start, "-", loh$End)
+  gene_segs <- loh_genes_overlap$Gene_segments
+  
+  for(i in 1:length(gene_segs)) {
+    genes_segments <- gene_segs[[i]]
+    idx <- match(genes_segments, loh$id)
+    
+    loh_by_gene$Segment[i] <- loh$id[idx[1]]
+    loh_by_gene$Absolute_Diff[i] <- loh$Absolute_Diff[idx[1]]
+    if(length(idx) > 1) {
+      for(j in 2:length(idx)) {
+        loh_by_gene <- rbind(loh_by_gene, 
+                             data.frame(Gene = loh_by_gene$Gene[i],
+                                        Segment = loh$id[idx[j]],
+                                        Absolute_Diff = loh$Absolute_Diff[idx[j]]))
+      }
     }
   }
-}
-
-loh_by_gene_unfiltered <- loh_by_gene
-
-### LOH + sSNV
-if (any(loh_by_gene$Gene %in% somatic_vars_unfiltered$Hugo_Symbol)) {
-  tmp <- loh_by_gene[loh_by_gene$Gene %in% somatic_vars_unfiltered$Hugo_Symbol,]
-  write.csv(tmp, "LOH/d_hit_loh.csv", row.names = F)
-  loh_by_gene <- loh_by_gene[!loh_by_gene$Gene %in% tmp$Gene, ]
-}
-
-### CGC genes
-if(any(loh_by_gene$Gene %in% CGC_df$Gene.Symbol))
-{
-  tmp <- loh_by_gene[loh_by_gene$Gene %in% CGC_df$Gene.Symbol,]
-  write.csv(tmp, "LOH/CGC_loh.csv", row.names = FALSE)
+  
+  loh_by_gene_unfiltered <- loh_by_gene
+  
+  ### LOH + sSNV
+  if (any(loh_by_gene$Gene %in% somatic_vars_unfiltered$Hugo_Symbol)) {
+    tmp <- loh_by_gene[loh_by_gene$Gene %in% somatic_vars_unfiltered$Hugo_Symbol,]
+    write.csv(tmp, "LOH/d_hit_loh.csv", row.names = F)
+    loh_by_gene <- loh_by_gene[!loh_by_gene$Gene %in% tmp$Gene, ]
+  }
+  
+  ### CGC genes
+  if(any(loh_by_gene$Gene %in% CGC_df$Gene.Symbol))
+  {
+    tmp <- loh_by_gene[loh_by_gene$Gene %in% CGC_df$Gene.Symbol,]
+    write.csv(tmp, "LOH/CGC_loh.csv", row.names = FALSE)
+  }
+  
 }
 
 # Double-hit --------------------------------------------------------------

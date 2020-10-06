@@ -1,3 +1,13 @@
+# NOTATES v1.4.1.9001
+
+## Major Changes
+
+## Minor changes and bug fixes
+- fixed behavior when no loh is found
+- fixed issue in reading enrichment file
+
+***
+
 # NOTATES v1.4.0
 
 ## Major Changes
