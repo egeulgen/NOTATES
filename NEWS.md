@@ -5,6 +5,7 @@
 ## Minor changes and bug fixes
 - fixed behavior when no loh is found
 - fixed issue in reading enrichment file
+- fixed issue in summary report. When there is no gene-level SCNA, message is displayed instead of table
 
 ***
 

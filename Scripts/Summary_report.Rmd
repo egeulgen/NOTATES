@@ -188,6 +188,10 @@ for (i in 1:length(file_paths)) {
   }
 }
 
-k_tbl <- kable(all_scnas, format = "latex", booktabs = TRUE)
-kable_styling(k_tbl, font_size = 6)
+if (!is.null(all_scnas)) {
+  k_tbl <- kable(all_scnas, format = "latex", booktabs = TRUE)
+  kable_styling(k_tbl, font_size = 6)
+} else {
+  cat("No variation to report.")
+}
 ```
