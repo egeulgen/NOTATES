@@ -146,12 +146,16 @@ for (i in 1:length(file_paths)) {
     all_som_vars <- rbind(all_som_vars, tmp)
   }
 }
-selected <- c("Hugo_Symbol", "Variant_Classification", "Protein_Change", "Genome_Change", "tumor_f", "Category")
-all_som_vars <- all_som_vars[, selected]
-colnames(all_som_vars) <- c("Gene", "Classification", "Protein Change", "Genome Change", "VAF", "Category")
-
-k_tbl <- kable(all_som_vars, format = "latex", booktabs = TRUE)
-kable_styling(k_tbl, font_size = 6)
+if (!is.null(all_som_vars)) {
+  selected <- c("Hugo_Symbol", "Variant_Classification", "Protein_Change", "Genome_Change", "tumor_f", "Category")
+  all_som_vars <- all_som_vars[, selected]
+  colnames(all_som_vars) <- c("Gene", "Classification", "Protein Change", "Genome Change", "VAF", "Category")
+  
+  k_tbl <- kable(all_som_vars, format = "latex", booktabs = TRUE)
+  kable_styling(k_tbl, font_size = 6)
+} else {
+  cat("No variation to report.")
+}
 ```
 
 
