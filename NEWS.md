@@ -6,6 +6,7 @@
 - fixed behavior when no loh is found
 - fixed issue in reading enrichment file
 - fixed issue in summary report. When there is no gene-level SCNA, message is displayed instead of table
+- fixed issue in summary report. When there is no somatic short variants, message is displayed instead of table
 
 ***
 
