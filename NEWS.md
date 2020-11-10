@@ -1,6 +1,7 @@
-# NOTATES v1.4.1.9001
+# NOTATES v1.4.1.9002
 
 ## Major Changes
+- added "GOAL" exome capture kit information
 
 ## Minor changes and bug fixes
 - fixed behavior when no loh is found
