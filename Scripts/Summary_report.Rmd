@@ -104,7 +104,7 @@ TMB_df$x_val <- 1:nrow(TMB_df)
 TMB_df_plot <- TMB_df
 # calculate height of median line segment
 x_shift <- max(nrow(TMB_df_plot) / 7, 3)
-suppressPackageStartupMessages(library(ggplot2))
+suppressWarnings(suppressPackageStartupMessages(library(ggplot2)))
 p <- ggplot(TMB_df_plot, aes(x=x_val, y=TMB, group = subset))
 p <- p + geom_point(size=1, aes(shape=subset, color=subset))
 p <- p + scale_color_manual(values=c('#56B4E9','#E69F00', 'gray60'))
@@ -171,7 +171,7 @@ if(!file.exists("./THetA/output/CNV.BEST.results")){
 
 image_path <- ifelse(n3_chosen,"THetA/output/CNV.n3.graph.pdf","THetA/output/CNV.n2.graph.pdf")
 renamed_path <- sub("\\.g", "_g", sub("\\.n", "_n", image_path))
-file.rename(image_path, renamed_path)
+tmp <- file.rename(image_path, renamed_path)
 ```
 
 \begin{center} 
