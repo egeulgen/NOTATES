@@ -1,7 +1,8 @@
-# NOTATES v1.4.1.9002
+# NOTATES v1.4.1.9003
 
 ## Major Changes
 - added "GOAL" exome capture kit information
+- updated germline report filtering to report "pathogenic"/"likely pathogenic" variants
 
 ## Minor changes and bug fixes
 - fixed behavior when no loh is found

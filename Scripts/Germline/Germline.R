@@ -132,29 +132,29 @@ germline_final <- germline_final[order(germline_final$Rank), ]
 write.csv(germline_final,"./output/germline_variants_NO_FILTER.csv", row.names = F)
 
 # II. Evaluate Variants ---------------------------------------------------
-# filter out benign/likely benign variants
-germline_final <- germline_final[!grepl("benign", germline_final$Clin_sig, ignore.case = TRUE), ]
+# include pathogenic/likely pathogenic variants
+germline_final <- germline_final[grepl("pathogenic", germline_final$Clin_sig, ignore.case = TRUE), ]
 germline_final$Clin_sig[is.na(germline_final$Clin_sig)] <- ""
 
-# only keep variants with MAF < 1%
-AF_cols <- colnames(germline_final)[grepl("_AF$", colnames(germline_final)) | grepl("_AF_", colnames(germline_final))]
-for (af_column in AF_cols) {
-  germline_final[, af_column] <- suppressWarnings(as.numeric(germline_final[, af_column]))
-  germline_final[is.na(germline_final[, af_column]), af_column] <- -1
-  germline_final <- germline_final[germline_final[, af_column] < 0.01, ]
-}
-
-# only keep non-synonymous variants
-non_syn_classes <- c("Frame_Shift_Del", "Frame_Shift_Ins", "Splice_Site", 
-                     "Translation_Start_Site","Nonsense_Mutation", 
-                     "Nonstop_Mutation", "In_Frame_Del","In_Frame_Ins", 
-                     "Missense_Mutation")
-germline_final <- germline_final[germline_final$Variant_Classification %in% non_syn_classes, ]
-
+# # only keep variants with MAF < 1%
+# AF_cols <- colnames(germline_final)[grepl("_AF$", colnames(germline_final)) | grepl("_AF_", colnames(germline_final))]
+# for (af_column in AF_cols) {
+#   germline_final[, af_column] <- suppressWarnings(as.numeric(germline_final[, af_column]))
+#   germline_final[is.na(germline_final[, af_column]), af_column] <- -1
+#   germline_final <- germline_final[germline_final[, af_column] < 0.01, ]
+# }
+# 
+# # only keep non-synonymous variants
+# non_syn_classes <- c("Frame_Shift_Del", "Frame_Shift_Ins", "Splice_Site",
+#                      "Translation_Start_Site","Nonsense_Mutation",
+#                      "Nonstop_Mutation", "In_Frame_Del","In_Frame_Ins",
+#                      "Missense_Mutation")
+# germline_final <- germline_final[germline_final$Variant_Classification %in% non_syn_classes, ]
+# 
 # Exclude variants in FLAGs
-flags <- c("TTN", "MUC16", "OBSCN", "AHNAK2", "SYNE1", "FLG", 
-           "MUC5B", "DNAH17", "PLEC", "DST", "SYNE2", "NEB", "HSPG2", 
-           "LAMA5", "AHNAK", "HMCN1", "USH2A", "DNAH11", "MACF1", 
+flags <- c("TTN", "MUC16", "OBSCN", "AHNAK2", "SYNE1", "FLG",
+           "MUC5B", "DNAH17", "PLEC", "DST", "SYNE2", "NEB", "HSPG2",
+           "LAMA5", "AHNAK", "HMCN1", "USH2A", "DNAH11", "MACF1",
            "MUC17")
 germline_final <- germline_final[!germline_final$Hugo_Symbol %in% flags, ]
 
