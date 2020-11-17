@@ -29,7 +29,7 @@ indication_for_testing <- ifelse(params$type == "glioma", "Diffuse glioma clinic
 treatment_status <- ifelse(as.logical(params$primary_tm), "Primary (untreated) tumor", "Recurrent (previously treated) tumor")
 tumor_sample_type <- ifelse(params$tumor_sample == "FFPE", "Formalin-Fixed Paraffin-Embedded (FFPE) tissue specimen", "Fresh tumor tissue, snap-frozen in liquid nitrogen")
 
-QC_df <- read.csv("./QC_table.csv" )
+QC_df <- read.csv("QC_table.csv" )
 tumor_25X <- QC_df$Tumor[QC_df$X == "25X"]
 normal_25X <- QC_df$Normal[QC_df$X == "25X"]
 
@@ -54,7 +54,7 @@ include_graphics(file.path(params$script_dir, 'NOT_summary_title.png'))
 \selectfont
 Whole exome sequencing of this individual's tumor and normal samples were performed and covered `r tumor_25X` (tumor) and `r normal_25X` (normal) of all exonic positions at 25X or more. Selected somatic findings are presented below.
 
-# I. Tumor Mutational Burden
+## I. Tumor Mutational Burden
 
 TMB is defined as the number of somatic mutations per megabase. TMB is a predictive biomarker being studied to evaluate its association with response to immunotherapy.
 
@@ -96,39 +96,39 @@ if(!params$ID %in% TMB_df$ID) {
                              primary = params$primary_tm))
   saveRDS(TMB_df, TMB_tbl_path)
 }
-## Scatter plots of TMB over all analyses
-# rank TMB vals
-TMB_df <- TMB_df[order(TMB_df$TMB),]
-TMB_df$x_val <- 1:nrow(TMB_df)
-
-TMB_df_plot <- TMB_df
-# calculate height of median line segment
-x_shift <- max(nrow(TMB_df_plot) / 7, 3)
-suppressWarnings(suppressPackageStartupMessages(library(ggplot2)))
-p <- ggplot(TMB_df_plot, aes(x=x_val, y=TMB, group = subset))
-p <- p + geom_point(size=1, aes(shape=subset, color=subset))
-p <- p + scale_color_manual(values=c('#56B4E9','#E69F00', 'gray60'))
-p <- p + geom_segment(aes(x = median(x_val) - x_shift, 
-                          y = median(TMB), 
-                          xend = median(x_val) + x_shift, 
-                          yend = median(TMB)), 
-                      colour = "red")
-p <- p + coord_flip()
-p <- p + theme(axis.title.y = element_blank(),
-               axis.title.x = element_blank(),
-               axis.text.y = element_blank(),
-               axis.ticks.y = element_blank(),
-               legend.title = element_blank())
-p <- p + scale_y_log10(breaks = scales::trans_breaks("log10", function(x) 10^x),
-                       labels = scales::trans_format("log10", scales::math_format(10^.x)))
-p <- p + geom_point(data=TMB_df_plot[TMB_df_plot$ID == params$ID, ], 
-                    aes(x=x_val, y=TMB), colour="red", size=1.3, shape = 1)
-p
+# ## Scatter plot of TMB over all analyses
+# # rank TMB vals
+# TMB_df <- TMB_df[order(TMB_df$TMB),]
+# TMB_df$x_val <- 1:nrow(TMB_df)
+# 
+# TMB_df_plot <- TMB_df
+# # calculate height of median line segment
+# x_shift <- max(nrow(TMB_df_plot) / 7, 3)
+# suppressWarnings(suppressPackageStartupMessages(library(ggplot2)))
+# p <- ggplot(TMB_df_plot, aes(x=x_val, y=TMB, group = subset))
+# p <- p + geom_point(size=1, aes(shape=subset, color=subset))
+# p <- p + scale_color_manual(values=c('#56B4E9','#E69F00', 'gray60'))
+# p <- p + geom_segment(aes(x = median(x_val) - x_shift, 
+#                           y = median(TMB), 
+#                           xend = median(x_val) + x_shift, 
+#                           yend = median(TMB)), 
+#                       colour = "red")
+# p <- p + coord_flip()
+# p <- p + theme(axis.title.y = element_blank(),
+#                axis.title.x = element_blank(),
+#                axis.text.y = element_blank(),
+#                axis.ticks.y = element_blank(),
+#                legend.title = element_blank())
+# p <- p + scale_y_log10(breaks = scales::trans_breaks("log10", function(x) 10^x),
+#                        labels = scales::trans_format("log10", scales::math_format(10^.x)))
+# p <- p + geom_point(data=TMB_df_plot[TMB_df_plot$ID == params$ID, ], 
+#                     aes(x=x_val, y=TMB), colour="red", size=1.3, shape = 1)
+# p
 ```
 
 TMB for the current tumor sample is: **`r round(current_TMB, 2)` mutations/Mb** (`r ifelse(current_TMB > 20, "High \\(>", "Normal \\(<=")` 20 mutations/Mb)). The predicted MSI status of this tumor was **`r msi_class_tbl$Predicted_MSI_Status`**.
 
-# II. Somatic Short Variants
+## II. Somatic Short Variants
 
 ```{r somatic_SNV_indel}
 file_paths <- c("Established gene" = "./NOTATES/Somatic_SNV/important_SNVs.csv",
@@ -159,7 +159,7 @@ if (!is.null(all_som_vars)) {
 ```
 
 
-# III. Somatic Copy Number Alterations
+## III. Somatic Copy Number Alterations
 
 ```{r n3_or_n2}
 if(!file.exists("./THetA/output/CNV.BEST.results")){
@@ -171,7 +171,7 @@ if(!file.exists("./THetA/output/CNV.BEST.results")){
 
 image_path <- ifelse(n3_chosen,"THetA/output/CNV.n3.graph.pdf","THetA/output/CNV.n2.graph.pdf")
 renamed_path <- sub("\\.g", "_g", sub("\\.n", "_n", image_path))
-tmp <- file.rename(image_path, renamed_path)
+tmp <- suppressWarnings(file.rename(image_path, renamed_path))
 ```
 
 \begin{center} 
@@ -198,4 +198,10 @@ if (!is.null(all_scnas)) {
 } else {
   cat("No variation to report.")
 }
+```
+
+## IV. Somatic Translocationn Events
+
+```{r transloc, fig.align="center", out.width="20%"}
+include_graphics(file.path("DELLY", "TR_circos.pdf"))
 ```

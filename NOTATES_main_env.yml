@@ -11,5 +11,8 @@ dependencies:
   - bwa
   - fastqc
   - samtools
+  - bedtools
+  - bcftools
   - pandoc
   - texlive-core
+  - delly

@@ -603,7 +603,29 @@ This subsection displays SCNA plots (log2(Tumor/Normal) ratio vs. position) per 
 
 \newpage
 
-# V. Loss of Heterozygosity (LOH) Events
+# V. Somatic Translocations
+
+Possible somatic translocations are called using DELLY. Only gene-to-different-gene structural variants (where both ends of the structural variant are in the exonic/intronic regions of the two genes) are kept. Below is the circos plot displaying possible translocations.
+
+\begin{center}
+\includegraphics[width=400pt]{./DELLY/TR_circos.pdf}
+\end{center}
+
+```{r translocation_table}
+transloc_df <- read.csv("DELLY/possible_translocations.csv")
+if(nrow(transloc_df) != 0) {
+  kable_styling(kable(transloc_df,
+                      format = "latex", 
+                      booktabs = TRUE,
+                      align = "c"))
+} else {
+  cat("No variation to report.")
+}
+```
+
+\newpage
+
+# VI. Loss of Heterozygosity (LOH) Events
 
 Only LOH events for which absolute difference of B-allele frequencies ($|BAF_{Tumor}-BAF_{Normal}|$) is larger than 0.4 are reported.
 
@@ -664,7 +686,7 @@ if(file.exists("./NOTATES/LOH/CGC_loh.csv"))
 
 \newpage
 
-# VI. Genes with Double Hit
+# VII. Genes with Double Hit
 
 A double hit strongly suggests a relevant tumor-suppressor gene [^10]. In this section, the list of genes with somatic SNV/indel(s) as well as SCNA and/or LOH events are reported.
 
@@ -682,7 +704,7 @@ if(file.exists("./NOTATES/double_hit.csv"))
 ```
 
 
-# VII. Tumor Heterogeneity Analysis 
+# VIII. Tumor Heterogeneity Analysis 
 
 ```{r n3_or_n2}
 if(!file.exists("./THetA/output/CNV.BEST.results")){
@@ -704,7 +726,7 @@ THetA (Tumor Heterogeneity Analysis) is an algorithm that estimates the tumor pu
 
 \newpage
 
-# VIII. Mutational Signatures
+# IX. Mutational Signatures
 
 Using DeConstructSigs, the weights of Mutational Signatures v3 (May 2019) from COSMIC are estimated. This section presents the mutational signatures detected in this tumor.
 
@@ -727,7 +749,7 @@ kable_styling(k_tbl, latex_options = "scale_down")
 
 \newpage
 
-# IX. pathfindR - KEGG Pathway Enrichment Analysis
+# X. pathfindR - KEGG Pathway Enrichment Analysis
 
 Pathway enrichment analysis is frequently utilized for studying the mechanisms underlying oncological processes. For this analysis KEGG pathway enrichment analysis was performed using the active-subnetwork-oriented enrichment approach of `pathfindR`. `pathfindR` leverages interaction information from a protein-protein interaction network (PIN) to identify distinct active subnetworks ^[An active subnetwork can be defined as a group of interconnected genes in a PIN that predominantly consists of significantly altered genes] and then perform enrichment analyses on these subnetworks. 
 

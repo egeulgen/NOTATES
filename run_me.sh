@@ -211,6 +211,26 @@ conda activate NOTATES_python
 python "$scripts_dir"/MSIpred_analysis.py $simple_repeats $exome_length
 conda deactivate
 
+conda deactivate
+
+################################################################################
+################################ Translocations ################################
+################################################################################
+source $CONDA_BASE/etc/profile.d/conda.sh
+conda activate NOTATES_main
+
+bash "$scripts_dir"/SV_calling.sh
+
+conda deactivate
+
+source $CONDA_BASE/etc/profile.d/conda.sh
+conda activate NOTATES_R
+
+Rscript "$scripts_dir"/process_DELLY.R
+
+conda deactivate
+
+
 ################################################################################
 #################################### QC ########################################
 ################################################################################

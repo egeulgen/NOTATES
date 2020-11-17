@@ -1,6 +1,7 @@
-# NOTATES v1.4.1.9003
+# NOTATES v1.5.0.9000
 
 ## Major Changes
+- added structural variant calling with DELLY (annotation with StructuralVariantAnnotation and VariantAnnotation)
 - added "GOAL" exome capture kit information
 - updated germline report filtering to report "pathogenic"/"likely pathogenic" variants
 

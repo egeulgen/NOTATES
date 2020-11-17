@@ -12,6 +12,9 @@ dependencies:
   - bioconductor-txdb.hsapiens.ucsc.hg38.knowngene
   - bioconductor-org.Hs.eg.db
   - bioconductor-dnacopy
+  - bioconductor-structuralvariantannotation
+  - bioconductor-variantannotation
+  - r-circlize
   - r-magick
   - r-foreach
   - r-doparallel
