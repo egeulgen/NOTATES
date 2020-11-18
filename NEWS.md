@@ -1,4 +1,4 @@
-# NOTATES v1.5.0.9000
+# NOTATES v1.5.0
 
 ## Major Changes
 - added structural variant calling with DELLY (annotation with StructuralVariantAnnotation and VariantAnnotation)
