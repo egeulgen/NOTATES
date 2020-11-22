@@ -34,6 +34,7 @@ if (nrow(tra_df) == 0) {
                                               TxDb.Hsapiens.UCSC.hg38.knownGene::TxDb.Hsapiens.UCSC.hg38.knownGene, 
                                               AllVariants()))
     locs_1 <- locs_1[locs_1$LOCATION %in% valid_locs, ]
+    locs_1 <- locs_1[!is.na(locs_1$GENEID), ]
     
     symbols_1 <- c()
     if (length(locs_1) != 0) {
@@ -48,6 +49,7 @@ if (nrow(tra_df) == 0) {
                                               TxDb.Hsapiens.UCSC.hg38.knownGene::TxDb.Hsapiens.UCSC.hg38.knownGene, 
                                               AllVariants()))
     locs_2 <- locs_2[locs_2$LOCATION %in% valid_locs, ]
+    locs_2 <- locs_2[!is.na(locs_2$GENEID), ]
     
     symbols_2 <- c()
     if (length(locs_2) != 0) {
@@ -71,10 +73,10 @@ final_pairs <- pairs[!is.na(tra_df$Gene1) & !is.na(tra_df$Gene2), ]
 tra_final_df <- tra_df[!is.na(tra_df$Gene1) & !is.na(tra_df$Gene2), ]
 
 ### for gene labels
-tmp_df <- tra_df[, c("first.X.seqnames", "first.X.start", "first.X.end", "Gene1")]
+tmp_df <- tra_final_df[, c("first.X.seqnames", "first.X.start", "first.X.end", "Gene1")]
 colnames(tmp_df) <- c("second.X.seqnames", "second.X.start", "second.X.end", "Gene2")
 tmp_df <- rbind(tmp_df,
-                tra_df[, c("second.X.seqnames", "second.X.start", "second.X.end", "Gene2")])
+                tra_final_df[, c("second.X.seqnames", "second.X.start", "second.X.end", "Gene2")])
 
 pdf("DELLY/TR_circos.pdf", width = 6, height = 6)
 circos.initializeWithIdeogram(species = "hg38")
