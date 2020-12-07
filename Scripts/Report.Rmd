@@ -54,7 +54,7 @@ suppressPackageStartupMessages(library(GenomicRanges))
 ## Ia. Summary Table of Quality Metrics
 
 ```{r QC}
-QC_df <- read.csv("./QC_table.csv" )
+QC_df <- read.csv("QC_table.csv" )
 colnames(QC_df)[1] <- ""
 kable_styling(kable(QC_df,
                     format = "latex", 
@@ -100,8 +100,8 @@ Filtered germline SNV/indels that affects any of the genes listed in ACMG SF V2.
 [^2]: Kalia SS, Adelman K, Bale SJ, et al. Recommendations for reporting of secondary findings in clinical exome and genome sequencing, 2016 update (ACMG SF v2.0): a policy statement of the American College of Medical Genetics and Genomics. Genet Med. 2017;19(2):249-255.
 
 ```{r ACMG}
-if(file.exists("./NOTATES/Germline/ACMG.csv")) {
-  ACMG_df <- read.csv("./NOTATES/Germline/ACMG.csv")
+if(file.exists("NOTATES/Germline/ACMG.csv")) {
+  ACMG_df <- read.csv("NOTATES/Germline/ACMG.csv")
   rownames(ACMG_df) <- ACMG_df$ID
   ACMG_df <- ACMG_df[,-2]
   
@@ -120,8 +120,8 @@ if(file.exists("./NOTATES/Germline/ACMG.csv")) {
 Cancer Gene Census (CGC) from the Catalogue of Somatic Mutations in Cancer (COSMIC) database is a catalog of genes which contain mutations that have been causally linked to cancer [(https://cancer.sanger.ac.uk/census)](https://cancer.sanger.ac.uk/census). This subsection filters the germline SNV/indels for genes that are reported in CGC. 
 
 ```{r CGC}
-if(file.exists("./NOTATES/Germline/CGC.csv")) {
-  gCGC_df <- read.csv("./NOTATES/Germline/CGC.csv")
+if(file.exists("NOTATES/Germline/CGC.csv")) {
+  gCGC_df <- read.csv("NOTATES/Germline/CGC.csv")
   kable_styling(kable(gCGC_df,
                       format = "latex", 
                       booktabs = TRUE,
@@ -139,8 +139,8 @@ Genes in which germline mutations confer highly or moderately increased risks of
 [^3]: Rahman N. Realizing the promise of cancer predisposition genes. Nature. 2014;505(7483):302-8.
 
 ```{r CPG}
-if(file.exists("./NOTATES/Germline/CPG.csv")) {
-  CPG_df <- read.csv("./NOTATES/Germline/CPG.csv")
+if(file.exists("NOTATES/Germline/CPG.csv")) {
+  CPG_df <- read.csv("NOTATES/Germline/CPG.csv")
   kable_styling(kable(CPG_df,
                       format = "latex", 
                       booktabs = TRUE,
@@ -159,8 +159,8 @@ In this subsection, filtered germline variants in Human DNA Repair Genes [^4] ar
 [^4]: Mdanderson.org. 2020. Human DNA Repair Genes. [online] Available at: <https://www.mdanderson.org/documents/Labs/Wood-Laboratory/human-dna-repair-genes.html>.
 
 ```{r DDR_germ}
-if(file.exists("./NOTATES/Germline/DDR.csv")) {
-  DDR_df <- read.csv("./NOTATES/Germline/DDR.csv")
+if(file.exists("NOTATES/Germline/DDR.csv")) {
+  DDR_df <- read.csv("NOTATES/Germline/DDR.csv")
   kable_styling(kable(DDR_df,
                       format = "latex", 
                       booktabs = TRUE,
@@ -177,8 +177,8 @@ if(file.exists("./NOTATES/Germline/DDR.csv")) {
 
 ```{r common}
 if (params$type == "glioma") {
-  if(file.exists("./NOTATES/Germline/common_var.csv")) {
-    common_df <- read.csv("./NOTATES/Germline/common_var.csv")
+  if(file.exists("NOTATES/Germline/common_var.csv")) {
+    common_df <- read.csv("NOTATES/Germline/common_var.csv")
     kable_styling(kable(common_df,
                         format = "latex", 
                         booktabs = TRUE,
@@ -209,7 +209,7 @@ This calculation was performed using the following filtering approach:
 2. keeping variants with a sequence depth greater than 20X in the tumor sample greater and 10X in the normal sample
 
 ```{r TMB, fig.width=10, fig.height=3}
-somatic_SNVs <- read.delim("./Funcotator/annotated_somatic.maf", comment.char="#")
+somatic_SNVs <- read.delim("Funcotator/annotated_somatic.maf", comment.char="#")
 
 somatic_SNVs$tot_depth_tumor <- somatic_SNVs$t_alt_count + somatic_SNVs$t_ref_count
 somatic_SNVs$tot_depth_normal <- somatic_SNVs$n_alt_count + somatic_SNVs$n_ref_count
@@ -344,8 +344,8 @@ kable_styling(kable(class_tbl,
 `r if(params$type == "glioma") {"[^6]: Ceccarelli M, Barthel FP, Malta TM, et al. Molecular Profiling Reveals Biologically Discrete Subsets and Pathways of Progression in Diffuse Glioma. Cell. 2016;164(3):550-63."}`
 
 ```{r imp_som_var}
-if(file.exists("./NOTATES/Somatic_SNV/important_SNVs.csv")) {
-  imp_som_var <- read.csv("./NOTATES/Somatic_SNV/important_SNVs.csv", colClasses = c("character"))
+if(file.exists("NOTATES/Somatic_SNV/important_SNVs.csv")) {
+  imp_som_var <- read.csv("NOTATES/Somatic_SNV/important_SNVs.csv", colClasses = c("character"))
   imp_som_var <- imp_som_var[, setdiff(colnames(imp_som_var), 
                                c("COSMIC_total_alterations_in_gene", "DNA_repair", "selected_KEGG"))]
   colnames(imp_som_var) <- c("Gene", "Variant Classification", "Protein", "Genomic Change", "VAF", "COS_n_ov",
@@ -367,8 +367,8 @@ This subsection presents somatic SNV/indels which fulfill the following criteria
 2. The variant has a mutation record in COSMIC at the same genomic position (as a recurrent mutation increases the likelihood of an actionable “gain-of function” mutation).
 
 ```{r hotspot}
-if(file.exists("./NOTATES/Somatic_SNV/COSMIC_hotspot.csv")) {
-  hot_som <- read.csv("./NOTATES/Somatic_SNV/COSMIC_hotspot.csv", colClasses = c("character"))
+if(file.exists("NOTATES/Somatic_SNV/COSMIC_hotspot.csv")) {
+  hot_som <- read.csv("NOTATES/Somatic_SNV/COSMIC_hotspot.csv", colClasses = c("character"))
   hot_som <- hot_som[, setdiff(colnames(hot_som), 
                                c("COSMIC_total_alterations_in_gene", "DNA_repair", "selected_KEGG"))]
   colnames(hot_som) <- c("Gene", "Variant Classification", "Protein", "Genomic Change", "VAF", "COS_n_ov",
@@ -386,8 +386,8 @@ if(file.exists("./NOTATES/Somatic_SNV/COSMIC_hotspot.csv")) {
 This subsection lists somatic variants where the gene harboring the variants is listed in the COSMIC-CGC, which is a catalog of genes which contain mutations that have been causally linked to cancer [(https://cancer.sanger.ac.uk/census)](https://cancer.sanger.ac.uk/census).
 
 ```{r cgc_som}
-if(file.exists("./NOTATES/Somatic_SNV/CGC_genes.csv")) {
-  cgc_som <- read.csv("./NOTATES/Somatic_SNV/CGC_genes.csv", colClasses = c("character"))
+if(file.exists("NOTATES/Somatic_SNV/CGC_genes.csv")) {
+  cgc_som <- read.csv("NOTATES/Somatic_SNV/CGC_genes.csv", colClasses = c("character"))
   cgc_som <- cgc_som[, setdiff(colnames(cgc_som), 
                                c("COSMIC_total_alterations_in_gene", "DNA_repair", "selected_KEGG"))]
   colnames(cgc_som) <- c("Gene", "Variant Classification", "Protein", "Genomic Change","VAF", "COS_n_ov",
@@ -406,8 +406,8 @@ if(file.exists("./NOTATES/Somatic_SNV/CGC_genes.csv")) {
 Somatic SNV/indels in DNA damage repair genes that were presented on [https://www.mdanderson.org/documents/Labs/Wood-Laboratory/human-dna-repair-genes.html](https://www.mdanderson.org/documents/Labs/Wood-Laboratory/human-dna-repair-genes.html):
 
 ```{r DDR}
-if(file.exists("./NOTATES/Somatic_SNV/DDR_related.csv")) {
-  ddr_som_var <- read.csv("./NOTATES/Somatic_SNV/DDR_related.csv", colClasses = c("character"))
+if(file.exists("NOTATES/Somatic_SNV/DDR_related.csv")) {
+  ddr_som_var <- read.csv("NOTATES/Somatic_SNV/DDR_related.csv", colClasses = c("character"))
 
   ddr_som_var <- ddr_som_var[, setdiff(colnames(ddr_som_var),
                                        c("COSMIC_total_alterations_in_gene", "selected_KEGG"))]
@@ -424,8 +424,8 @@ if(file.exists("./NOTATES/Somatic_SNV/DDR_related.csv")) {
 Somatic SNVs/indels in important KEGG Pathway genes:
 
 ```{r kegg}
-if(file.exists("./NOTATES/Somatic_SNV/KEGG_selected.csv")) {
-  kegg_som_var <- read.csv("./NOTATES/Somatic_SNV/KEGG_selected.csv", colClasses = c("character"))
+if(file.exists("NOTATES/Somatic_SNV/KEGG_selected.csv")) {
+  kegg_som_var <- read.csv("NOTATES/Somatic_SNV/KEGG_selected.csv", colClasses = c("character"))
   
   colnames(kegg_som_var) <- c("Gene", "Variant Classification", "Protein", "Genomic Change", "VAF", "COS_n_ov",
                               "COS_tot", "UniProt_Region", "DNA_repair", "Irino", "TMZ", "KEGG")
@@ -547,8 +547,8 @@ if(!params$ID %in% scna_burden_df$ID) {
 `r if(params$type == "glioma") {"This is the intersection of SCNAs in this case with a list of SCNAs manually curated because of their importance in gliomas."} else {"This is the intersection of SCNAs in this case with a list of SCNAs manually curated because of their importance in medulloblastomas."}`
 
 ```{r imp_cna}
-if(file.exists("./NOTATES/SCNA/important_CNVs.csv")) {
-  imp_cna <- read.csv("./NOTATES/SCNA/important_CNVs.csv")
+if(file.exists("NOTATES/SCNA/important_CNVs.csv")) {
+  imp_cna <- read.csv("NOTATES/SCNA/important_CNVs.csv")
   kable_styling(kable(imp_cna,
                       format = "latex", 
                       booktabs = TRUE,
@@ -563,8 +563,8 @@ if(file.exists("./NOTATES/SCNA/important_CNVs.csv")) {
 This subsection lists SCNAs where the gene subject to copy-number alteration is listed in CGC.
 
 ```{r cgc_cna}
-if(file.exists("./NOTATES/SCNA/CGC_CNVs.csv")) {
-  cgc_cna <- read.csv("./NOTATES/SCNA/CGC_CNVs.csv")
+if(file.exists("NOTATES/SCNA/CGC_CNVs.csv")) {
+  cgc_cna <- read.csv("NOTATES/SCNA/CGC_CNVs.csv")
   kable_styling(kable(cgc_cna,
                       format = "latex", 
                       booktabs = TRUE,
@@ -579,8 +579,8 @@ if(file.exists("./NOTATES/SCNA/CGC_CNVs.csv")) {
 This subsection lists SCNA events that span over one or more cytobands.
 
 ```{r brod_cna}
-if(file.exists("./NOTATES/SCNA/broad.csv")) {
-  broad_cna <- read.csv("./NOTATES/SCNA/broad.csv")
+if(file.exists("NOTATES/SCNA/broad.csv")) {
+  broad_cna <- read.csv("NOTATES/SCNA/broad.csv")
   colnames(broad_cna)[1] <- "chromosome:start-end"
   kable_styling(kable(broad_cna,
                       format = "latex", booktabs = TRUE,
@@ -602,7 +602,7 @@ if(file.exists("./NOTATES/SCNA/broad.csv")) {
 This subsection displays SCNA plots (log2(Tumor/Normal) ratio vs. position) per all chromosomes.
 
 \begin{center}
-  \makebox[\textwidth]{\includegraphics[width=\paperwidth]{./ExomeCNV/{CNV.cnv}.png}}
+  \makebox[\textwidth]{\includegraphics[width=\paperwidth]{ExomeCNV/{CNV.cnv}.png}}
 \end{center}
 
 \newpage
@@ -612,7 +612,7 @@ This subsection displays SCNA plots (log2(Tumor/Normal) ratio vs. position) per 
 Possible somatic translocations are called using DELLY. Only gene-to-different-gene structural variants (where both ends of the structural variant are in the exonic/intronic regions of the two genes) are kept. Below is the circos plot displaying possible translocations.
 
 \begin{center}
-\includegraphics[width=400pt]{./DELLY/TR_circos.pdf}
+\includegraphics[width=400pt]{DELLY/TR_circos.pdf}
 \end{center}
 
 ```{r translocation_table}
@@ -638,7 +638,7 @@ Only LOH events for which absolute difference of B-allele frequencies ($|BAF_{Tu
 All LOH events that pass the filter are reported here.
 
 ```{r loh_regions}
-loh <- read.csv("./NOTATES/LOH/LOH.csv")
+loh <- read.csv("NOTATES/LOH/LOH.csv")
 if (nrow(loh) == 0) {
   cat("No variation to report.")
 } else {
@@ -656,9 +656,9 @@ if (nrow(loh) == 0) {
 Here, alterations where a gene has LOH and a somatic SNV/indel are reported.
 
 ```{r loh_dhit}
-if(file.exists("./NOTATES/LOH/d_hit_loh.csv"))
+if(file.exists("NOTATES/LOH/d_hit_loh.csv"))
 {
-  loh_dhit <- read.csv("./NOTATES/LOH/d_hit_loh.csv")
+  loh_dhit <- read.csv("NOTATES/LOH/d_hit_loh.csv")
   k_tbl <- kable(loh_dhit, format = "latex", booktabs = TRUE, align = "c")
   kable_styling(k_tbl, latex_options = "scale_down")
 }else
@@ -672,9 +672,9 @@ if(file.exists("./NOTATES/LOH/d_hit_loh.csv"))
 LOH events where the gene subject to LOH is listed in CGC are reported here.
 
 ```{r loh_cgc}
-if(file.exists("./NOTATES/LOH/CGC_loh.csv"))
+if(file.exists("NOTATES/LOH/CGC_loh.csv"))
 {
-  loh_cgc <- read.csv("./NOTATES/LOH/CGC_loh.csv")
+  loh_cgc <- read.csv("NOTATES/LOH/CGC_loh.csv")
   k_tbl <- kable(loh_cgc, format = "latex", booktabs = TRUE, 
                  align = "c", longtable = TRUE,
                  row.names = FALSE, 
@@ -696,9 +696,9 @@ A double hit strongly suggests a relevant tumor-suppressor gene [^10]. In this s
 [^10]: Vogelstein B, Papadopoulos N, Velculescu VE, Zhou S, Diaz LA, Kinzler KW. Cancer genome landscapes. Science. 2013;339(6127):1546-58.
 
 ```{r dhit_tbl}
-if(file.exists("./NOTATES/double_hit.csv"))
+if(file.exists("NOTATES/double_hit.csv"))
 {
-  dhit_tbl <- read.csv("./NOTATES/double_hit.csv")
+  dhit_tbl <- read.csv("NOTATES/double_hit.csv")
   k_tbl <- kable(dhit_tbl, format = "latex", booktabs = TRUE, align = "c")
   kable_styling(k_tbl, latex_options = "scale_down")
 } else {
@@ -710,10 +710,10 @@ if(file.exists("./NOTATES/double_hit.csv"))
 # VIII. Tumor Heterogeneity Analysis 
 
 ```{r n3_or_n2}
-if(!file.exists("./THetA/output/CNV.BEST.results")){
+if(!file.exists("THetA/output/CNV.BEST.results")){
    n3_chosen <- F
 }else{
-  theta_out <- read.delim("./THetA/output/CNV.BEST.results")
+  theta_out <- read.delim("THetA/output/CNV.BEST.results")
   n3_chosen <- ifelse(length(unlist(strsplit(theta_out[1,"mu"], ","))) == 2, F, T)
   
   image_path <- ifelse(n3_chosen,"THetA/output/CNV.n3.graph.pdf","THetA/output/CNV.n2.graph.pdf")
@@ -748,7 +748,7 @@ Using DeConstructSigs, the weights of Mutational Signatures v3 (May 2019) from C
 \end{center}
 
 ```{r mut_sigs}
-mut_sigs <- read.csv("./mut_signatures.csv", row.names = 1)
+mut_sigs <- read.csv("mut_signatures.csv", row.names = 1)
 k_tbl <- kable(mut_sigs, format = "latex", booktabs = TRUE)
 k_tbl <- column_spec(k_tbl, 3, width = "30em")
 k_tbl <- column_spec(k_tbl, 4, width = "30em")
