@@ -84,12 +84,14 @@ kable_styling(kable(contam_df[, -1],
 
 Germline alterations are assessed from the WES sequencing of DNA extracted from blood. Alterations are called using GATK - HaplotypeCaller. Findings are filtered for germline single nucleotide variations (SNVs) and short (typically less than 20 bases-long) insertion-deletion events (indels) that:
 
-- have been reported as "pathogenic" or "likely pathogenic" in ClinVar
+- have a MAF < 1% in gnomAD, ExAC, ESP-6500 and 1000 Genomes projects
+- have been not reported as "benign" or "likely benign" in ClinVar
+- have non-synonymous impact 
 - are not in genes that are often non-pathogenic and passengers but are frequently mutated in most of the public exome studies (named FLAGS) as collected by Shyr et al. [^1]. 
 
 [^1]: Shyr C, Tarailo-graovac M, Gottlieb M, Lee JJ, Van karnebeek C, Wasserman WW. FLAGS, frequently mutated genes in public exomes. BMC Med Genomics. 2014;7:64.
 
-`r if(params$type == "glioma") {" (except for the subsection \"Common Variants\")"}`. The altered gene, the position of the SNV, the reference nucleotide as well as the altered nucleotide, the mutation type, the read depth of the variation, the estimated allelic frequency and clinical significance (as reported in ClinVar) are reported. The report follows a sequential order where an alteration reported in a subsection is not reported in the following subsections.
+`r if(params$type == "glioma") {" (except for the subsection \"Common Variants\")"}`. The altered gene, the position of the SNV, the reference nucleotide as well as the altered nucleotide, the mutation type, the read depth of the variation, the estimated allelic frequency and clinical significance (as reported in ClinVar) are reported. The report follows a sequential order where an alteration reported in a subsection is not reported in the following subsections. This sequential order prioritizes variants from a "highly likely" to "less likely" clinical relevance.
 
 ## II. a. ACMG Incidental Findings
 
@@ -193,6 +195,8 @@ if (params$type == "glioma") {
 # III. Somatic Single Nucleotide Variations (SNVs) and Small Insertion/Deletions (Indels)
 
 Somatic mutations were called from the tumor-blood pair in the current analysis using GATK - MuTect2 with a cutoff of 5% variant allele frequency (VAF). Only non-synonymous variants (with variant classifications of High/Moderate variant consequences: "Frame_Shift_Del", "Frame_Shift_Ins", "Splice_Site", "Translation_Start_Site","Nonsense_Mutation", "Nonstop_Mutation", "In_Frame_Del","In_Frame_Ins", "Missense_Mutation", see [http://www.ensembl.org/Help/Glossary?id=535]( http://www.ensembl.org/Help/Glossary?id=535)) were used for reporting. Genes that are often non-pathogenic and passengers but are frequently mutated in most of the public exome studies (named FLAGS) as collected by Shyr et al. were excluded from the report. 
+
+The reporting of SNVs/indels follows a sequential order where an alteration reported in a subsection is not reported in the following subsections. This sequential order prioritizes variants from a "highly likely" to "less likely" clinical relevance.
 
 ## III. a. Tumor Mutational Burden (TMB)
 
@@ -663,7 +667,6 @@ if(file.exists("./NOTATES/LOH/d_hit_loh.csv"))
 }
 ```
 
-
 ## V. c. LOH Events in Cancer Gene Census Genes 
 
 LOH events where the gene subject to LOH is listed in CGC are reported here.
@@ -718,7 +721,7 @@ if(!file.exists("./THetA/output/CNV.BEST.results")){
 }
 ```
 
-THetA (Tumor Heterogeneity Analysis) is an algorithm that estimates the tumor purity and clonal/sublconal copy number aberrations directly from high-throughput DNA sequencing data.
+THetA (Tumor Heterogeneity Analysis) is an algorithm that estimates the tumor purity and clonal/subclonal copy number aberrations directly from high-throughput DNA sequencing data.
 
 \begin{center} 
 \includegraphics[width=500pt]{`r renamed_path`}
@@ -728,7 +731,13 @@ THetA (Tumor Heterogeneity Analysis) is an algorithm that estimates the tumor pu
 
 # IX. Mutational Signatures
 
-Using DeConstructSigs, the weights of Mutational Signatures v3 (May 2019) from COSMIC are estimated. This section presents the mutational signatures detected in this tumor.
+Somatic mutations in cancer genomes are caused by multiple mutational processes each of which generates a characteristic mutational signature (i.e. a distinct pattern of substitution types in specific sequence contexts) [^11]. Importantly, recent studies show that mutational signatures could have significant clinical impact in certain tumor types [^12]^-^[^13].
+
+[^11]: Ludmil B Alexandrov, Jaegil Kim, Nicholas J Haradhvala, Mi Ni Huang, Alvin WT Ng, Yang Wu, Arnoud Boot, Kyle R Covington, Dmitry A Gordenin, Erik N Bergstrom, S M Ashiqul Islam, Nuria Lopez-Bigas, Leszek J Klimczak, John R McPherson, Sandro Morganella, Radhakrishnan Sabarinathan, David A Wheeler, Ville Mustonen, the PCAWG Mutational Signatures Working Group, Gad Getz, Steven G Rozen, Michael R Stratton. The Repertoire of Mutational Signatures in Human Cancer. bioRxiv (2019). doi: 10.1101/322859
+[^12]: Dong F, Davineni PK, Howitt BE, Beck AH. A BRCA1/2 Mutational Signature and Survival in Ovarian High-Grade Serous Carcinoma. Cancer Epidemiol Biomarkers Prev. 2016;25(11):1511-1516.
+[^13]: Secrier M, Li X, De silva N, et al. Mutational signatures in esophageal adenocarcinoma define etiologically distinct subgroups with therapeutic relevance. Nat Genet. 2016;48(10):1131-41.
+
+Using DeConstructSigs, the weights of Mutational Signatures v3 (May 2019) from COSMIC within this tumor's exome are estimated. This section presents the mutational signatures detected in this tumor.
 
 \begin{center} 
 \includegraphics[width=500pt]{mut_signatures.pdf}
@@ -789,7 +798,6 @@ if (is.data.frame(enr_res)) {
 }
 
 ```
-
 
 ## IX. b. Enrichment Results for High-impact SCNA
 
