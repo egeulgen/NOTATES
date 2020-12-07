@@ -198,8 +198,9 @@ if(file.exists("NOTATES/Germline/DDR.csv")) {
 
 ```{r common}
 if (params$type == "glioma") {
-  if(file.exists("NOTATES/Germline/common_var.csv")) {
-    common_df <- read.csv("NOTATES/Germline/common_var.csv")
+  common_df <- read.csv("NOTATES/Germline/common_var.csv")
+  
+  if(nrow(common_df) != 0) {
     kable_styling(kable(common_df,
                         format = "latex", 
                         booktabs = TRUE,
