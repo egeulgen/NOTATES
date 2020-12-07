@@ -2,8 +2,10 @@
 
 ## Major Changes
 - Changed germline variant filtering (for reporting) to (1) NOT "benign"/"likely benign" in ClinVar (2) MAF < 1% (in gnomAD, ExAC, TGP and ESP) and (3) Non-syn. impact and (4) NOT in FLAGs
+- Add links to dbSNP for germline variants
 
 ## Minor changes and bug fixes
+- Minor changes in report text
 
 ***
 
