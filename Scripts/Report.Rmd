@@ -41,6 +41,8 @@ suppressPackageStartupMessages(library(GenomicRanges))
 **DNA extraction method:** QIAGEN DNeasy Blood & Tissue kit \
 **Report date:** `r format(Sys.time(), '%d %B, %Y')`
 
+The reference genome assembly ID: hg38
+
 ***
 
 
