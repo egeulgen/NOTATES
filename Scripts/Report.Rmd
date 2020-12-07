@@ -373,6 +373,8 @@ if(file.exists("NOTATES/Somatic_SNV/important_SNVs.csv")) {
   colnames(imp_som_var) <- c("Gene", "Variant Classification", "Protein", "Genomic Change", "VAF", "COS_n_ov",
                          "UniProt_Region", "Irino", "TMZ")
   
+  imp_som_var$COSMIC <- paste0("https://cancer.sanger.ac.uk/cosmic/gene/analysis?ln=", imp_som_var$Gene)
+  
   k_tbl <- kable(imp_som_var, format = "latex", booktabs = TRUE)
   k_tbl <- column_spec(k_tbl, which(colnames(imp_som_var) == "UniProt_Region"), width = "10em")
   kable_styling(k_tbl, latex_options = "scale_down")
@@ -395,6 +397,9 @@ if(file.exists("NOTATES/Somatic_SNV/COSMIC_hotspot.csv")) {
                                c("COSMIC_total_alterations_in_gene", "DNA_repair", "selected_KEGG"))]
   colnames(hot_som) <- c("Gene", "Variant Classification", "Protein", "Genomic Change", "VAF", "COS_n_ov",
                          "UniProt_Region","Irino", "TMZ")
+  
+  hot_som$COSMIC <- paste0("https://cancer.sanger.ac.uk/cosmic/gene/analysis?ln=", hot_som$Gene)
+  
   k_tbl <- kable(hot_som, format = "latex", booktabs = TRUE)
   k_tbl <- column_spec(k_tbl, which(colnames(hot_som) == "UniProt_Region"), width = "10em")
   kable_styling(k_tbl, latex_options = "scale_down")
@@ -414,6 +419,9 @@ if(file.exists("NOTATES/Somatic_SNV/CGC_genes.csv")) {
                                c("COSMIC_total_alterations_in_gene", "DNA_repair", "selected_KEGG"))]
   colnames(cgc_som) <- c("Gene", "Variant Classification", "Protein", "Genomic Change","VAF", "COS_n_ov",
                          "UniProt_Region", "Irino", "TMZ")
+  
+  cgc_som$COSMIC <- paste0("https://cancer.sanger.ac.uk/cosmic/gene/analysis?ln=", cgc_som$Gene)
+  
   k_tbl <- kable(cgc_som, format = "latex", booktabs = TRUE)
   k_tbl <- column_spec(k_tbl, which(colnames(cgc_som) == "UniProt_Region"), width = "10em")
   kable_styling(k_tbl, latex_options = "scale_down")
@@ -435,6 +443,9 @@ if(file.exists("NOTATES/Somatic_SNV/DDR_related.csv")) {
                                        c("COSMIC_total_alterations_in_gene", "selected_KEGG"))]
   colnames(ddr_som_var) <- c("Gene", "Variant Classification", "Protein", "Genomic Change", "VAF", "COS_n_ov",
                              "UniProt_Region", "DNA_repair", "Irino", "TMZ")
+  
+  ddr_som_var$COSMIC <- paste0("https://cancer.sanger.ac.uk/cosmic/gene/analysis?ln=", ddr_som_var$Gene)
+  
   k_tbl <- kable(ddr_som_var, format = "latex", booktabs = TRUE)
   k_tbl <- column_spec(k_tbl, which(colnames(ddr_som_var) == "UniProt_Region"), width = "10em")
   kable_styling(k_tbl, latex_options = "scale_down")
@@ -452,6 +463,8 @@ if(file.exists("NOTATES/Somatic_SNV/KEGG_selected.csv")) {
   colnames(kegg_som_var) <- c("Gene", "Variant Classification", "Protein", "Genomic Change", "VAF", "COS_n_ov",
                               "COS_tot", "UniProt_Region", "DNA_repair", "Irino", "TMZ", "KEGG")
   
+  kegg_som_var$COSMIC <- paste0("https://cancer.sanger.ac.uk/cosmic/gene/analysis?ln=", kegg_som_var$Gene)
+
   k_tbl <- kable(kegg_som_var, format = "latex", booktabs = TRUE)
   k_tbl <- column_spec(k_tbl, which(colnames(kegg_som_var) == "UniProt_Region"), width = "10em")
   kable_styling(k_tbl, latex_options = "scale_down")
