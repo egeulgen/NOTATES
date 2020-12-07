@@ -95,7 +95,7 @@ Germline alterations are assessed from the WES sequencing of DNA extracted from 
 
 ## II. a. ACMG Incidental Findings
 
-Filtered germline SNV/indels that affects any of the genes listed in ACMG SF V2.0[^2] are reported under this subsection.
+Filtered germline SNV/indels that affects any of the genes listed in ACMG SF V2.0[^2] - incidental findings are reported under this subsection.
 
 [^2]: Kalia SS, Adelman K, Bale SJ, et al. Recommendations for reporting of secondary findings in clinical exome and genome sequencing, 2016 update (ACMG SF v2.0): a policy statement of the American College of Medical Genetics and Genomics. Genet Med. 2017;19(2):249-255.
 
@@ -117,7 +117,7 @@ if(file.exists("./NOTATES/Germline/ACMG.csv")) {
 
 ## II. b. Variants in Cancer Gene Census Genes
 
-Cancer Gene Census (CGC) from the Catalogue of Somatic Mutations in Cancer (COSMIC) database is a catalogue of genes which contain mutations that have been causally linked to cancer [(https://cancer.sanger.ac.uk/census)](https://cancer.sanger.ac.uk/census). This subsection filters the germline SNV/indels for genes that are reported in CGC. 
+Cancer Gene Census (CGC) from the Catalogue of Somatic Mutations in Cancer (COSMIC) database is a catalog of genes which contain mutations that have been causally linked to cancer [(https://cancer.sanger.ac.uk/census)](https://cancer.sanger.ac.uk/census). This subsection filters the germline SNV/indels for genes that are reported in CGC. 
 
 ```{r CGC}
 if(file.exists("./NOTATES/Germline/CGC.csv")) {
@@ -134,8 +134,7 @@ if(file.exists("./NOTATES/Germline/CGC.csv")) {
 
 ## II. c. Variants in Cancer Predisposition Genes
 
-Genes in which germline mutations confer highly or moderately increased risks of cancer are called cancer predisposition genes. Filtered germline SNV/indels catalogued in the 2014 Nature publication by Rahman [^3] are reported in this subsection.
-
+Genes in which germline mutations confer highly or moderately increased risks of cancer are called cancer predisposition genes. Filtered germline SNV/indels cataloged in the 2014 Nature publication by Rahman [^3], studying cancer predisposition genes, are reported in this subsection.
 
 [^3]: Rahman N. Realizing the promise of cancer predisposition genes. Nature. 2014;505(7483):302-8.
 
@@ -174,7 +173,7 @@ if(file.exists("./NOTATES/Germline/DDR.csv")) {
 
 `r if(params$type == "glioma") {"## II. e. Common Variants"}`
 
-`r if(params$type == "glioma") {"This subsection is distinct from the previous germline alterations subsections. Here, germline alterations are filtered for “single nucleotide polymorphisms (SNPs)” which were previously shown in genome wide association studies (GWAS) to have an association with gliomas and were listed in the GWAS catalog [(https://www.ebi.ac.uk/gwas/efotraits/EFO_0005543)](https://www.ebi.ac.uk/gwas/efotraits/EFO_0005543)"}`
+`r if(params$type == "glioma") {"This subsection is distinct from the previous germline alterations subsections. Here, germline alterations are filtered for \"single nucleotide polymorphisms (SNPs)\" which were previously shown in genome wide association studies (GWAS) to have an association with gliomas and were listed in the GWAS catalog [(https://www.ebi.ac.uk/gwas/efotraits/EFO_0005543)](https://www.ebi.ac.uk/gwas/efotraits/EFO_0005543)"}`
 
 ```{r common}
 if (params$type == "glioma") {
@@ -193,6 +192,8 @@ if (params$type == "glioma") {
 \newpage
 
 # III. Somatic Single Nucleotide Variations (SNVs) and Small Insertion/Deletions (Indels)
+
+In this section, Tumor Mutational Burden, Microsatellite Instability Status, and somatic mutations are reported.
 
 Somatic mutations were called from the tumor-blood pair in the current analysis using GATK - MuTect2 with a cutoff of 5% variant allele frequency (VAF). Only non-synonymous variants (with variant classifications of High/Moderate variant consequences: "Frame_Shift_Del", "Frame_Shift_Ins", "Splice_Site", "Translation_Start_Site","Nonsense_Mutation", "Nonstop_Mutation", "In_Frame_Del","In_Frame_Ins", "Missense_Mutation", see [http://www.ensembl.org/Help/Glossary?id=535]( http://www.ensembl.org/Help/Glossary?id=535)) were used for reporting. Genes that are often non-pathogenic and passengers but are frequently mutated in most of the public exome studies (named FLAGS) as collected by Shyr et al. were excluded from the report. 
 
@@ -317,7 +318,7 @@ if (params$type == "glioma") {
 
 ## III. b. Microsatellite Instability Status
 
-The microsatellite instability (MSI) status was predicted using the tool MSIpred [^5]. MSIpred computes 22 somatic mutational features (predictors of MSI) and using these features, it predicts tumor MSI status as microsatellite instability high (MSI-H) or microsatellite stable (MSS) using a machine learning method, support vector machine (SVM). 
+Microsatellite instability (MSI) is the result of impaired DNA mismatch repair and constitutes a cellular phenotype of clinical significance in many cancer types. The MSI status of the tumor was predicted using the tool MSIpred [^5]. MSIpred computes 22 somatic mutational features (predictors of MSI) and using these features, it predicts tumor MSI status as microsatellite instability high (MSI-H) or microsatellite stable (MSS) using a machine learning method, support vector machine. 
 
 Additionally, polymerase-epsilon (POLE) deficiency is predicted based on the presence of both of:
 
@@ -341,7 +342,6 @@ kable_styling(kable(class_tbl,
 `r if(params$type == "glioma") {"This subsection contains somatic SNV/indels in genes that have been reported in the TCGA pan-glioma study of Ceccarelli et al. [^6] which analyzed 1122 WHO grade II-III and IV diffuse-gliomas."} else {"This is the intersection of somaticSNV/indels in this case with a list of genes manually curated because of their importance in medulloblastomas."}`
 
 `r if(params$type == "glioma") {"[^6]: Ceccarelli M, Barthel FP, Malta TM, et al. Molecular Profiling Reveals Biologically Discrete Subsets and Pathways of Progression in Diffuse Glioma. Cell. 2016;164(3):550-63."}`
-
 
 ```{r imp_som_var}
 if(file.exists("./NOTATES/Somatic_SNV/important_SNVs.csv")) {
