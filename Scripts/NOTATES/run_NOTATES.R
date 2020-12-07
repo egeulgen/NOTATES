@@ -19,7 +19,7 @@ notates_dir <- dirname(script_name)
 ## Argument for MB vs Glioma
 mb_arg <- commandArgs(trailingOnly=TRUE)
 if (length(mb_arg) == 0)
-  mb_arg[1] = 'glioma'
+  mb_arg = "glioma"
 
 # Necessary resources -----------------------------------------------------
 # CGC
@@ -29,14 +29,14 @@ CGC_df <- read.csv(file.path(dirname(notates_dir), "CGC_latest.csv"))
 dna_repair_df <- read.csv(file.path(notates_dir, "curated_dbs", "DNA_damage_repair_1jul20.csv"))
 irinotecan_df <- read.csv(file.path(notates_dir, "curated_dbs", "irinotecan_response_genes_22feb16.csv"))
 tmz_df <- read.csv(file.path(notates_dir, "curated_dbs", "temozolamide_resistance_genes_22feb16.csv"))
-if (mb_arg == 'glioma') {
+if (mb_arg == "glioma") {
   KEGG_df <- read.csv(file.path(notates_dir, "curated_dbs", "important_KEGG_pws_glioma.csv"))
 } else {
   KEGG_df <- read.csv(file.path(notates_dir, "curated_dbs", "important_KEGG_pws_MB.csv"))
 }
 
 # Curated Alterations
-if (mb_arg == 'glioma') {
+if (mb_arg == "glioma") {
   curated_SNV <- read.csv(file.path(notates_dir, "curated_alterations", "glioma_important_SNV_May25_17.csv"))
   curated_CNA <- read.csv(file.path(notates_dir, "curated_alterations", "glioma_important_CNA_May25_17.csv"))
 } else {
