@@ -126,7 +126,7 @@ if(!params$ID %in% TMB_df$ID) {
 # p
 ```
 
-TMB for the current tumor sample is: **`r round(current_TMB, 2)` mutations/Mb** (`r ifelse(current_TMB > 20, "High \\(>", "Normal \\(<=")` 20 mutations/Mb)). The predicted MSI status of this tumor was **`r msi_class_tbl$Predicted_MSI_Status`**.
+TMB for the current tumor sample is: **`r round(current_TMB, 2)` mutations/Mb** (`r ifelse(current_TMB > 20, "High \\(>", "Normal \\(<=")` 20 mutations/Mb)). The predicted MSI status of this tumor was **`r msi_class_tbl$Predicted_MSI_Status` (`r ifelse(msi_class_tbl$Predicted_MSI_Status == "MSS", "microsatellite stable", "microsatellite instability high")`)**.
 
 ## II. Somatic Short Variants
 
@@ -158,6 +158,7 @@ if (!is.null(all_som_vars)) {
 }
 ```
 
+(CGC: Cancer Gene Census, DDR: DNA-damage repair)
 
 ## III. Somatic Copy Number Alterations
 
@@ -200,7 +201,7 @@ if (!is.null(all_scnas)) {
 }
 ```
 
-## IV. Somatic Translocationn Events
+## IV. Somatic Translocation Events
 
 ```{r transloc, fig.align="center", out.width="20%"}
 include_graphics(file.path("DELLY", "TR_circos.pdf"))
