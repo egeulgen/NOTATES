@@ -1,23 +1,15 @@
-# NOTATES development
-
-## Major Changes
-- Changed germline variant filtering (for reporting) to (1) NOT "benign"/"likely benign" in ClinVar (2) MAF < 1% (in gnomAD, ExAC, TGP and ESP) and (3) Non-syn. impact and (4) NOT in FLAGs
-- Added links to dbSNP for germline variants
-- Added links to COSMIC somatic variants' genes
-
-## Minor changes and bug fixes
-- Minor changes in report text
-
-***
-
 # NOTATES v1.5.0
 
 ## Major Changes
-- added structural variant calling with DELLY (annotation with StructuralVariantAnnotation and VariantAnnotation)
+
+- added structural variant calling with DELLY (annotation with StructuralVariantAnnotation and VariantAnnotation) (not yet reported)
 - added "GOAL" exome capture kit information
-- updated germline report filtering to report "pathogenic"/"likely pathogenic" variants
+- changed germline variant filtering (for reporting) to (1) NOT "benign"/"likely benign" in ClinVar (2) MAF < 1% (in gnomAD, ExAC, TGP and ESP) and (3) Non-syn. impact and (4) NOT in FLAGs
+- added links to dbSNP for germline variants
+- added links to COSMIC somatic variants' genes
 
 ## Minor changes and bug fixes
+- Minor changes in report text
 - fixed behavior when no loh is found
 - fixed issue in reading enrichment file
 - fixed issue in summary report. When there is no gene-level SCNA, message is displayed instead of table

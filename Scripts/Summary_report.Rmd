@@ -96,34 +96,34 @@ if(!params$ID %in% TMB_df$ID) {
                              primary = params$primary_tm))
   saveRDS(TMB_df, TMB_tbl_path)
 }
-# ## Scatter plot of TMB over all analyses
-# # rank TMB vals
-# TMB_df <- TMB_df[order(TMB_df$TMB),]
-# TMB_df$x_val <- 1:nrow(TMB_df)
-# 
-# TMB_df_plot <- TMB_df
-# # calculate height of median line segment
-# x_shift <- max(nrow(TMB_df_plot) / 7, 3)
-# suppressWarnings(suppressPackageStartupMessages(library(ggplot2)))
-# p <- ggplot(TMB_df_plot, aes(x=x_val, y=TMB, group = subset))
-# p <- p + geom_point(size=1, aes(shape=subset, color=subset))
-# p <- p + scale_color_manual(values=c('#56B4E9','#E69F00', 'gray60'))
-# p <- p + geom_segment(aes(x = median(x_val) - x_shift, 
-#                           y = median(TMB), 
-#                           xend = median(x_val) + x_shift, 
-#                           yend = median(TMB)), 
-#                       colour = "red")
-# p <- p + coord_flip()
-# p <- p + theme(axis.title.y = element_blank(),
-#                axis.title.x = element_blank(),
-#                axis.text.y = element_blank(),
-#                axis.ticks.y = element_blank(),
-#                legend.title = element_blank())
-# p <- p + scale_y_log10(breaks = scales::trans_breaks("log10", function(x) 10^x),
-#                        labels = scales::trans_format("log10", scales::math_format(10^.x)))
-# p <- p + geom_point(data=TMB_df_plot[TMB_df_plot$ID == params$ID, ], 
-#                     aes(x=x_val, y=TMB), colour="red", size=1.3, shape = 1)
-# p
+## Scatter plot of TMB over all analyses
+# rank TMB vals
+TMB_df <- TMB_df[order(TMB_df$TMB),]
+TMB_df$x_val <- 1:nrow(TMB_df)
+
+TMB_df_plot <- TMB_df
+# calculate height of median line segment
+x_shift <- max(nrow(TMB_df_plot) / 7, 3)
+suppressWarnings(suppressPackageStartupMessages(library(ggplot2)))
+p <- ggplot(TMB_df_plot, aes(x=x_val, y=TMB, group = subset))
+p <- p + geom_point(size=1, aes(shape=subset, color=subset))
+p <- p + scale_color_manual(values=c('#56B4E9','#E69F00', 'gray60'))
+p <- p + geom_segment(aes(x = median(x_val) - x_shift,
+                          y = median(TMB),
+                          xend = median(x_val) + x_shift,
+                          yend = median(TMB)),
+                      colour = "red")
+p <- p + coord_flip()
+p <- p + theme(axis.title.y = element_blank(),
+               axis.title.x = element_blank(),
+               axis.text.y = element_blank(),
+               axis.ticks.y = element_blank(),
+               legend.title = element_blank())
+p <- p + scale_y_log10(breaks = scales::trans_breaks("log10", function(x) 10^x),
+                       labels = scales::trans_format("log10", scales::math_format(10^.x)))
+p <- p + geom_point(data=TMB_df_plot[TMB_df_plot$ID == params$ID, ],
+                    aes(x=x_val, y=TMB), colour="red", size=1.3, shape = 1)
+p
 ```
 
 TMB for the current tumor sample is: **`r round(current_TMB, 2)` mutations/Mb** (`r ifelse(current_TMB > 20, "High \\(>", "Normal \\(<=")` 20 mutations/Mb)). The predicted MSI status of this tumor was **`r msi_class_tbl$Predicted_MSI_Status` (`r ifelse(msi_class_tbl$Predicted_MSI_Status == "MSS", "microsatellite stable", "microsatellite instability high")`)**.
@@ -199,10 +199,4 @@ if (!is.null(all_scnas)) {
 } else {
   cat("No variation to report.")
 }
-```
-
-## IV. Somatic Translocation Events
-
-```{r transloc, fig.align="center", out.width="20%"}
-include_graphics(file.path("DELLY", "TR_circos.pdf"))
 ```
