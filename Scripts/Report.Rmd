@@ -106,7 +106,7 @@ if(file.exists("NOTATES/Germline/ACMG.csv")) {
   # add link to dbSNP
   ACMG_df$rs_id <- ifelse(ACMG_df$rs_id == "", 
                           "",
-                          paste0("[", ACMG_df$rs_id, "](", "https://www.ncbi.nlm.nih.gov/snp/", ACMG_df$rs_id, ")"))
+                          paste0("https://www.ncbi.nlm.nih.gov/snp/", ACMG_df$rs_id))
   
   kable_styling(kable(ACMG_df,
                       format = "latex", 
@@ -129,7 +129,7 @@ if(file.exists("NOTATES/Germline/CGC.csv")) {
   # add link to dbSNP
   gCGC_df$rs_id <- ifelse(gCGC_df$rs_id == "", 
                           "",
-                          paste0("[", gCGC_df$rs_id, "](", "https://www.ncbi.nlm.nih.gov/snp/", gCGC_df$rs_id, ")"))
+                          paste0("https://www.ncbi.nlm.nih.gov/snp/", gCGC_df$rs_id))
   
   kable_styling(kable(gCGC_df,
                       format = "latex", 
@@ -154,7 +154,7 @@ if(file.exists("NOTATES/Germline/CPG.csv")) {
   # add link to dbSNP
   CPG_df$rs_id <- ifelse(CPG_df$rs_id == "", 
                           "",
-                          paste0("[", CPG_df$rs_id, "](", "https://www.ncbi.nlm.nih.gov/snp/", CPG_df$rs_id, ")"))
+                          paste0("https://www.ncbi.nlm.nih.gov/snp/", CPG_df$rs_id))
   
   kable_styling(kable(CPG_df,
                       format = "latex", 
@@ -180,7 +180,7 @@ if(file.exists("NOTATES/Germline/DDR.csv")) {
   # add link to dbSNP
   DDR_df$rs_id <- ifelse(DDR_df$rs_id == "", 
                           "",
-                          paste0("[", DDR_df$rs_id, "](", "https://www.ncbi.nlm.nih.gov/snp/", DDR_df$rs_id, ")"))
+                          paste0("https://www.ncbi.nlm.nih.gov/snp/", DDR_df$rs_id))
   
   kable_styling(kable(DDR_df,
                       format = "latex", 
