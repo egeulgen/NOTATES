@@ -7,7 +7,8 @@
 ## in ClinVar
 ## 2. have MAF < 1%
 ## 3. are non-synonymous
-## Date: Sep 23, 2020
+## 4. are not in FLAGs
+## Date: Dec 7, 2020
 ## Author: Ege Ulgen
 ##################################################
 
@@ -35,18 +36,7 @@ germline$Alt_depth <- germline$t_alt_count
 # add id column
 germline$id <- ifelse(germline$gnomAD_exome_ID != "", germline$gnomAD_exome_ID, germline$gnomAD_genome_ID)
 
-# Add clinical significance
-clin_sig_df <- readRDS(file.path(script_dir, "ClinVar_clinical_sig.RDS"))
-clin_sig_df$lookup <- paste(clin_sig_df$Chrom, 
-                            clin_sig_df$Start, 
-                            clin_sig_df$REF, 
-                            clin_sig_df$ALT)
-
-germline$lookup <- paste(germline$Chromosome, 
-                         germline$Start_Position, 
-                         germline$Reference_Allele, 
-                         germline$Tumor_Seq_Allele2)
-germline$Clin_sig <- clin_sig_df$Clinical_Significance[match(germline$lookup, clin_sig_df$lookup)]
+germline$Clin_sig <- germline$ClinVar_VCF_CLNSIG
 germline$Clin_sig[is.na(germline$Clin_sig)] <- ""
 
 # fix long clin. sig.s
@@ -82,7 +72,7 @@ common_variant_df$gCCV_Risk_allele <- common_vars$Risk_allele[idx]
 common_variant_df$gCCV_Ancestral_allele <- common_vars$Ancestral_allele[idx]
 common_variant_df$gCCV_MAF_1000G <- common_vars$MAF_1kG[idx]
 
-write.csv(common_variant_df, "./output/common_variant_report.csv", row.names = F)
+write.csv(common_variant_df, "output/common_variant_report.csv", row.names = F)
 
 # I. Extract relevant genes with preset filter groups ---------------------
 filter_df <- read.csv(file.path(script_dir, "Germline_filter_list.csv"))
@@ -132,25 +122,25 @@ germline_final <- germline_final[order(germline_final$Rank), ]
 write.csv(germline_final,"./output/germline_variants_NO_FILTER.csv", row.names = F)
 
 # II. Evaluate Variants ---------------------------------------------------
-# include pathogenic/likely pathogenic variants
-germline_final <- germline_final[grepl("pathogenic", germline_final$Clin_sig, ignore.case = TRUE), ]
+# exclude benign/likely benign variants
+germline_final <- germline_final[!grepl("benign", germline_final$Clin_sig, ignore.case = TRUE), ]
 germline_final$Clin_sig[is.na(germline_final$Clin_sig)] <- ""
 
-# # only keep variants with MAF < 1%
-# AF_cols <- colnames(germline_final)[grepl("_AF$", colnames(germline_final)) | grepl("_AF_", colnames(germline_final))]
-# for (af_column in AF_cols) {
-#   germline_final[, af_column] <- suppressWarnings(as.numeric(germline_final[, af_column]))
-#   germline_final[is.na(germline_final[, af_column]), af_column] <- -1
-#   germline_final <- germline_final[germline_final[, af_column] < 0.01, ]
-# }
-# 
-# # only keep non-synonymous variants
-# non_syn_classes <- c("Frame_Shift_Del", "Frame_Shift_Ins", "Splice_Site",
-#                      "Translation_Start_Site","Nonsense_Mutation",
-#                      "Nonstop_Mutation", "In_Frame_Del","In_Frame_Ins",
-#                      "Missense_Mutation")
-# germline_final <- germline_final[germline_final$Variant_Classification %in% non_syn_classes, ]
-# 
+# only keep variants with MAF < 1%
+AF_cols <- colnames(germline_final)[grepl("_AF$", colnames(germline_final)) | grepl("_AF_", colnames(germline_final))]
+for (af_column in AF_cols) {
+  germline_final[, af_column] <- suppressWarnings(as.numeric(germline_final[, af_column]))
+  germline_final[is.na(germline_final[, af_column]), af_column] <- -1
+  germline_final <- germline_final[germline_final[, af_column] < 0.01, ]
+}
+
+# only keep non-synonymous variants
+non_syn_classes <- c("Frame_Shift_Del", "Frame_Shift_Ins", "Splice_Site",
+                     "Translation_Start_Site","Nonsense_Mutation",
+                     "Nonstop_Mutation", "In_Frame_Del","In_Frame_Ins",
+                     "Missense_Mutation")
+germline_final <- germline_final[germline_final$Variant_Classification %in% non_syn_classes, ]
+
 # Exclude variants in FLAGs
 flags <- c("TTN", "MUC16", "OBSCN", "AHNAK2", "SYNE1", "FLG",
            "MUC5B", "DNAH17", "PLEC", "DST", "SYNE2", "NEB", "HSPG2",
