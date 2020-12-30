@@ -39,9 +39,8 @@ suppressPackageStartupMessages(library(GenomicRanges))
 **Tumor sample:** `r ifelse(params$tumor_sample == "FFPE", "Formalin-Fixed Paraffin-Embedded (FFPE) tissue specimen", "Fresh tumor tissue, snap-frozen in liquid nitrogen")` \
 **Normal sample:** Peripheral venous blood \
 **DNA extraction method:** QIAGEN DNeasy Blood & Tissue kit \
-**Report date:** `r format(Sys.time(), '%d %B, %Y')`
-
-The reference genome assembly ID: hg38
+**Report date:** `r format(Sys.time(), '%d %B, %Y')` \
+**The reference genome assembly ID:** hg38
 
 ***
 
@@ -86,9 +85,7 @@ kable_styling(kable(contam_df[, -1],
 
 Germline alterations are assessed from the WES sequencing of DNA extracted from blood. Alterations are called using GATK - HaplotypeCaller. Findings are filtered for germline single nucleotide variations (SNVs) and short (typically less than 20 bases-long) insertion-deletion events (indels) that:
 
-- have a MAF < 1% in gnomAD, ExAC, ESP-6500 and 1000 Genomes projects
-- have been not reported as "benign" or "likely benign" in ClinVar
-- have non-synonymous impact 
+- have been reported as "pathogenic" or "likely pathogenic" in ClinVar
 - are not in genes that are often non-pathogenic and passengers but are frequently mutated in most of the public exome studies (named FLAGS) as collected by Shyr et al. [^1]. 
 
 [^1]: Shyr C, Tarailo-graovac M, Gottlieb M, Lee JJ, Van karnebeek C, Wasserman WW. FLAGS, frequently mutated genes in public exomes. BMC Med Genomics. 2014;7:64.
@@ -103,10 +100,13 @@ Filtered germline SNV/indels that affects any of the genes listed in ACMG SF V2.
 
 ```{r ACMG}
 if(file.exists("NOTATES/Germline/ACMG.csv")) {
-  ACMG_df <- read.csv("NOTATES/Germline/ACMG.csv")
-
+  ACMG_df <- read.csv("NOTATES/Germline/ACMG.csv", 
+                      colClasses = c("character", "character", "character", "numeric",
+                                     "character", "character", "character", "character",
+                                     "numeric", "numeric", "numeric", "character"))
+  
   # add link to dbSNP
-  ACMG_df$rs_id <- ifelse(ACMG_df$rs_id == "", 
+  ACMG_df$rs_id <- ifelse(ACMG_df$rs_id == "" | is.na(ACMG_df$rs_id), 
                           "",
                           paste0("https://www.ncbi.nlm.nih.gov/snp/", ACMG_df$rs_id))
   
@@ -126,10 +126,13 @@ Cancer Gene Census (CGC) from the Catalogue of Somatic Mutations in Cancer (COSM
 
 ```{r CGC}
 if(file.exists("NOTATES/Germline/CGC.csv")) {
-  gCGC_df <- read.csv("NOTATES/Germline/CGC.csv")
+  gCGC_df <- read.csv("NOTATES/Germline/CGC.csv",
+                      colClasses = c("character", "character", "character", "numeric",
+                                     "character", "character", "character",
+                                     "numeric", "numeric", "numeric", "character"))
   
   # add link to dbSNP
-  gCGC_df$rs_id <- ifelse(gCGC_df$rs_id == "", 
+  gCGC_df$rs_id <- ifelse(gCGC_df$rs_id == "" | is.na(gCGC_df$rs_id), 
                           "",
                           paste0("https://www.ncbi.nlm.nih.gov/snp/", gCGC_df$rs_id))
   
@@ -151,10 +154,13 @@ Genes in which germline mutations confer highly or moderately increased risks of
 
 ```{r CPG}
 if(file.exists("NOTATES/Germline/CPG.csv")) {
-  CPG_df <- read.csv("NOTATES/Germline/CPG.csv")
+  CPG_df <- read.csv("NOTATES/Germline/CPG.csv",
+                     colClasses = c("character", "character", "character", "numeric",
+                                     "character", "character", "character",
+                                     "numeric", "numeric", "numeric", "character"))
   
   # add link to dbSNP
-  CPG_df$rs_id <- ifelse(CPG_df$rs_id == "", 
+  CPG_df$rs_id <- ifelse(CPG_df$rs_id == "" | is.na(CPG_df$rs_id), 
                           "",
                           paste0("https://www.ncbi.nlm.nih.gov/snp/", CPG_df$rs_id))
   
@@ -177,10 +183,13 @@ In this subsection, filtered germline variants in Human DNA Repair Genes [^4] ar
 
 ```{r DDR_germ}
 if(file.exists("NOTATES/Germline/DDR.csv")) {
-  DDR_df <- read.csv("NOTATES/Germline/DDR.csv")
+  DDR_df <- read.csv("NOTATES/Germline/DDR.csv",
+                     colClasses = c("character", "character", "character", "numeric",
+                                     "character", "character", "character",
+                                     "numeric", "numeric", "numeric", "character"))
   
   # add link to dbSNP
-  DDR_df$rs_id <- ifelse(DDR_df$rs_id == "", 
+  DDR_df$rs_id <- ifelse(DDR_df$rs_id == "" | is.na(DDR_df$rs_id), 
                           "",
                           paste0("https://www.ncbi.nlm.nih.gov/snp/", DDR_df$rs_id))
   
@@ -200,7 +209,9 @@ if(file.exists("NOTATES/Germline/DDR.csv")) {
 
 ```{r common}
 if (params$type == "glioma") {
-  common_df <- read.csv("NOTATES/Germline/common_var.csv")
+  common_df <- read.csv("NOTATES/Germline/common_var.csv",
+                        colClasses = c(rep("character", 6),
+                                       rep("numeric", 3)))
   
   if(nrow(common_df) != 0) {
     kable_styling(kable(common_df,
@@ -644,7 +655,29 @@ This subsection displays SCNA plots (log2(Tumor/Normal) ratio vs. position) per 
 
 \newpage
 
-# V. Loss of Heterozygosity (LOH) Events
+# V. Somatic Translocations
+
+Possible somatic translocations are called using DELLY. Only gene-to-different-gene structural variants (where both ends of the structural variant are in the exonic/intronic regions of the two genes) are kept. Below is the circos plot displaying possible translocations.
+
+\begin{center}
+\includegraphics[width=400pt]{DELLY/TR_circos.pdf}
+\end{center}
+
+```{r translocation_table}
+transloc_df <- read.csv("DELLY/possible_translocations.csv")
+if(nrow(transloc_df) != 0) {
+  kable_styling(kable(transloc_df,
+                      format = "latex", 
+                      booktabs = TRUE,
+                      align = "c"))
+} else {
+  cat("No variation to report.")
+}
+```
+
+\newpage
+
+# VI. Loss of Heterozygosity (LOH) Events
 
 Only LOH events for which absolute difference of B-allele frequencies ($|BAF_{Tumor}-BAF_{Normal}|$) is larger than 0.4 are reported.
 
@@ -704,7 +737,7 @@ if(file.exists("NOTATES/LOH/CGC_loh.csv"))
 
 \newpage
 
-# VI. Genes with Double Hit
+# VII. Genes with Double Hit
 
 A double hit strongly suggests a relevant tumor-suppressor gene [^10]. In this section, the list of genes with somatic SNV/indel(s) as well as SCNA and/or LOH events are reported.
 
@@ -722,7 +755,7 @@ if(file.exists("NOTATES/double_hit.csv"))
 ```
 
 
-# VII. Tumor Heterogeneity Analysis 
+# VIII. Tumor Heterogeneity Analysis 
 
 ```{r n3_or_n2}
 if(!file.exists("THetA/output/CNV.BEST.results")){
@@ -744,7 +777,7 @@ THetA (Tumor Heterogeneity Analysis) is an algorithm that estimates the tumor pu
 
 \newpage
 
-# VIII. Mutational Signatures
+# IX. Mutational Signatures
 
 Somatic mutations in cancer genomes are caused by multiple mutational processes each of which generates a characteristic mutational signature (i.e. a distinct pattern of substitution types in specific sequence contexts) [^11]. Importantly, recent studies show that mutational signatures could have significant clinical impact in certain tumor types [^12]^-^[^13].
 
@@ -773,7 +806,7 @@ kable_styling(k_tbl, latex_options = "scale_down")
 
 \newpage
 
-# IX. pathfindR - KEGG Pathway Enrichment Analysis
+# X. pathfindR - KEGG Pathway Enrichment Analysis
 
 Pathway enrichment analysis is frequently utilized for studying the mechanisms underlying oncological processes. For this analysis KEGG pathway enrichment analysis was performed using the active-subnetwork-oriented enrichment approach of `pathfindR`. `pathfindR` leverages interaction information from a protein-protein interaction network (PIN) to identify distinct active subnetworks ^[An active subnetwork can be defined as a group of interconnected genes in a PIN that predominantly consists of significantly altered genes] and then perform enrichment analyses on these subnetworks. 
 

@@ -1,3 +1,14 @@
+# NOTATES development
+
+## Major Changes
+
+- reporting translocations
+- changed germline variant filtering (for reporting, pathogenic/likely pathogenic in ClinVar)
+
+## Minor changes and bug fixes
+
+***
+
 # NOTATES v1.5.0
 
 ## Major Changes
