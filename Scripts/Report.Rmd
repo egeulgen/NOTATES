@@ -185,7 +185,7 @@ In this subsection, filtered germline variants in Human DNA Repair Genes [^4] ar
 if(file.exists("NOTATES/Germline/DDR.csv")) {
   DDR_df <- read.csv("NOTATES/Germline/DDR.csv",
                      colClasses = c("character", "character", "character", "numeric",
-                                     "character", "character", "character",
+                                     "character", "character", "character", "character",
                                      "numeric", "numeric", "numeric", "character"))
   
   # add link to dbSNP
