@@ -1,6 +1,8 @@
 # <img src="Scripts/NOT_logo.png" align="left" height=120/> NOTATES : NOT - Alterations in Tumor Exome Sequencing
 NeuroOncology Technologies(NOT) aims to analyze Whole Exome Sequencing data of blood-matched tumor samples that belong to brain tumor patients. For the moment, the analysis is focused on gliomas and medulloblastomas (MBs). Therefore, glioma/MB-specific genomic alterations that are expected to affect diagnosis, prognosis and treatment response are assessed in each case, utilizing manually-curated databases of genes and genomic alterations that are related to brain tumor biology.
 
+The functionalities of NOTATES is demonstrated in detail in: *Ülgen E, Can Ö, Bilguvar K, Akyerli Boylu C, Kılıçturgay Yüksel Ş, Erşen Danyeli A, et al. Sequential filtering for clinically relevant variants as a method for clinical interpretation of whole exome sequencing findings in glioma. BMC Med Genomics. 2021 Feb 23;14(1):54. <https://doi.org/10.1186/s12920-021-00904-3>*
+
 # Overview of the Pipeline
 The pipeline consists of several bash and R scripts, and a wrapper bash script.
 
