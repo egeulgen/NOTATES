@@ -192,7 +192,7 @@ rm tumor.final.pileup normal.final.pileup
 
 echo "############################################### Running THetA    " $(date)
 bash "$THetA"/bin/RunTHetA THetA/CNV.input \
-	--DIR THetA/output --NUM_PROCESSES "$num_threads" --MIN_FRAC 0.01
+	--DIR THetA/output --NUM_PROCESSES "$num_threads" --MIN_FRAC 0.005
 # bash "$THetA"/bin/RunTHetA THetA/CNV.input --TUMOR_FILE THetA/tumor_SNP.txt \
 # 	--NORMAL_FILE THetA/normal_SNP.txt --DIR THetA/output --NUM_PROCESSES "$num_threads"
 conda deactivate
