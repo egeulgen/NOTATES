@@ -63,10 +63,10 @@ conda deactivate
 The pipeline utilizes the following resources (`path/to/resource` can be altered in the configuration file `notates.config`):
 
 - Reference sequence, prepared for use with BWA and GATK (can be found in the [GATK bundle])
-- Exome capture kit target intervals (check with your capture kit provider or your sequencing facility)
+- Exome capture kit probe and target intervals (check with your capture kit provider or your sequencing facility)
 - dbSNP VCF (can be found in the [GATK bundle])
 - Mills and 1000 Genomes gold standard InDel Sites VCF (can be found in the [GATK bundle])
-- 1000 Genomes phase 1 high confidencce SNP Sites VCF (can be found in the [GATK bundle])
+- 1000 Genomes phase 1 high confidence SNP Sites VCF (can be found in the [GATK bundle])
 - `af-only-gnomad` VCF (can be found in [GATK somatic bundle])
 - `small_exac_common` VCF (can be found in [GATK somatic bundle])
 - Funcotator data sources (see the [tutorial](https://gatk.broadinstitute.org/hc/en-us/articles/360035889931-Funcotator-Information-and-Tutorial))
