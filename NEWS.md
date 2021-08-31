@@ -6,6 +6,7 @@
 - changed germline variant filtering (for reporting, pathogenic/likely pathogenic in ClinVar)
 
 ## Minor changes and bug fixes
+- added "XGen Exome Research Panel v2" exome capture kit information
 
 ***
 
