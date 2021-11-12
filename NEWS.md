@@ -1,4 +1,10 @@
 # NOTATES development
+## Major Changes
+## Minor changes and bug fixes
+
+***
+
+# NOTATES v1.6.0
 
 ## Major Changes
 
