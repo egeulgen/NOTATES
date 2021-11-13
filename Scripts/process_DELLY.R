@@ -1,3 +1,11 @@
+##################################################
+## Project: NOTATES
+## Script purpose: Script for processing DELLY output
+## Date: Nov 13, 2021
+## Author: Ege Ulgen
+##################################################
+
+
 suppressPackageStartupMessages(library(StructuralVariantAnnotation))
 suppressPackageStartupMessages(library(VariantAnnotation))
 suppressPackageStartupMessages(library(circlize))
@@ -30,6 +38,7 @@ if (nrow(tra_df) == 0) {
     tmp_df_1 <- data.frame(chrom = tra_df$first.X.seqnames[i],
                            start = tra_df$first.X.start[i],
                            end = tra_df$first.X.end[i])
+    tmp_df_1$chrom <- as.character(tmp_df_1$chrom)
     locs_1 <- suppressWarnings(locateVariants(GenomicRanges::makeGRangesFromDataFrame(tmp_df_1), 
                                               TxDb.Hsapiens.UCSC.hg38.knownGene::TxDb.Hsapiens.UCSC.hg38.knownGene, 
                                               AllVariants()))
@@ -45,6 +54,7 @@ if (nrow(tra_df) == 0) {
     tmp_df_2 <- data.frame(chrom = tra_df$second.X.seqnames[i],
                            start = tra_df$second.X.start[i],
                            end = tra_df$second.X.end[i])
+    tmp_df_2$chrom <- as.character(tmp_df_2$chrom)
     locs_2 <- suppressWarnings(locateVariants(GenomicRanges::makeGRangesFromDataFrame(tmp_df_2), 
                                               TxDb.Hsapiens.UCSC.hg38.knownGene::TxDb.Hsapiens.UCSC.hg38.knownGene, 
                                               AllVariants()))

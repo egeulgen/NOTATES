@@ -1,13 +1,13 @@
 # NOTATES development
 ## Major Changes
 ## Minor changes and bug fixes
+- fixed minor issue in processing DELLY output
 
 ***
 
 # NOTATES v1.6.0
 
 ## Major Changes
-
 - reporting translocations
 - changed germline variant filtering (for reporting, pathogenic/likely pathogenic in ClinVar)
 
@@ -19,7 +19,6 @@
 # NOTATES v1.5.0
 
 ## Major Changes
-
 - added structural variant calling with DELLY (annotation with StructuralVariantAnnotation and VariantAnnotation) (not yet reported)
 - added "GOAL" exome capture kit information
 - changed germline variant filtering (for reporting) to (1) NOT "benign"/"likely benign" in ClinVar (2) MAF < 1% (in gnomAD, ExAC, TGP and ESP) and (3) Non-syn. impact and (4) NOT in FLAGs
