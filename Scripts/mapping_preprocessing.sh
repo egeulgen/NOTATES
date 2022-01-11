@@ -28,18 +28,14 @@ do
 	## Read Group Information
 	readGroup="@RG\\tID:"$analysisID"\tPL:ILLUMINA\tLB:"$kit_name"\tSM:"$sample_name""
 
-	## Alignment
+	## Alignment/Sort
 	echo '############'"$sample_name"': Aligning reads from lane: '$lane "    " $(date)
 	bwa mem -M -t "$num_threads" -R "$readGroup" "$genome" \
-		"$lane"_R1.fastq.gz "$lane"_R2.fastq.gz > "$lane".sam
-
-	## SAM to BAM
-	echo '##########'"$sample_name"': SAM to BAM & Sort for lane: '$lane "    " $(date)
+	"$lane"_R1.fastq.gz "$lane"_R2.fastq.gz | \
 	picard SortSam SORT_ORDER=coordinate \
-		INPUT="$lane".sam OUTPUT="$lane".bam CREATE_INDEX=true \
-		USE_JDK_DEFLATER=true USE_JDK_INFLATER=true
-	
-	rm "$lane".sam
+	INPUT=/dev/stdin \
+	OUTPUT="$lane".bam CREATE_INDEX=true \
+	USE_JDK_DEFLATER=true USE_JDK_INFLATER=true
 
 	## Fix Mate Information
 	echo '####'"$sample_name"': Fixing mate information for lane: '$lane "    " $(date)

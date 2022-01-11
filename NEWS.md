@@ -2,6 +2,7 @@
 ## Major Changes
 ## Minor changes and bug fixes
 - fixed minor issue in processing DELLY output
+- merged bwa+SortSam
 
 ***
 
