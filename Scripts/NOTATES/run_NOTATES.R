@@ -146,13 +146,6 @@ somatic_vars <- somatic_vars[, c("Hugo_Symbol", "Variant_Classification", "Prote
                                  "COSMIC_total_alterations_in_gene","UniProt_Region")]
 somatic_vars$UniProt_Region[somatic_vars$UniProt_Region == "__UNKNOWN__"] <- ""
 
-# Only include somatic snv/indels with Variant Classifications of High/Moderate variant consequences
-high_conseq <- c("Frame_Shift_Del", "Frame_Shift_Ins", "Splice_Site", 
-                 "Translation_Start_Site","Nonsense_Mutation", 
-                 "Nonstop_Mutation", "In_Frame_Del","In_Frame_Ins", 
-                 "Missense_Mutation")
-somatic_vars <- somatic_vars[somatic_vars$Variant_Classification %in% high_conseq, ]
-
 #### Other annotations 
 somatic_vars$DNA_repair <- ifelse(somatic_vars$Hugo_Symbol %in% dna_repair_df$Gene.Name, "yes", "no")
 somatic_vars$DNA_repair[somatic_vars$DNA_repair == "yes"] <- dna_repair_df$FUNCTION[match(somatic_vars$Hugo_Symbol[somatic_vars$DNA_repair == "yes"],dna_repair_df$Gene.Name)]
@@ -199,6 +192,13 @@ if(any(somatic_vars$Hugo_Symbol %in% curated_SNV$Gene)) {
   somatic_vars <- somatic_vars[-keep,]
   write.csv(tmp, "Somatic_SNV/important_SNVs.csv",row.names = F)
 }
+
+# Only include somatic snv/indels with Variant Classifications of High/Moderate variant consequences
+high_conseq <- c("Frame_Shift_Del", "Frame_Shift_Ins", "Splice_Site", 
+                 "Translation_Start_Site","Nonsense_Mutation", 
+                 "Nonstop_Mutation", "In_Frame_Del","In_Frame_Ins", 
+                 "Missense_Mutation")
+somatic_vars <- somatic_vars[somatic_vars$Variant_Classification %in% high_conseq, ]
 
 ### in CGC and COSMIC hotspot
 if(any(somatic_vars$Hugo_Symbol %in% CGC_df$Gene.Symbol)) {
