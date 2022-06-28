@@ -1,5 +1,7 @@
 # NOTATES development
 ## Major Changes
+- While reporting important glioma variants, no high consequence variant impact filter is applied
+
 ## Minor changes and bug fixes
 - fixed minor issue in processing DELLY output
 - merged bwa+SortSam

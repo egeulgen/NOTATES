@@ -37,7 +37,7 @@ if (mb_arg == "glioma") {
 
 # Curated Alterations
 if (mb_arg == "glioma") {
-  curated_SNV <- read.csv(file.path(notates_dir, "curated_alterations", "glioma_important_SNV_May25_17.csv"))
+  curated_SNV <- read.csv(file.path(notates_dir, "curated_alterations", "glioma_important_SNV_Jun28_22.csv"))
   curated_CNA <- read.csv(file.path(notates_dir, "curated_alterations", "glioma_important_CNA_May25_17.csv"))
 } else {
   curated_SNV <- read.csv(file.path(notates_dir, "curated_alterations", "MB_important_SNV_Mar19_19.csv"))
@@ -166,7 +166,7 @@ if(any(somatic_vars$Hugo_Symbol %in% curated_SNV$Gene)) {
     tmp <- somatic_vars[i, ]
     idx2 <- which(curated_SNV$Gene == tmp$Hugo_Symbol)
     
-    if(any(curated_SNV$Genomic_Alt[idx2] != "")) {
+    if(!is.na(curated_SNV$Genomic_Alt[idx2])) {
       tmp2 <- curated_SNV$Genomic_Alt[idx2]
       if(unlist(strsplit(tmp$Genome_Change,":"))[2] %in% tmp2) {
         keep <- c(keep, i)
