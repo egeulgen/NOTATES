@@ -1,0 +1,265 @@
+#!/usr/bin/env snakemake -s
+
+##################################################
+## Project: NOTATES RNAseq Pipeline
+## Purpose: Snakefile for the RNAseq pipeline
+## Date: Mar 2026
+## Author: Ege Ulgen
+##################################################
+from snakemake.utils import min_version
+
+min_version("6.15.5")
+
+SAMPLES = [config["sample_id"]]
+FASTQ_DATA_DIR = Path(config["data_dir"])
+OUTPUT_DIR = Path(config["output_dir"])
+
+RSEM_IDX_PREFIX = Path(config["rsem_index"]).joinpath(
+    ".".join(Path(config["reference_genome"]).stem.split(".")[:2])
+)
+
+PATH_FASTQC = OUTPUT_DIR.joinpath("fastqc_reports")
+PATH_TRIM = OUTPUT_DIR.joinpath("trimming")
+PATH_STAR_ALIGN = OUTPUT_DIR.joinpath("mapping")
+PATH_QUANTIF = OUTPUT_DIR.joinpath("quantification")
+PATH_FUSIONS = OUTPUT_DIR.joinpath("fusions")
+
+
+(FASTQ_FILES,) = glob_wildcards(
+    FASTQ_DATA_DIR.joinpath("{file_name}.fastq.gz").as_posix()
+)
+FASTQC_HTML_FILES = expand(
+    PATH_FASTQC.joinpath("{file_name}_fastqc.html"), file_name=FASTQ_FILES
+)
+
+
+def config_dict_to_cli(opts: dict) -> str:
+    args = []
+    for k, v in opts.items():
+        if isinstance(v, bool):
+            if v:
+                args.append(f"--{k}")
+        else:
+            args.append(f"--{k} {v}")
+    return " ".join(args)
+
+
+if config["output_target"] == "fastqc":
+    RULE_ALL = []
+elif config["output_target"] == "trimming":
+    RULE_ALL = [
+        expand(
+            PATH_TRIM.joinpath("{sample}_1_val_1.fq.gz"),
+            sample=SAMPLES,
+        )
+    ]
+    RULE_ALL += [
+        expand(
+            PATH_TRIM.joinpath("{sample}_2_val_2.fq.gz"),
+            sample=SAMPLES,
+        )
+    ]
+elif config["output_target"] == "mapping":
+    RULE_ALL = [
+        expand(
+            PATH_STAR_ALIGN.joinpath("{sample}_Aligned.toTranscriptome.out.bam"),
+            sample=SAMPLES,
+        )
+    ]
+    RULE_ALL += [
+        expand(
+            PATH_STAR_ALIGN.joinpath("{sample}_Aligned.out.bam"),
+            sample=SAMPLES,
+        )
+    ]
+
+
+elif config["output_target"] == "quantification":
+    RULE_ALL = [
+        expand(
+            PATH_QUANTIF.joinpath("{sample}_rsem.isoforms.results"),
+            sample=SAMPLES,
+        )
+    ]
+else:
+    RULE_ALL = [
+        expand(
+            PATH_QUANTIF.joinpath("{sample}_rsem.isoforms.results"),
+            sample=SAMPLES,
+        )
+    ]
+    RULE_ALL += [
+        expand(
+            PATH_FUSIONS.joinpath("{sample}.fusions.tsv"),
+            sample=SAMPLES,
+        )
+    ]
+
+
+RULE_ALL += [OUTPUT_DIR.joinpath("multiqc_report.html")]
+
+
+rule all:
+    input:
+        RULE_ALL,
+
+
+rule fastqc:
+    input:
+        fastq=FASTQ_DATA_DIR.joinpath("{file_name}.fastq.gz"),
+    output:
+        html=PATH_FASTQC.joinpath("{file_name}_fastqc.html"),
+    threads: config["threads"]
+    params:
+        outdir=PATH_FASTQC,
+    shell:
+        """
+        fastqc --outdir {params.outdir} --threads {threads} --quiet --noextract {input.fastq}
+        """
+
+
+rule multiqc:
+    input:
+        FASTQC_HTML_FILES,
+    output:
+        multiqc_report=OUTPUT_DIR.joinpath("multiqc_report.html"),
+    params:
+        outdir=OUTPUT_DIR,
+    shell:
+        """
+        export LC_ALL=en_US.utf-8
+        export LANG=en_US.utf-8
+        multiqc {PATH_FASTQC} --outdir {params.outdir} --no-data-dir
+        """
+
+
+rule trimgalore:
+    input:
+        FASTQ_DATA_DIR.joinpath("{sample}_1.fastq.gz"),
+        FASTQ_DATA_DIR.joinpath("{sample}_2.fastq.gz"),
+    output:
+        fastq1=PATH_TRIM.joinpath("{sample}_1_val_1.fq.gz"),
+        fastq2=PATH_TRIM.joinpath("{sample}_2_val_2.fq.gz"),
+    threads: config["threads"]
+    params:
+        outdir=PATH_TRIM,
+        trim_opts=lambda wildcards: config_dict_to_cli(
+            config.get("trim_galore_options", {})
+        ),
+    shell:
+        """
+        trim_galore --phred33 --gzip --trim-n \
+            --output_dir {params.outdir} \
+            --retain_unpaired \
+            --cores {threads} \
+            {params.trim_opts} \
+            --paired {input}
+        """
+
+
+rule star_index:
+    input:
+        ref_genome=config["reference_genome"],
+        gtf_file=config["reference_gtf"],
+    output:
+        index_path=directory(config["star_index"]),
+    threads: config["threads"]
+    params:
+        extra_opts=lambda wildcards: config_dict_to_cli(
+            config.get("star_index_options", {})
+        ),
+    shell:
+        """
+        STAR --runThreadN {threads} --runMode genomeGenerate \
+            --genomeDir {output.index_path} --genomeFastaFiles {input.ref_genome} \
+            --sjdbGTFfile {input.gtf_file} --sjdbOverhang 100 \
+            {params.extra_opts}
+        """
+
+
+rule star_align:
+    input:
+        input_fastq1=rules.trimgalore.output.fastq1,
+        input_fastq2=rules.trimgalore.output.fastq2,
+        genome_idx=config["star_index"],
+    output:
+        aln_transcriptome=PATH_STAR_ALIGN.joinpath(
+            "{sample}_Aligned.toTranscriptome.out.bam"
+        ),
+        aln_genome=PATH_STAR_ALIGN.joinpath("{sample}_Aligned.out.bam"),
+    threads: config["threads"]
+    params:
+        extra_opts=lambda wildcards: config_dict_to_cli(
+            config.get("star_align_options", {})
+        ),
+        out_prefix=directory(PATH_STAR_ALIGN.joinpath("{sample}_")),
+    shell:
+        """
+        STAR --runMode alignReads --genomeDir {input.genome_idx} --quantMode TranscriptomeSAM --runThreadN {threads} \
+            --readFilesIn {input.input_fastq1} {input.input_fastq2} \
+            --readFilesCommand "gunzip -c" \
+            --outFileNamePrefix {params.out_prefix} \
+            {params.extra_opts}            
+        """
+
+
+rule rsem_index:
+    input:
+        ref_genome=config["reference_genome"],
+        gtf_file=config["reference_gtf"],
+    output:
+        rsem_transcripts_fa=RSEM_IDX_PREFIX.with_name(
+            f"{RSEM_IDX_PREFIX.name}.transcripts.fa"
+        ),
+    params:
+        idx_prefix=RSEM_IDX_PREFIX,
+    shell:
+        "rsem-prepare-reference --gtf {input.gtf_file} {input.ref_genome} {params.idx_prefix}"
+
+
+rule rsem_quantification:
+    input:
+        bam=rules.star_align.output.aln_transcriptome,
+        transcripts_fa=rules.rsem_index.output.rsem_transcripts_fa,
+    params:
+        idx_prefix=rules.rsem_index.params.idx_prefix,
+        out_prefix=PATH_QUANTIF.joinpath("{sample}_rsem"),
+    threads: config["threads"]
+    output:
+        PATH_QUANTIF.joinpath("{sample}_rsem.isoforms.results"),
+    shell:
+        """
+        rsem-calculate-expression \
+            --bam \
+            -p {threads} \
+            --paired-end \
+            --no-bam-output \
+            --estimate-rspd \
+            {input.bam} \
+            {params.idx_prefix} \
+            {params.out_prefix}
+        """
+
+
+rule arriba:
+    input:
+        bam=rules.star_align.output.aln_genome,
+        genome=config["reference_genome"],
+        annotation=config["reference_gtf"],
+        blacklist=config["fusion_blacklist"],
+        known_fusions=config["known_fusions"],
+    threads: config["threads"]
+    output:
+        fusions=PATH_FUSIONS.joinpath("{sample}.fusions.tsv"),
+        discarded=PATH_FUSIONS.joinpath("{sample}.fusions.discarded.tsv"),
+    shell:
+        """
+        arriba \
+            -x {input.bam} \
+            -a {input.genome} \
+            -g {input.annotation} \
+            -b {input.blacklist} \
+            -k {input.known_fusions} \
+            -o {output.fusions} \
+            -O {output.discarded}
+        """
