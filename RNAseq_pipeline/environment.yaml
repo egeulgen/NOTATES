@@ -1,0 +1,12 @@
+name: notates-rnaseq-pipeline
+channels:
+  - conda-forge
+  - bioconda
+  - egeulgen
+dependencies:
+  - python=3.11
+  - snakemake
+  - trim-galore
+  - star=2.7.10b
+  - rsem
+  - multiqc
