@@ -6,6 +6,8 @@ library(msigdbr)
 library(GSVA)
 library(GSEABase)
 library(dplyr)
+library(tibble)
+library(ggplot2)
 
 #######################################
 # Logging setup
@@ -111,18 +113,24 @@ write.table(
 # Plot
 #######################################
 
-pdf(out_scores_plot)
-
-barplot(
-  scores_vec,
-  las = 2,
-  col = "steelblue",
-  main = "Verhaak GBM subtype scores"
+plot_df <- tibble(
+  subtype = names(scores_vec),
+  score = as.numeric(scores_vec)
 )
 
-dev.off()
+g <- ggplot(plot_df, aes(x = reorder(subtype, score), y = score, fill = score))
+g <- g + geom_col(width = 0.6, show.legend = FALSE)
+g <- g + coord_flip()
+g <- g + scale_fill_gradient(low = "lightblue", high = "steelblue")
+g <- g +
+  labs(
+    title = "Verhaak GBM Subtype Scores",
+    x = "Subtype",
+    y = "ssGSEA Score"
+  )
+g <- g + theme_minimal(base_size = 14)
 
-cat("\nDone.\n")
+ggsave(out_scores_plot, plot = g, width = 6, height = 4)
 
 
 #######################################

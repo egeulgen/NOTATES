@@ -13,6 +13,8 @@ dependencies:
   - rsem
   - r-readr
   - r-dplyr
+  - r-tibble
+  - r-ggplot2
   - r-msigdbr
   - bioconductor-gsva
   - bioconductor-gseabase
