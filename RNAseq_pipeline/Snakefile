@@ -223,9 +223,10 @@ rule rsem_quantification:
         transcripts_fa=rules.rsem_index.output.rsem_transcripts_fa,
     params:
         idx_prefix=rules.rsem_index.params.idx_prefix,
-        out_prefix=PATH_QUANTIF.joinpath("{sample}_rsem"),
+        out_prefix=lambda wc: PATH_QUANTIF.joinpath(f"{wc.sample}_rsem"),
     threads: config["threads"]
     output:
+        PATH_QUANTIF.joinpath("{sample}_rsem.genes.results"),
         PATH_QUANTIF.joinpath("{sample}_rsem.isoforms.results"),
     shell:
         """
