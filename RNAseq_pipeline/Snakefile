@@ -33,6 +33,7 @@ PATH_TRIM = OUTPUT_DIR.joinpath("trimming")
 PATH_STAR_ALIGN = OUTPUT_DIR.joinpath("mapping")
 PATH_QUANTIF = OUTPUT_DIR.joinpath("quantification")
 PATH_FUSIONS = OUTPUT_DIR.joinpath("fusions")
+PATH_CLASSIFICATION = OUTPUT_DIR.joinpath("verhaak_classification")
 
 
 FASTQ_FILES = glob_wildcards(FASTQ_DATA_DIR.joinpath("{file_name}.fastq.gz").as_posix())
@@ -56,6 +57,11 @@ FUSION_RESULTS = [
     PATH_FUSIONS.joinpath(f"{SAMPLE_ID}.fusions.tsv"),
     PATH_FUSIONS.joinpath(f"{SAMPLE_ID}.fusions.discarded.tsv"),
 ]
+CLASSIFICATION_RESULTS = [
+    PATH_CLASSIFICATION.joinpath(f"{SAMPLE_ID}.verhaak_scores.tsv"),
+    PATH_CLASSIFICATION.joinpath(f"{SAMPLE_ID}.verhaak_scores.pdf"),
+]
+
 
 RULE_ALL = [MULTIQC_REPORT]
 if config["output_target"] == "fastqc":
@@ -67,7 +73,7 @@ elif config["output_target"] == "mapping":
 elif config["output_target"] == "quantification":
     RULE_ALL += QUANTIFICATION_RESULTS
 else:
-    RULE_ALL += QUANTIFICATION_RESULTS + FUSION_RESULTS
+    RULE_ALL += QUANTIFICATION_RESULTS + FUSION_RESULTS + CLASSIFICATION_RESULTS
 
 
 rule all:
@@ -201,8 +207,8 @@ rule rsem_quantification:
         bam=rules.star_align.output.aln_transcriptome,
         transcripts_fa=rules.rsem_index.output.rsem_transcripts_fa,
     output:
-        PATH_QUANTIF.joinpath("{sample}_rsem.genes.results"),
-        PATH_QUANTIF.joinpath("{sample}_rsem.isoforms.results"),
+        gene_level=PATH_QUANTIF.joinpath("{sample}_rsem.genes.results"),
+        isoform_level=PATH_QUANTIF.joinpath("{sample}_rsem.isoforms.results"),
     log:
         PATH_LOGS.joinpath("rsem/{sample}_quantification.log"),
     params:
@@ -249,3 +255,15 @@ rule arriba:
             -O {output.discarded} \
             > {log} 2>&1
         """
+
+
+rule verhaak_classification:
+    input:
+        rsem_file=rules.rsem_quantification.output.gene_level,
+    log:
+        PATH_LOGS.joinpath("verhaak_classification/{sample}.log"),
+    output:
+        scores_tsv=PATH_CLASSIFICATION.joinpath("{sample}.verhaak_scores.tsv"),
+        scores_plot=PATH_CLASSIFICATION.joinpath("{sample}.verhaak_scores.pdf"),
+    script:
+        "scripts/verhaak_classification.R"
