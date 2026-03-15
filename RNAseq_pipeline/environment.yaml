@@ -6,7 +6,8 @@ channels:
 dependencies:
   - python=3.11
   - snakemake
+  - multiqc
   - trim-galore
   - star=2.7.10b
+  - arriba
   - rsem
-  - multiqc
