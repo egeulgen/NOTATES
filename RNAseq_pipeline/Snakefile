@@ -169,8 +169,8 @@ rule star_align:
         PATH_LOGS.joinpath("star/{sample}_align.log"),
     threads: config["threads"]
     params:
-        extra_opts=lambda wildcards: config_dict_to_cli(config.get("star_align_options", {})),
-        out_prefix=PATH_STAR_ALIGN.joinpath("{sample}_"),
+        extra_opts=lambda wc: config_dict_to_cli(config.get("star_align_options", {})),
+        out_prefix=lambda wc: PATH_STAR_ALIGN.joinpath(f"{wc.sample}_"),
     shell:
         """
         STAR --runMode alignReads --genomeDir {input.genome_idx} --quantMode TranscriptomeSAM --runThreadN {threads} \
