@@ -29,7 +29,7 @@ rsem_file <- snakemake@input[["rsem_file"]]
 #######################################
 # Output files
 #######################################
-collections <- c("H", "C6", "C7", "KEGG")
+collections <- snakemake@params[["collections"]]
 
 # Named list of output TSV files per collection
 out_scores_files <- list()
@@ -85,15 +85,15 @@ for (col in collections) {
     col.names = NA
   )
 
-  # Top 10 entries
-  top10 <- sort(scores_vec, decreasing = TRUE)[1:10]
-  cat("\nTop 10 enriched gene sets for collection", col, ":\n")
-  print(top10)
+  # Top 25 entries
+  top25 <- sort(scores_vec, decreasing = TRUE)[1:25]
+  cat("\nTop 25 enriched gene sets for collection", col, ":\n")
+  print(top25)
 
-  # Plot top 10 using ggplot2
+  # Plot top 25 using ggplot2
   top10_df <- tibble(
-    gs_name = names(top10),
-    score = as.numeric(top10)
+    gs_name = names(top25),
+    score = as.numeric(top25)
   )
 
   g <- ggplot(
@@ -105,7 +105,7 @@ for (col in collections) {
   g <- g + scale_fill_gradient(low = "lightblue", high = "steelblue")
   g <- g +
     labs(
-      title = paste("Top 10 ssGSEA scores - Collection", col),
+      title = paste("Top 25 ssGSEA scores - Collection", col),
       x = "Gene set",
       y = "ssGSEA score"
     )

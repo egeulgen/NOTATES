@@ -276,6 +276,8 @@ rule verhaak_classification:
 rule enrichment:
     input:
         rsem_file=rules.rsem_quantification.output.gene_level,
+    params:
+        collections=COLLECTIONS.values()
     log:
         PATH_LOGS.joinpath("enrichment/{sample}.log"),
     output:
