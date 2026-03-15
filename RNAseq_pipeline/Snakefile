@@ -34,7 +34,10 @@ PATH_STAR_ALIGN = OUTPUT_DIR.joinpath("mapping")
 PATH_QUANTIF = OUTPUT_DIR.joinpath("quantification")
 PATH_FUSIONS = OUTPUT_DIR.joinpath("fusions")
 PATH_CLASSIFICATION = OUTPUT_DIR.joinpath("verhaak_classification")
+PATH_ENRICHMENT = OUTPUT_DIR.joinpath("gene_set_enrichment")
 
+
+COLLECTIONS = {"hallmark": "H", "oncogenic": "C6", "immunological": "C7", "KEGG": "KEGG"}
 
 FASTQ_FILES = glob_wildcards(FASTQ_DATA_DIR.joinpath("{file_name}.fastq.gz").as_posix())
 FASTQC_HTML_FILES = expand(PATH_FASTQC.joinpath("{file_name}_fastqc.html"), file_name=FASTQ_FILES.file_name)
@@ -57,11 +60,12 @@ FUSION_RESULTS = [
     PATH_FUSIONS.joinpath(f"{SAMPLE_ID}.fusions.tsv"),
     PATH_FUSIONS.joinpath(f"{SAMPLE_ID}.fusions.discarded.tsv"),
 ]
-CLASSIFICATION_RESULTS = [
-    PATH_CLASSIFICATION.joinpath(f"{SAMPLE_ID}.verhaak_scores.tsv"),
-    PATH_CLASSIFICATION.joinpath(f"{SAMPLE_ID}.verhaak_scores.pdf"),
-]
 
+FILE_TYPES = ["tsv", "pdf"]
+CLASSIFICATION_RESULTS = [PATH_CLASSIFICATION.joinpath(f"{SAMPLE_ID}.verhaak_scores.{ext}") for ext in FILE_TYPES]
+ENRICHMENT_RESULTS = [
+    PATH_ENRICHMENT.joinpath(f"{SAMPLE_ID}.{name}.scores.{ext}") for name in COLLECTIONS.keys() for ext in FILE_TYPES
+]
 
 RULE_ALL = [MULTIQC_REPORT]
 if config["output_target"] == "fastqc":
@@ -73,7 +77,7 @@ elif config["output_target"] == "mapping":
 elif config["output_target"] == "quantification":
     RULE_ALL += QUANTIFICATION_RESULTS
 else:
-    RULE_ALL += QUANTIFICATION_RESULTS + FUSION_RESULTS + CLASSIFICATION_RESULTS
+    RULE_ALL += QUANTIFICATION_RESULTS + FUSION_RESULTS + CLASSIFICATION_RESULTS + ENRICHMENT_RESULTS
 
 
 rule all:
@@ -267,3 +271,18 @@ rule verhaak_classification:
         scores_plot=PATH_CLASSIFICATION.joinpath("{sample}.verhaak_scores.pdf"),
     script:
         "scripts/verhaak_classification.R"
+
+
+rule enrichment:
+    input:
+        rsem_file=rules.rsem_quantification.output.gene_level,
+    log:
+        PATH_LOGS.joinpath("enrichment/{sample}.log"),
+    output:
+        **{
+            f"{col_id}_scores_{ext}": PATH_ENRICHMENT.joinpath("{sample}." + f"{col_name}.scores.{ext}")
+            for col_name, col_id in COLLECTIONS.items()
+            for ext in FILE_TYPES
+        },
+    script:
+        "scripts/enrichment_analyses.R"
