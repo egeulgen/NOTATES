@@ -193,7 +193,7 @@ rule rsem_index:
     params:
         idx_prefix=RSEM_IDX_PREFIX,
     shell:
-        "rsem-prepare-reference --gtf {input.gtf_file} {input.ref_genome} {params.idx_prefix}"
+        "rsem-prepare-reference --gtf {input.gtf_file} {input.ref_genome} {params.idx_prefix} > {log} 2>&1"
 
 
 rule rsem_quantification:
