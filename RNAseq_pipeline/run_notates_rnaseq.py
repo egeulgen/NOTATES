@@ -2,16 +2,21 @@
 
 ##################################################
 ## Project: NOTATES RNAseq Pipeline
-## Purpose: Wrapper script for the NOTATES RNAseq pipeline
+## Purpose: CLI for the NOTATES RNAseq pipeline
 ## Date: Mar 2026
 ## Author: Ege Ulgen
 ##################################################
 
-import subprocess
 import argparse
-import yaml
-from typing import Any
+import logging
+import subprocess
+import sys
 from pathlib import Path
+from typing import Any
+
+import yaml
+
+logger = logging.getLogger(__name__)
 
 DEFAULT_STAR_ALIGN_OPTIONS = {
     "outSAMtype": "BAM Unsorted",
@@ -34,6 +39,24 @@ DEFAULT_STAR_INDEX_OPTIONS = {
 
 CONFIG_FILE_NAME = "config.yaml"
 DAG_FILE_NAME = "pipeline_dag.pdf"
+LOG_FILE_NAME = "notates_rnaseq.log"
+
+
+def setup_logging(output_dir: Path) -> None:
+    """Configure logging to both console and a log file in the output directory."""
+    output_dir.mkdir(parents=True, exist_ok=True)
+    log_path = output_dir / LOG_FILE_NAME
+
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s [%(levelname)s] %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+        handlers=[
+            logging.StreamHandler(),
+            logging.FileHandler(log_path),
+        ],
+    )
+    logger.info(f"Logging to {log_path}")
 
 
 def parse_arguments() -> argparse.Namespace:
@@ -63,7 +86,7 @@ def parse_arguments() -> argparse.Namespace:
         "--output_target",
         type=str,
         required=False,
-        choices=["fastqc", "trimming", "quantification", "all"],
+        choices=["fastqc", "trimming", "mapping", "quantification", "all"],
         default="all",
         help="Final output target; one of all (default), fastqc, trimming, mapping, quantification",
     )
@@ -159,6 +182,7 @@ def parse_arguments() -> argparse.Namespace:
 
 def load_options_from_yaml(opts_path: Path | None) -> dict[str, Any]:
     if opts_path and opts_path.exists():
+        logger.info(f"Loading options from {opts_path}")
         with opts_path.open("rt") as opt_handle:
             return yaml.safe_load(opt_handle)
     return {}
@@ -166,6 +190,24 @@ def load_options_from_yaml(opts_path: Path | None) -> dict[str, Any]:
 
 def generate_config_file(args: argparse.Namespace) -> Path:
     output_dir = args.output_dir
+
+    logger.info(f"Sample ID     : {args.sample_id}")
+    logger.info(f"Data dir      : {args.data_dir.resolve()}")
+    logger.info(f"Output dir    : {output_dir.resolve()}")
+    logger.info(f"Output target : {args.output_target}")
+    logger.info(f"Reference     : {args.reference_genome.resolve()}")
+    logger.info(f"GTF           : {args.gtf_file.resolve()}")
+    logger.info(f"STAR index    : {args.star_index.resolve()}")
+    logger.info(f"RSEM index    : {args.rsem_index.resolve()}")
+    logger.info(f"Threads       : {args.threads}")
+
+    if not (star_align_opts := load_options_from_yaml(args.star_align_options)):
+        logger.info("No STAR align options provided — using defaults")
+        star_align_opts = DEFAULT_STAR_ALIGN_OPTIONS
+    if not (star_index_opts := load_options_from_yaml(args.star_index_options)):
+        logger.info("No STAR index options provided — using defaults")
+        star_index_opts = DEFAULT_STAR_INDEX_OPTIONS
+
     config_content = {
         "sample_id": args.sample_id,
         "data_dir": str(args.data_dir.resolve()),
@@ -179,49 +221,62 @@ def generate_config_file(args: argparse.Namespace) -> Path:
         "known_fusions": str(args.known_fusions.resolve()),
         "threads": args.threads,
         "trim_galore_options": load_options_from_yaml(args.trim_galore_options),
-        "star_align_options": load_options_from_yaml(args.star_align_options)
-        or DEFAULT_STAR_ALIGN_OPTIONS,
-        "star_index_options": load_options_from_yaml(args.star_index_options)
-        or DEFAULT_STAR_INDEX_OPTIONS,
+        "star_align_options": star_align_opts,
+        "star_index_options": star_index_opts,
     }
 
     output_dir.mkdir(parents=True, exist_ok=True)
     config_path = output_dir.joinpath(CONFIG_FILE_NAME)
     with config_path.open("wt") as outfile:
         yaml.dump(config_content, outfile, default_flow_style=False)
+
+    logger.info(f"Config written to {config_path}")
     return config_path
 
 
 def create_dag_and_exit(config_path: Path) -> None:
+    dag_path = config_path.parent.joinpath(DAG_FILE_NAME)
+    logger.info("Generating pipeline DAG...")
+
     snakemake = subprocess.Popen(
         ["snakemake", "--configfile", str(config_path.resolve()), "--dag"],
         stdout=subprocess.PIPE,
     )
-    dag_path = config_path.parent.joinpath(DAG_FILE_NAME)
     with dag_path.open("wb") as fp:
-        subprocess.run(
-            ["dot", "-Tpdf"],
-            stdin=snakemake.stdout,
-            stdout=fp,
-            check=True,
-        )
+        subprocess.run(["dot", "-Tpdf"], stdin=snakemake.stdout, stdout=fp, check=True)
+    snakemake.wait()
+    if snakemake.returncode != 0:
+        raise RuntimeError(f"Snakemake DAG generation failed with return code {snakemake.returncode}")
+
+    logger.info(f"DAG written to {dag_path}")
+    sys.exit(0)
 
 
 def execute_pipeline(config_path: Path, threads: int) -> None:
-    subprocess.run(
-        [
-            "snakemake",
-            "--configfile",
-            str(config_path.resolve()),
-            "--cores",
-            str(threads),
-        ],
-        check=True,
-    )
+    logger.info("Starting Snakemake pipeline...")
+    try:
+        subprocess.run(
+            [
+                "snakemake",
+                "--configfile",
+                str(config_path.resolve()),
+                "--cores",
+                str(threads),
+            ],
+            check=True,
+        )
+        logger.info("Pipeline completed successfully")
+    except subprocess.CalledProcessError as exc:
+        logger.error(f"Pipeline failed with return code {exc.returncode}")
+        raise RuntimeError("Pipeline failed") from exc
 
 
 def main() -> None:
     arguments = parse_arguments()
+
+    setup_logging(arguments.output_dir)
+    logger.info("=== NOTATES RNAseq Pipeline ===")
+
     config_path = generate_config_file(arguments)
 
     if arguments.create_DAG:
