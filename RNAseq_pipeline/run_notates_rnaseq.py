@@ -225,7 +225,6 @@ def generate_config_file(args: argparse.Namespace) -> Path:
         "star_index_options": star_index_opts,
     }
 
-    output_dir.mkdir(parents=True, exist_ok=True)
     config_path = output_dir.joinpath(CONFIG_FILE_NAME)
     with config_path.open("wt") as outfile:
         yaml.dump(config_content, outfile, default_flow_style=False)
@@ -274,6 +273,7 @@ def execute_pipeline(config_path: Path, threads: int) -> None:
 def main() -> None:
     arguments = parse_arguments()
 
+    arguments.output_dir.mkdir(parents=True, exist_ok=True)
     setup_logging(arguments.output_dir)
     logger.info("=== NOTATES RNAseq Pipeline ===")
 
