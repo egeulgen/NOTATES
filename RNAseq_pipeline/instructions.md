@@ -46,7 +46,7 @@ conda activate notates-rnaseq-pipeline
 	--create-DAG
 ```
 
-The FASTA file names should be as follows:
+The FASTQ file names should be as follows:
 
 - `samplename_1.fastq.gz` and `samplename_2.fastq.gz`
 		
