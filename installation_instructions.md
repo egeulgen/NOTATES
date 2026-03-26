@@ -6,6 +6,7 @@ See instructions on https://docs.conda.io/en/latest/miniconda.html
 
 ```bash
 conda env create -f NOTATES_main_env.yml
+conda env create -f NOTATES_annotation_env.yml
 conda env create -f NOTATES_R_env.yml
 conda env create -f NOTATES_python_env.yml
 ```

@@ -142,6 +142,9 @@ bash "$scripts_dir"/somatic_filter.sh
 ################################################################################
 ############################ Variant Annoation #################################
 ################################################################################
+source $CONDA_BASE/etc/profile.d/conda.sh
+conda activate NOTATES_annotation
+
 mkdir Funcotator
 
 echo "################################ Annotating Somatic Variants    " $(date)
@@ -173,6 +176,9 @@ gatk Funcotator \
 ################################################################################
 ################################# ExomeCNV #####################################
 ################################################################################
+source $CONDA_BASE/etc/profile.d/conda.sh
+conda activate NOTATES_main
+
 bash "$scripts_dir"/ExomeCNV/ExomeCNV.sh $normal_name $tumor_name
 
 ################################################################################
