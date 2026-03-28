@@ -33,9 +33,6 @@ germline <- read.delim(file.path(dirname(getwd()), "Funcotator",
 germline$Ref_depth <- germline$t_ref_count
 germline$Alt_depth <- germline$t_alt_count  
 
-# add id column
-germline$id <- ifelse(germline$gnomAD_exome_ID != "", germline$gnomAD_exome_ID, germline$gnomAD_genome_ID)
-
 germline$Clin_sig <- germline$ClinVar_VCF_CLNSIG
 germline$Clin_sig[is.na(germline$Clin_sig)] <- ""
 
@@ -56,9 +53,9 @@ germline$Clin_sig[germline$Clin_sig == ""] <- "not reported"
 common_vars <- read.csv(paste0(script_dir, "/common_variants_list.csv"))
 
 # Create df for variants that predispose to glioma in the sample
-common_variant_df <- germline[germline$id %in% common_vars$rs_ID, ]
+common_variant_df <- germline[germline$dbSNP_RS %in% common_vars$rs_ID, ]
 
-cols <- c("id", "Hugo_Symbol", "Chromosome", "Start_Position", "End_Position", "Variant_Classification",
+cols <- c("dbSNP_RS", "Hugo_Symbol", "Chromosome", "Start_Position", "End_Position", "Variant_Classification",
           "Reference_Allele", "Tumor_Seq_Allele1", "Tumor_Seq_Allele2", "Ref_depth", "Alt_depth", 
           "AF")
 
@@ -66,7 +63,7 @@ common_variant_df <- common_variant_df[, cols]
 colnames(common_variant_df) <- gsub("Tumor", "Normal", colnames(common_variant_df))
 
 # add further information
-idx <- match(common_variant_df$id, common_vars$rs_ID)
+idx <- match(common_variant_df$dbSNP_RS, common_vars$rs_ID)
 common_variant_df$gCCV_functional_consequence <- common_vars$Functional_consequence[idx]
 common_variant_df$gCCV_Risk_allele <- common_vars$Risk_allele[idx]
 common_variant_df$gCCV_Ancestral_allele <- common_vars$Ancestral_allele[idx]
@@ -134,7 +131,7 @@ germline_final <- germline_final[!germline_final$Hugo_Symbol %in% flags, ]
 
 # III. Report Relevant Variants -------------------------------------------
 cols_to_keep <- c("Hugo_Symbol", "Chromosome", "Start_Position", "End_Position", "Variant_Classification", 
-                  "Reference_Allele", "Tumor_Seq_Allele1", "Tumor_Seq_Allele2", "id", 
+                  "Reference_Allele", "Tumor_Seq_Allele1", "Tumor_Seq_Allele2", "dbSNP_RS", 
                   "Filter_Group", "Filter_Comment",
                   "Ref_depth", "Alt_depth", "AF", "Clin_sig")
 
