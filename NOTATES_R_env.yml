@@ -24,3 +24,4 @@ dependencies:
   - r-rmarkdown
   - r-pdftools
   - r-ggplot2
+  - r-pathfindr
