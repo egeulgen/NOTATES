@@ -32,7 +32,6 @@ R
 install.packages("https://cran.r-project.org/src/contrib/Archive/ExomeCNV/ExomeCNV_1.4.tar.gz", 
                   repos = NULL, type = "source", method = "libcurl")
 devtools::install_github("raerose01/deconstructSigs")
-devtools::install_github("egeulgen/pathfindR") # will take a long time
 ```
 
 # 5. Install THetA2
