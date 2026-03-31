@@ -152,7 +152,7 @@ if (!is.null(all_som_vars)) {
   colnames(all_som_vars) <- c("Gene", "Classification", "Protein Change", "Genome Change", "VAF", "Category")
   
   k_tbl <- kable(all_som_vars, format = "latex", booktabs = TRUE)
-  kable_styling(k_tbl, font_size = 6)
+  kableExtra::kable_styling(kable_styling(k_tbl, font_size = 6), position = "center")
 } else {
   cat("No variation to report.")
 }
@@ -195,7 +195,7 @@ for (i in 1:length(file_paths)) {
 
 if (!is.null(all_scnas)) {
   k_tbl <- kable(all_scnas, format = "latex", booktabs = TRUE)
-  kable_styling(k_tbl, font_size = 6)
+  kableExtra::kable_styling(kable_styling(k_tbl, font_size = 6), position = "center")
 } else {
   cat("No variation to report.")
 }
