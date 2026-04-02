@@ -38,7 +38,6 @@ HQ_mut_df <- data.frame(GENE = somatic_vars$Hugo_Symbol,
 HQ_mut_res <- tryCatch({
   res <- run_pathfindR(HQ_mut_df,
                        plot_enrichment_chart = FALSE,
-                       visualize_enriched_terms = FALSE,
                        output_dir = "pathfindR_results/HQ_mutations")
   res
 }, error = function(e) {
@@ -95,7 +94,6 @@ HQ_SCNA_df <- data.frame(Gene = cnv_df$Gene,
 HQ_SCNA_res <- tryCatch({
   res <- run_pathfindR(HQ_SCNA_df,
                        plot_enrichment_chart = FALSE,
-                       visualize_enriched_terms = FALSE,
                        output_dir = "pathfindR_results/HQ_SCNA")
   res
 }, error = function(e) {

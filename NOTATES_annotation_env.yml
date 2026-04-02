@@ -1,0 +1,6 @@
+name: NOTATES_annotation
+channels:
+  - defaults
+  - bioconda
+dependencies:
+  - gatk4

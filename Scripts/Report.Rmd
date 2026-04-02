@@ -60,7 +60,8 @@ colnames(QC_df)[1] <- ""
 kable_styling(kable(QC_df,
                     format = "latex", 
                     booktabs = TRUE,
-                    align = c("r", "c", "c")))
+                    align = c("r", "c", "c")),
+                    position = "center")
 ```
 
 >>> \* PF is defined as passing Illumina's filter \
@@ -76,7 +77,8 @@ contam_df <- read.delim("contamination.table")
 kable_styling(kable(contam_df[, -1],
                     format = "latex",
                     booktabs = TRUE,
-                    align = "c"))
+                    align = "c"),
+              position = "center")
 ```
 
 \newpage
@@ -114,7 +116,8 @@ if(file.exists("NOTATES/Germline/ACMG.csv")) {
                       format = "latex", 
                       booktabs = TRUE,
                       align = "c"),
-                latex_options="scale_down")
+                latex_options="scale_down",
+                position = "center")
 } else {
   cat("No variation to report.")
 }
@@ -140,7 +143,8 @@ if(file.exists("NOTATES/Germline/CGC.csv")) {
                       format = "latex", 
                       booktabs = TRUE,
                       align = "c"),
-                latex_options="scale_down")
+                latex_options="scale_down",
+                position = "center")
 } else {
   cat("No variation to report.")
 }
@@ -168,7 +172,8 @@ if(file.exists("NOTATES/Germline/CPG.csv")) {
                       format = "latex", 
                       booktabs = TRUE,
                       align = "c"),
-                latex_options="scale_down")
+                latex_options="scale_down",
+                position = "center")
 } else {
   cat("No variation to report.")
 }
@@ -197,7 +202,8 @@ if(file.exists("NOTATES/Germline/DDR.csv")) {
                       format = "latex", 
                       booktabs = TRUE,
                       align = "c"),
-                latex_options="scale_down")
+                latex_options="scale_down",
+                position = "center")
 } else {
   cat("No variation to report.")
 }
@@ -217,7 +223,8 @@ if (params$type == "glioma") {
     kable_styling(kable(common_df,
                         format = "latex", 
                         booktabs = TRUE,
-                        align = "c"))
+                        align = "c"),
+                  position = "center")
   } else {
     cat("No variation to report.")
   }
@@ -345,7 +352,8 @@ if (params$type == "glioma") {
   kable_styling(kable(ss_TMB_tbl,
                       format = "latex", 
                       booktabs = TRUE,
-                      align = "c"))
+                      align = "c"),
+                position = "center")
 }
 ```
 
@@ -369,7 +377,8 @@ rownames(class_tbl) <- NULL
 kable_styling(kable(class_tbl,
                     format = "latex", 
                     booktabs = TRUE,
-                    align = "c"))
+                    align = "c"),
+              position = "center")
 ```
 
 `r if(params$type == "glioma") {"## III. c. Variants in Established Glioma Genes"} else {"## III. c. Variants in Established Medulloblastoma Genes"}`
@@ -390,7 +399,7 @@ if(file.exists("NOTATES/Somatic_SNV/important_SNVs.csv")) {
   
   k_tbl <- kable(imp_som_var, format = "latex", booktabs = TRUE)
   k_tbl <- column_spec(k_tbl, which(colnames(imp_som_var) == "UniProt_Region"), width = "10em")
-  kable_styling(k_tbl, latex_options = "scale_down")
+  kable_styling(k_tbl, latex_options = "scale_down", position = "center")
 } else {
   cat("No variation to report.")
 }
@@ -415,7 +424,7 @@ if(file.exists("NOTATES/Somatic_SNV/COSMIC_hotspot.csv")) {
   
   k_tbl <- kable(hot_som, format = "latex", booktabs = TRUE)
   k_tbl <- column_spec(k_tbl, which(colnames(hot_som) == "UniProt_Region"), width = "10em")
-  kable_styling(k_tbl, latex_options = "scale_down")
+  kable_styling(k_tbl, latex_options = "scale_down", position = "center")
 } else {
   cat("No variation to report.")
 }
@@ -437,7 +446,7 @@ if(file.exists("NOTATES/Somatic_SNV/CGC_genes.csv")) {
   
   k_tbl <- kable(cgc_som, format = "latex", booktabs = TRUE)
   k_tbl <- column_spec(k_tbl, which(colnames(cgc_som) == "UniProt_Region"), width = "10em")
-  kable_styling(k_tbl, latex_options = "scale_down")
+  kable_styling(k_tbl, latex_options = "scale_down", position = "center")
 } else
 {
   cat("No variation to report.")
@@ -461,7 +470,7 @@ if(file.exists("NOTATES/Somatic_SNV/DDR_related.csv")) {
   
   k_tbl <- kable(ddr_som_var, format = "latex", booktabs = TRUE)
   k_tbl <- column_spec(k_tbl, which(colnames(ddr_som_var) == "UniProt_Region"), width = "10em")
-  kable_styling(k_tbl, latex_options = "scale_down")
+  kable_styling(k_tbl, latex_options = "scale_down", position = "center")
 } else {
   cat("No variation to report.")
 }
@@ -480,7 +489,7 @@ if(file.exists("NOTATES/Somatic_SNV/KEGG_selected.csv")) {
 
   k_tbl <- kable(kegg_som_var, format = "latex", booktabs = TRUE)
   k_tbl <- column_spec(k_tbl, which(colnames(kegg_som_var) == "UniProt_Region"), width = "10em")
-  kable_styling(k_tbl, latex_options = "scale_down")
+  kable_styling(k_tbl, latex_options = "scale_down", position = "center")
 } else {
   cat("No variation to report.")
 }
@@ -567,7 +576,8 @@ kable_styling(kable(t(cnv_burden2),
                     format = "latex", 
                     booktabs = TRUE, 
                     col.names = NULL,
-                    align = "c"))
+                    align = "c"),
+              position = "center")
 ```
 
 ```{r SCNA_burden_save}
@@ -600,7 +610,8 @@ if(file.exists("NOTATES/SCNA/important_CNVs.csv")) {
   kable_styling(kable(imp_cna,
                       format = "latex", 
                       booktabs = TRUE,
-                      align = "c"))
+                      align = "c"),
+                position = "center")
 } else {
   cat("No variation to report.")
 }
@@ -616,7 +627,8 @@ if(file.exists("NOTATES/SCNA/CGC_CNVs.csv")) {
   kable_styling(kable(cgc_cna,
                       format = "latex", 
                       booktabs = TRUE,
-                      align = "c"))
+                      align = "c"),
+                position = "center")
 } else {
   cat("No variation to report.")
 }
@@ -637,7 +649,8 @@ if(file.exists("NOTATES/SCNA/broad.csv")) {
                       linesep = "\\addlinespace"), 
                 latex_options = c("hold_position", 
                                   "repeat_header"),
-                full_width = TRUE)
+                full_width = TRUE,
+                position = "center")
 } else {
   cat("No variation to report.")
 }
@@ -669,7 +682,8 @@ if(nrow(transloc_df) != 0) {
   kable_styling(kable(transloc_df,
                       format = "latex", 
                       booktabs = TRUE,
-                      align = "c"))
+                      align = "c"),
+                position = "center")
 } else {
   cat("No variation to report.")
 }
@@ -695,7 +709,7 @@ if (nrow(loh) == 0) {
   
   kable_styling(kable(loh,
                       format = "latex", booktabs = TRUE), 
-                latex_options = "scale_down")
+                latex_options = "scale_down", position = "center")
 }
 ```
 
@@ -708,7 +722,7 @@ if(file.exists("NOTATES/LOH/d_hit_loh.csv"))
 {
   loh_dhit <- read.csv("NOTATES/LOH/d_hit_loh.csv")
   k_tbl <- kable(loh_dhit, format = "latex", booktabs = TRUE, align = "c")
-  kable_styling(k_tbl, latex_options = "scale_down")
+  kable_styling(k_tbl, latex_options = "scale_down", position = "center")
 }else
 {
   cat("No event to report.")
@@ -729,7 +743,7 @@ if(file.exists("NOTATES/LOH/CGC_loh.csv"))
                  linesep = "\\addlinespace")
   kable_styling(k_tbl, latex_options = c("hold_position", 
                                          "repeat_header"),
-                full_width = TRUE)
+                full_width = TRUE, position = "center")
 } else {
   cat("No event to report.")
 }
@@ -748,7 +762,7 @@ if(file.exists("NOTATES/double_hit.csv"))
 {
   dhit_tbl <- read.csv("NOTATES/double_hit.csv")
   k_tbl <- kable(dhit_tbl, format = "latex", booktabs = TRUE, align = "c")
-  kable_styling(k_tbl, latex_options = "scale_down")
+  kable_styling(k_tbl, latex_options = "scale_down", position = "center")
 } else {
   cat("No event to report.")
 }
@@ -801,7 +815,7 @@ k_tbl <- kable(mut_sigs, format = "latex", booktabs = TRUE)
 k_tbl <- column_spec(k_tbl, 3, width = "30em")
 k_tbl <- column_spec(k_tbl, 4, width = "30em")
 k_tbl <- column_spec(k_tbl, 5, width = "30em")
-kable_styling(k_tbl, latex_options = "scale_down")
+kable_styling(k_tbl, latex_options = "scale_down", position = "center")
 ```
 
 \newpage
@@ -840,7 +854,8 @@ if (is.data.frame(enr_res)) {
   colnames(enr_res)[7] <- "Somatic SNV/indel"
   kable_styling(kable(enr_res,
                       format = "latex", booktabs = TRUE), 
-                latex_options = "scale_down")
+                latex_options = "scale_down",
+                position = "center")
 } else {
   cat("There are no enriched KEGG pathways.")
 }
@@ -875,7 +890,8 @@ if (is.data.frame(enr_res)) {
   colnames(enr_res)[7:8] <- c("Amplification", "Deletion")
   kable_styling(kable(enr_res,
                       format = "latex", booktabs = TRUE), 
-                latex_options = "scale_down")
+                latex_options = "scale_down",
+                position = "center")
 } else {
   cat("There are no enriched KEGG pathways.")
 }
