@@ -19,3 +19,5 @@ dependencies:
   - r-circlize
   - bioconductor-gsva
   - bioconductor-gseabase
+  - r-biomartr
+  - bioconductor-quantiseqr

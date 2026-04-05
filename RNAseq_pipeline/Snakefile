@@ -35,6 +35,7 @@ PATH_QUANTIF = OUTPUT_DIR.joinpath("quantification")
 PATH_FUSIONS = OUTPUT_DIR.joinpath("fusions")
 PATH_CLASSIFICATION = OUTPUT_DIR.joinpath("verhaak_classification")
 PATH_ENRICHMENT = OUTPUT_DIR.joinpath("gene_set_enrichment")
+PATH_CELL_TYPE_QUANTIFICATION = OUTPUT_DIR.joinpath("quantiseqr")
 
 
 COLLECTIONS = {"hallmark": "H", "oncogenic": "C6", "immunological": "C7", "KEGG": "KEGG"}
@@ -61,6 +62,7 @@ FUSION_RESULTS = [
     PATH_FUSIONS.joinpath(f"{SAMPLE_ID}.fusions.discarded.tsv"),
     PATH_FUSIONS.joinpath(f"{SAMPLE_ID}.circos.pdf"),
 ]
+CELL_TYPE_RESULTS = [PATH_CELL_TYPE_QUANTIFICATION.joinpath(f"{SAMPLE_ID}.quanti_plot.pdf")]
 
 FILE_TYPES = ["tsv", "pdf"]
 CLASSIFICATION_RESULTS = [PATH_CLASSIFICATION.joinpath(f"{SAMPLE_ID}.verhaak_scores.{ext}") for ext in FILE_TYPES]
@@ -78,7 +80,9 @@ elif config["output_target"] == "mapping":
 elif config["output_target"] == "quantification":
     RULE_ALL += QUANTIFICATION_RESULTS
 else:
-    RULE_ALL += QUANTIFICATION_RESULTS + FUSION_RESULTS + CLASSIFICATION_RESULTS + ENRICHMENT_RESULTS
+    RULE_ALL += (
+        QUANTIFICATION_RESULTS + FUSION_RESULTS + CLASSIFICATION_RESULTS + ENRICHMENT_RESULTS + CELL_TYPE_RESULTS
+    )
 
 
 rule all:
@@ -300,3 +304,16 @@ rule enrichment:
         },
     script:
         "scripts/enrichment_analyses.R"
+
+
+rule quantiseqr:
+    input:
+        rsem_file=rules.rsem_quantification.output.gene_level,
+    params:
+        sample_id="{sample}",
+    log:
+        PATH_LOGS.joinpath("quantiseqr/{sample}.log"),
+    output:
+        quanti_plot=PATH_CELL_TYPE_QUANTIFICATION.joinpath("{sample}.quanti_plot.pdf"),
+    script:
+        "scripts/quantiseqr.R"
