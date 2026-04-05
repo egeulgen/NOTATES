@@ -16,5 +16,6 @@ dependencies:
   - r-tibble
   - r-ggplot2
   - r-msigdbr
+  - r-circlize
   - bioconductor-gsva
   - bioconductor-gseabase

@@ -59,6 +59,7 @@ QUANTIFICATION_RESULTS = [
 FUSION_RESULTS = [
     PATH_FUSIONS.joinpath(f"{SAMPLE_ID}.fusions.tsv"),
     PATH_FUSIONS.joinpath(f"{SAMPLE_ID}.fusions.discarded.tsv"),
+    PATH_FUSIONS.joinpath(f"{SAMPLE_ID}.circos.pdf"),
 ]
 
 FILE_TYPES = ["tsv", "pdf"]
@@ -261,6 +262,17 @@ rule arriba:
         """
 
 
+rule circos_plot:
+    input:
+        arriba_result=rules.arriba.output.fusions,
+    log:
+        PATH_LOGS.joinpath("circos_plot/{sample}.log"),
+    output:
+        circos_plot=PATH_FUSIONS.joinpath("{sample}.circos.pdf"),
+    script:
+        "scripts/circos_plot.R"
+
+
 rule verhaak_classification:
     input:
         rsem_file=rules.rsem_quantification.output.gene_level,
@@ -277,7 +289,7 @@ rule enrichment:
     input:
         rsem_file=rules.rsem_quantification.output.gene_level,
     params:
-        collections=COLLECTIONS.values()
+        collections=COLLECTIONS.values(),
     log:
         PATH_LOGS.joinpath("enrichment/{sample}.log"),
     output:
