@@ -1,0 +1,23 @@
+name: notates-rnaseq-pipeline
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - python=3.11
+  - r-base=4.5.3
+  - snakemake
+  - multiqc
+  - trim-galore
+  - star=2.7.10b
+  - arriba
+  - rsem
+  - r-readr
+  - r-dplyr
+  - r-tibble
+  - r-ggplot2
+  - r-msigdbr
+  - r-circlize
+  - bioconductor-gsva
+  - bioconductor-gseabase
+  - r-biomartr
+  - bioconductor-quantiseqr

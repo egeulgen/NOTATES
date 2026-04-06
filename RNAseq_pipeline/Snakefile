@@ -1,0 +1,319 @@
+#!/usr/bin/env snakemake -s
+
+##################################################
+## Project: NOTATES RNAseq Pipeline
+## Purpose: Snakefile for the RNAseq pipeline
+## Date: Mar 2026
+## Author: Ege Ulgen
+##################################################
+
+
+def config_dict_to_cli(opts: dict) -> str:
+    """Turn extra options into CLI arguments"""
+    args = []
+    for k, v in opts.items():
+        if isinstance(v, bool):
+            if v:
+                args.append(f"--{k}")
+        else:
+            args.append(f"--{k} {v}")
+    return " ".join(args)
+
+
+SAMPLE_ID = config["sample_id"]
+
+FASTQ_DATA_DIR = Path(config["data_dir"])
+OUTPUT_DIR = Path(config["output_dir"])
+
+RSEM_IDX_PREFIX = Path(config["rsem_index"]).joinpath(".".join(Path(config["reference_genome"]).stem.split(".")[:2]))
+
+PATH_LOGS = OUTPUT_DIR.joinpath("logs")
+PATH_FASTQC = OUTPUT_DIR.joinpath("fastqc_reports")
+PATH_TRIM = OUTPUT_DIR.joinpath("trimming")
+PATH_STAR_ALIGN = OUTPUT_DIR.joinpath("mapping")
+PATH_QUANTIF = OUTPUT_DIR.joinpath("quantification")
+PATH_FUSIONS = OUTPUT_DIR.joinpath("fusions")
+PATH_CLASSIFICATION = OUTPUT_DIR.joinpath("verhaak_classification")
+PATH_ENRICHMENT = OUTPUT_DIR.joinpath("gene_set_enrichment")
+PATH_CELL_TYPE_QUANTIFICATION = OUTPUT_DIR.joinpath("quantiseqr")
+
+
+COLLECTIONS = {"hallmark": "H", "oncogenic": "C6", "immunological": "C7", "KEGG": "KEGG"}
+
+FASTQ_FILES = glob_wildcards(FASTQ_DATA_DIR.joinpath("{file_name}.fastq.gz").as_posix())
+FASTQC_HTML_FILES = expand(PATH_FASTQC.joinpath("{file_name}_fastqc.html"), file_name=FASTQ_FILES.file_name)
+
+MULTIQC_REPORT = OUTPUT_DIR.joinpath("multiqc_report.html")
+
+TRIMMED_READS = [
+    PATH_TRIM.joinpath(f"{SAMPLE_ID}_1_val_1.fq.gz"),
+    PATH_TRIM.joinpath(f"{SAMPLE_ID}_2_val_2.fq.gz"),
+]
+MAPPED_READS = [
+    PATH_STAR_ALIGN.joinpath(f"{SAMPLE_ID}_Aligned.toTranscriptome.out.bam"),
+    PATH_STAR_ALIGN.joinpath(f"{SAMPLE_ID}_Aligned.out.bam"),
+]
+QUANTIFICATION_RESULTS = [
+    PATH_QUANTIF.joinpath(f"{SAMPLE_ID}_rsem.isoforms.results"),
+    PATH_QUANTIF.joinpath(f"{SAMPLE_ID}_rsem.genes.results"),
+]
+FUSION_RESULTS = [
+    PATH_FUSIONS.joinpath(f"{SAMPLE_ID}.fusions.tsv"),
+    PATH_FUSIONS.joinpath(f"{SAMPLE_ID}.fusions.discarded.tsv"),
+    PATH_FUSIONS.joinpath(f"{SAMPLE_ID}.circos.pdf"),
+]
+CELL_TYPE_RESULTS = [PATH_CELL_TYPE_QUANTIFICATION.joinpath(f"{SAMPLE_ID}.quanti_plot.pdf")]
+
+FILE_TYPES = ["tsv", "pdf"]
+CLASSIFICATION_RESULTS = [PATH_CLASSIFICATION.joinpath(f"{SAMPLE_ID}.verhaak_scores.{ext}") for ext in FILE_TYPES]
+ENRICHMENT_RESULTS = [
+    PATH_ENRICHMENT.joinpath(f"{SAMPLE_ID}.{name}.scores.{ext}") for name in COLLECTIONS.keys() for ext in FILE_TYPES
+]
+
+RULE_ALL = [MULTIQC_REPORT]
+if config["output_target"] == "fastqc":
+    RULE_ALL += []
+elif config["output_target"] == "trimming":
+    RULE_ALL += TRIMMED_READS
+elif config["output_target"] == "mapping":
+    RULE_ALL += MAPPED_READS
+elif config["output_target"] == "quantification":
+    RULE_ALL += QUANTIFICATION_RESULTS
+else:
+    RULE_ALL += (
+        QUANTIFICATION_RESULTS + FUSION_RESULTS + CLASSIFICATION_RESULTS + ENRICHMENT_RESULTS + CELL_TYPE_RESULTS
+    )
+
+
+rule all:
+    input:
+        RULE_ALL,
+
+
+rule fastqc:
+    input:
+        fastq=FASTQ_DATA_DIR.joinpath("{file_name}.fastq.gz"),
+    output:
+        html=PATH_FASTQC.joinpath("{file_name}_fastqc.html"),
+    log:
+        PATH_LOGS.joinpath("fastqc/{file_name}.log"),
+    threads: 2
+    params:
+        outdir=PATH_FASTQC,
+    shell:
+        """
+        fastqc --outdir {params.outdir} --threads {threads} --quiet --noextract {input.fastq} \
+            > {log} 2>&1
+        """
+
+
+rule multiqc:
+    input:
+        FASTQC_HTML_FILES,
+    output:
+        multiqc_report=OUTPUT_DIR.joinpath("multiqc_report.html"),
+    log:
+        PATH_LOGS.joinpath("multiqc/multiqc.log"),
+    params:
+        outdir=OUTPUT_DIR,
+        fastqc_dir=PATH_FASTQC,
+    shell:
+        """
+        export LC_ALL=en_US.utf-8
+        export LANG=en_US.utf-8
+        multiqc {params.fastqc_dir} --outdir {params.outdir} --no-data-dir \
+            > {log} 2>&1
+        """
+
+
+rule trimgalore:
+    input:
+        FASTQ_DATA_DIR.joinpath("{sample}_1.fastq.gz"),
+        FASTQ_DATA_DIR.joinpath("{sample}_2.fastq.gz"),
+    output:
+        fastq1=PATH_TRIM.joinpath("{sample}_1_val_1.fq.gz"),
+        fastq2=PATH_TRIM.joinpath("{sample}_2_val_2.fq.gz"),
+    log:
+        PATH_LOGS.joinpath("trimgalore/{sample}.log"),
+    threads: config["threads"]
+    params:
+        outdir=PATH_TRIM,
+        trim_opts=lambda wildcards: config_dict_to_cli(config.get("trim_galore_options", {})),
+    shell:
+        """
+        trim_galore --phred33 --gzip --trim-n \
+            --output_dir {params.outdir} \
+            --retain_unpaired \
+            --cores {threads} \
+            {params.trim_opts} \
+            --paired {input} \
+            > {log} 2>&1
+        """
+
+
+rule star_index:
+    input:
+        ref_genome=config["reference_genome"],
+        gtf_file=config["reference_gtf"],
+    output:
+        index_path=directory(config["star_index"]),
+    threads: config["threads"]
+    log:
+        PATH_LOGS.joinpath("star/star_index.log"),
+    params:
+        extra_opts=lambda wildcards: config_dict_to_cli(config.get("star_index_options", {})),
+    shell:
+        """
+        STAR --runThreadN {threads} --runMode genomeGenerate \
+            --genomeDir {output.index_path} --genomeFastaFiles {input.ref_genome} \
+            --sjdbGTFfile {input.gtf_file} --sjdbOverhang 100 \
+            {params.extra_opts} \
+            > {log} 2>&1
+        """
+
+
+rule star_align:
+    input:
+        input_fastq1=rules.trimgalore.output.fastq1,
+        input_fastq2=rules.trimgalore.output.fastq2,
+        genome_idx=config["star_index"],
+    output:
+        aln_transcriptome=PATH_STAR_ALIGN.joinpath("{sample}_Aligned.toTranscriptome.out.bam"),
+        aln_genome=PATH_STAR_ALIGN.joinpath("{sample}_Aligned.out.bam"),
+    log:
+        PATH_LOGS.joinpath("star/{sample}_align.log"),
+    threads: config["threads"]
+    params:
+        extra_opts=lambda wc: config_dict_to_cli(config.get("star_align_options", {})),
+        out_prefix=lambda wc: PATH_STAR_ALIGN.joinpath(f"{wc.sample}_"),
+    shell:
+        """
+        STAR --runMode alignReads --genomeDir {input.genome_idx} --quantMode TranscriptomeSAM --runThreadN {threads} \
+            --readFilesIn {input.input_fastq1} {input.input_fastq2} \
+            --readFilesCommand "gunzip -c" \
+            --outFileNamePrefix {params.out_prefix} \
+            {params.extra_opts} \
+            > {log} 2>&1
+        """
+
+
+rule rsem_index:
+    input:
+        ref_genome=config["reference_genome"],
+        gtf_file=config["reference_gtf"],
+    output:
+        rsem_transcripts_fa=RSEM_IDX_PREFIX.with_name(f"{RSEM_IDX_PREFIX.name}.transcripts.fa"),
+    log:
+        PATH_LOGS.joinpath("rsem/rsem_index.log"),
+    params:
+        idx_prefix=RSEM_IDX_PREFIX,
+    shell:
+        "rsem-prepare-reference --gtf {input.gtf_file} {input.ref_genome} {params.idx_prefix} > {log} 2>&1"
+
+
+rule rsem_quantification:
+    input:
+        bam=rules.star_align.output.aln_transcriptome,
+        transcripts_fa=rules.rsem_index.output.rsem_transcripts_fa,
+    output:
+        gene_level=PATH_QUANTIF.joinpath("{sample}_rsem.genes.results"),
+        isoform_level=PATH_QUANTIF.joinpath("{sample}_rsem.isoforms.results"),
+    log:
+        PATH_LOGS.joinpath("rsem/{sample}_quantification.log"),
+    params:
+        idx_prefix=rules.rsem_index.params.idx_prefix,
+        out_prefix=lambda wc: PATH_QUANTIF.joinpath(f"{wc.sample}_rsem"),
+    threads: config["threads"]
+    shell:
+        """
+        rsem-calculate-expression \
+            --bam \
+            -p {threads} \
+            --paired-end \
+            --no-bam-output \
+            --estimate-rspd \
+            {input.bam} \
+            {params.idx_prefix} \
+            {params.out_prefix} \
+            > {log} 2>&1
+        """
+
+
+rule arriba:
+    input:
+        bam=rules.star_align.output.aln_genome,
+        genome=config["reference_genome"],
+        annotation=config["reference_gtf"],
+        blacklist=config["fusion_blacklist"],
+        known_fusions=config["known_fusions"],
+    log:
+        PATH_LOGS.joinpath("arriba/{sample}.log"),
+    threads: config["threads"]
+    output:
+        fusions=PATH_FUSIONS.joinpath("{sample}.fusions.tsv"),
+        discarded=PATH_FUSIONS.joinpath("{sample}.fusions.discarded.tsv"),
+    shell:
+        """
+        arriba \
+            -x {input.bam} \
+            -a {input.genome} \
+            -g {input.annotation} \
+            -b {input.blacklist} \
+            -k {input.known_fusions} \
+            -o {output.fusions} \
+            -O {output.discarded} \
+            > {log} 2>&1
+        """
+
+
+rule circos_plot:
+    input:
+        arriba_result=rules.arriba.output.fusions,
+    log:
+        PATH_LOGS.joinpath("circos_plot/{sample}.log"),
+    output:
+        circos_plot=PATH_FUSIONS.joinpath("{sample}.circos.pdf"),
+    script:
+        "scripts/circos_plot.R"
+
+
+rule verhaak_classification:
+    input:
+        rsem_file=rules.rsem_quantification.output.gene_level,
+    log:
+        PATH_LOGS.joinpath("verhaak_classification/{sample}.log"),
+    output:
+        scores_tsv=PATH_CLASSIFICATION.joinpath("{sample}.verhaak_scores.tsv"),
+        scores_plot=PATH_CLASSIFICATION.joinpath("{sample}.verhaak_scores.pdf"),
+    script:
+        "scripts/verhaak_classification.R"
+
+
+rule enrichment:
+    input:
+        rsem_file=rules.rsem_quantification.output.gene_level,
+    params:
+        collections=COLLECTIONS.values(),
+    log:
+        PATH_LOGS.joinpath("enrichment/{sample}.log"),
+    output:
+        **{
+            f"{col_id}_scores_{ext}": PATH_ENRICHMENT.joinpath("{sample}." + f"{col_name}.scores.{ext}")
+            for col_name, col_id in COLLECTIONS.items()
+            for ext in FILE_TYPES
+        },
+    script:
+        "scripts/enrichment_analyses.R"
+
+
+rule quantiseqr:
+    input:
+        rsem_file=rules.rsem_quantification.output.gene_level,
+    params:
+        sample_id="{sample}",
+    log:
+        PATH_LOGS.joinpath("quantiseqr/{sample}.log"),
+    output:
+        quanti_plot=PATH_CELL_TYPE_QUANTIFICATION.joinpath("{sample}.quanti_plot.pdf"),
+    script:
+        "scripts/quantiseqr.R"

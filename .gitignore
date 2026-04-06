@@ -14,3 +14,8 @@ Scripts/cosmic_sbs_details.csv
 Scripts/CGC_latest.csv
 Scripts/NOTATES/curated_dbs/important_KEGG_pws.csv
 Scripts/NOTATES/curated_dbs/important_KEGG_pws_MB.csv
+/RNAseq_pipeline/.snakemake
+/RNAseq_pipeline/data
+/RNAseq_pipeline/reference_data
+/RNAseq_pipeline/results
+RNAseq_pipeline/todo.md
