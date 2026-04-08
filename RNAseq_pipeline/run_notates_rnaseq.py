@@ -238,7 +238,14 @@ def create_dag_and_exit(config_path: Path) -> None:
     logger.info("Generating pipeline DAG...")
 
     snakemake = subprocess.Popen(
-        ["snakemake", "--configfile", str(config_path.resolve()), "--dag"],
+        [
+            "snakemake",
+            "--snakefile",
+            str(Path(__file__).resolve().parent.joinpath("Snakefile")),
+            "--configfile",
+            str(config_path.resolve()),
+            "--dag"
+        ],
         stdout=subprocess.PIPE,
     )
     with dag_path.open("wb") as fp:
@@ -257,6 +264,8 @@ def execute_pipeline(config_path: Path, threads: int) -> None:
         subprocess.run(
             [
                 "snakemake",
+                "--snakefile",
+                str(Path(__file__).resolve().parent.joinpath("Snakefile")),
                 "--configfile",
                 str(config_path.resolve()),
                 "--cores",
