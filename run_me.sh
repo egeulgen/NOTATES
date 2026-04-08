@@ -16,6 +16,9 @@ kit_name=$4
 tumor_type=$5
 primary_cond=$6
 tumor_sample=$7
+rnaseq_data_dir=$8
+rnaseq_sample_id=$9
+
 
 ### Set main_dir to the directory where this script is located
 main_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -277,6 +280,21 @@ Rscript "$scripts_dir"/DeConstructSigs.R $scripts_dir $patientID
 echo "######################## Creating Report                         " $(date)
 Rscript "$scripts_dir"/create_report.R $patientID $scripts_dir \
 	$exome_length $Target_Intervals $tumor_type $primary_cond $tumor_sample
+
+source $CONDA_BASE/etc/profile.d/conda.sh
+conda activate notates-rnaseq-pipeline
+
+$RNASEQ_DIR/run_notates_rnaseq.py \
+	--threads $num_threads \
+	--data-dir $rnaseq_data_dir \
+	--sample-id $rnaseq_sample_id \
+	--reference-genome $reference_fasta \
+	--gtf-file $reference_gtf \
+	--fusion-blacklist $blacklisted_fusions \
+	--known-fusions $known_fusions \
+	--star-index $STAR_IDX \
+	--rsem-index $RSEM_IDX \
+	--output-dir RNAseq_results
 
 conda deactivate
 echo "######################## Finished 							   " $(date)
