@@ -4,7 +4,7 @@ channels:
   - bioconda
 dependencies:
   - python=3.11
-  - r-base=4.5.3
+  - r-base
   - snakemake
   - multiqc
   - trim-galore
