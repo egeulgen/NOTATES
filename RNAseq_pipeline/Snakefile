@@ -62,12 +62,12 @@ FUSION_RESULTS = [
     PATH_FUSIONS.joinpath(f"{SAMPLE_ID}.fusions.discarded.tsv"),
     PATH_FUSIONS.joinpath(f"{SAMPLE_ID}_circos.pdf"),
 ]
-CELL_TYPE_RESULTS = [PATH_CELL_TYPE_QUANTIFICATION.joinpath(f"{SAMPLE_ID}.quanti_plot.pdf")]
+CELL_TYPE_RESULTS = [PATH_CELL_TYPE_QUANTIFICATION.joinpath(f"{SAMPLE_ID}_quanti_plot.pdf")]
 
 FILE_TYPES = ["tsv", "pdf"]
-CLASSIFICATION_RESULTS = [PATH_CLASSIFICATION.joinpath(f"{SAMPLE_ID}.verhaak_scores.{ext}") for ext in FILE_TYPES]
+CLASSIFICATION_RESULTS = [PATH_CLASSIFICATION.joinpath(f"{SAMPLE_ID}_verhaak_scores.{ext}") for ext in FILE_TYPES]
 ENRICHMENT_RESULTS = [
-    PATH_ENRICHMENT.joinpath(f"{SAMPLE_ID}.{name}.scores.{ext}") for name in COLLECTIONS.keys() for ext in FILE_TYPES
+    PATH_ENRICHMENT.joinpath(f"{SAMPLE_ID}_{name}_scores.{ext}") for name in COLLECTIONS.keys() for ext in FILE_TYPES
 ]
 
 RULE_ALL = [MULTIQC_REPORT]
@@ -283,8 +283,8 @@ rule verhaak_classification:
     log:
         PATH_LOGS.joinpath("verhaak_classification/{sample}.log"),
     output:
-        scores_tsv=PATH_CLASSIFICATION.joinpath("{sample}.verhaak_scores.tsv"),
-        scores_plot=PATH_CLASSIFICATION.joinpath("{sample}.verhaak_scores.pdf"),
+        scores_tsv=PATH_CLASSIFICATION.joinpath("{sample}_verhaak_scores.tsv"),
+        scores_plot=PATH_CLASSIFICATION.joinpath("{sample}_verhaak_scores.pdf"),
     script:
         "scripts/verhaak_classification.R"
 
@@ -298,7 +298,7 @@ rule enrichment:
         PATH_LOGS.joinpath("enrichment/{sample}.log"),
     output:
         **{
-            f"{col_id}_scores_{ext}": PATH_ENRICHMENT.joinpath("{sample}." + f"{col_name}.scores.{ext}")
+            f"{col_id}_scores_{ext}": PATH_ENRICHMENT.joinpath("{sample}_" + f"{col_name}_scores.{ext}")
             for col_name, col_id in COLLECTIONS.items()
             for ext in FILE_TYPES
         },
@@ -314,6 +314,6 @@ rule quantiseqr:
     log:
         PATH_LOGS.joinpath("quantiseqr/{sample}.log"),
     output:
-        quanti_plot=PATH_CELL_TYPE_QUANTIFICATION.joinpath("{sample}.quanti_plot.pdf"),
+        quanti_plot=PATH_CELL_TYPE_QUANTIFICATION.joinpath("{sample}_quanti_plot.pdf"),
     script:
         "scripts/quantiseqr.R"
