@@ -60,7 +60,7 @@ QUANTIFICATION_RESULTS = [
 FUSION_RESULTS = [
     PATH_FUSIONS.joinpath(f"{SAMPLE_ID}.fusions.tsv"),
     PATH_FUSIONS.joinpath(f"{SAMPLE_ID}.fusions.discarded.tsv"),
-    PATH_FUSIONS.joinpath(f"{SAMPLE_ID}.circos.pdf"),
+    PATH_FUSIONS.joinpath(f"{SAMPLE_ID}_circos.pdf"),
 ]
 CELL_TYPE_RESULTS = [PATH_CELL_TYPE_QUANTIFICATION.joinpath(f"{SAMPLE_ID}.quanti_plot.pdf")]
 
@@ -272,7 +272,7 @@ rule circos_plot:
     log:
         PATH_LOGS.joinpath("circos_plot/{sample}.log"),
     output:
-        circos_plot=PATH_FUSIONS.joinpath("{sample}.circos.pdf"),
+        circos_plot=PATH_FUSIONS.joinpath("{sample}_circos.pdf"),
     script:
         "scripts/circos_plot.R"
 

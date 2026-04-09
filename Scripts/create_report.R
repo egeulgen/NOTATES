@@ -26,7 +26,8 @@ render(input = summaryRMD_fname,
                      exome_length = as.numeric(args[3]),
                      type = args[5],
                      primary_tm = as.logical(args[6]),
-                     tumor_sample = args[7]),
+                     tumor_sample = args[7],
+                     rnaseq_sample_id=args[8]),
        output_format = "pdf_document")
 
 # Clean up
