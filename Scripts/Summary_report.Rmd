@@ -5,8 +5,9 @@ params:
   script_dir: ""
   exome_length: ""
   type: ""
-  primary_tm: ""
+  primary_tm: TRUE
   tumor_sample: ""
+  rnaseq_sample_id: ""
 header-includes:
 - \usepackage{float}
 - \usepackage{booktabs}
@@ -26,7 +27,7 @@ suppressPackageStartupMessages(library(kableExtra))
 
 indication_for_testing <- ifelse(params$type == "glioma", "Diffuse glioma clinical WES analysis",
                                  ifelse(params$type == "MB", "Medulloblastoma WES clinical WES analysis", "Oncological WES analysis"))
-treatment_status <- ifelse(as.logical(params$primary_tm), "Primary (untreated) tumor", "Recurrent (previously treated) tumor")
+treatment_status <- ifelse(params$primary_tm, "Primary (untreated) tumor", "Recurrent (previously treated) tumor")
 tumor_sample_type <- ifelse(params$tumor_sample == "FFPE", "Formalin-Fixed Paraffin-Embedded (FFPE) tissue specimen", "Fresh tumor tissue, snap-frozen in liquid nitrogen")
 
 QC_df <- read.csv("QC_table.csv" )
@@ -152,7 +153,12 @@ if (!is.null(all_som_vars)) {
   colnames(all_som_vars) <- c("Gene", "Classification", "Protein Change", "Genome Change", "VAF", "Category")
   
   k_tbl <- kable(all_som_vars, format = "latex", booktabs = TRUE)
-  kableExtra::kable_styling(kable_styling(k_tbl, font_size = 6), position = "center")
+  kableExtra::kable_styling(
+    k_tbl,
+    font_size = 6,
+    position = "center",
+    latex_options = "hold_position"
+  )
 } else {
   cat("No variation to report.")
 }
@@ -195,7 +201,12 @@ for (i in 1:length(file_paths)) {
 
 if (!is.null(all_scnas)) {
   k_tbl <- kable(all_scnas, format = "latex", booktabs = TRUE)
-  kableExtra::kable_styling(kable_styling(k_tbl, font_size = 6), position = "center")
+  kableExtra::kable_styling(
+    k_tbl,
+    font_size = 6,
+    position = "center",
+    latex_options = "hold_position"
+  )
 } else {
   cat("No variation to report.")
 }
@@ -203,6 +214,9 @@ if (!is.null(all_scnas)) {
 
 ## IV. Somatic Translocation Events
 
-```{r transloc, fig.align="center", out.width="20%"}
-include_graphics(file.path("DELLY", "TR_circos.pdf"))
+```{r transloc, fig.align="center", out.width="20%", fig.cap="Somatic translocation events from DNA (left) and RNA (right)", fig.show="hold"}
+knitr::include_graphics(c(
+  file.path("DELLY", "TR_circos.pdf"),
+  file.path("RNAseq_results", "fusions", paste0(params$rnaseq_sample_id, "_circos.pdf"))
+))
 ```
