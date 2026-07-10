@@ -214,9 +214,8 @@ if (!is.null(all_scnas)) {
 
 ## IV. Somatic Translocation Events
 
-```{r transloc, fig.align="center", out.width="20%", fig.cap="Somatic translocation events from DNA (left) and RNA (right)", fig.show="hold"}
-knitr::include_graphics(c(
-  file.path("DELLY", "TR_circos.pdf"),
+```{r transloc, fig.align="center", out.width="20%", fig.cap="Somatic translocation events from RNAseq", fig.show="hold"}
+knitr::include_graphics(
   file.path("RNAseq_results", "fusions", paste0(params$rnaseq_sample_id, "_circos.pdf"))
-))
+)
 ```
