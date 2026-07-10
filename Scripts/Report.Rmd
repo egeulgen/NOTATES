@@ -729,10 +729,7 @@ transloc_df <- read.delim("RNAseq_results/fusions/NOT-0123-Tumor.fusions.tsv")
 if(nrow(transloc_df) != 0) {
   colnames(transloc_df)[1] <- "gene1"
   
-  selected_cols <- c(
-    "gene1", "gene2", "breakpoint1", "breakpoint2", "site1", "site2", 
-    "type", "confidence", "reading_frame"
-  )
+  selected_cols <- c("gene1", "gene2", "type", "confidence")
   transloc_df <- transloc_df[, selected_cols]
   
   kable_styling(kable(transloc_df,
