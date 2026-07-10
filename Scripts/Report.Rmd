@@ -581,7 +581,17 @@ if(file.exists("NOTATES/Somatic_SNV/KEGG_selected.csv")) {
 
 Only SCNAs with a $log_2(Tumor/Normal)$ ratio $\le$ -0.25 or $\ge$ 0.25 were used in analysis.
 
-## V. a. SCNA Burden
+## V. a. Chromosome-arm Analysis
+
+\begin{center} 
+\includegraphics[width=500pt]{chromosome_arm_scna/arm_copynumber_heatmap.png}
+\end{center}
+
+\begin{center} 
+\includegraphics[width=500pt]{chromosome_arm_scna/arm_gain_loss_fraction_heatmap.png}
+\end{center}
+
+## V. b. SCNA Burden
 
 Numerous studies have shown that SCNA burden is an important prognostic marker ^[^8],^[^9]^,^[^10]. Below are 4 metrics associated with SCNA Burden:
 
@@ -681,7 +691,7 @@ if(!params$ID %in% scna_burden_df$ID) {
 }
 ```
 
-`r if(params$type == "glioma") {"## V. b. Established SCNAs in Glioma"} else {"## V. b. Established SCNAs in Medulloblastoma"}`
+`r if(params$type == "glioma") {"## V. c. Established SCNAs in Glioma"} else {"## V. c. Established SCNAs in Medulloblastoma"}`
 
 `r if(params$type == "glioma") {"This is the intersection of SCNAs in this case with a list of SCNAs manually curated because of their importance in gliomas."} else {"This is the intersection of SCNAs in this case with a list of SCNAs manually curated because of their importance in medulloblastomas."}`
 
@@ -699,7 +709,7 @@ if(file.exists("NOTATES/SCNA/important_CNVs.csv")) {
 }
 ```
 
-## V. c. SCNAs in Cancer Gene Census Genes
+## V. d. SCNAs in Cancer Gene Census Genes
 
 This subsection lists SCNAs where the gene subject to copy-number alteration is listed in CGC.
 
@@ -716,7 +726,7 @@ if(file.exists("NOTATES/SCNA/CGC_CNVs.csv")) {
 }
 ```
 
-## V. d. Broad SCNAs
+## V. e. Broad SCNAs
 
 This subsection lists SCNA events that span over one or more cytobands.
 
