@@ -15,4 +15,3 @@ dependencies:
   - bcftools
   - pandoc
   - texlive-core
-  - delly

@@ -742,31 +742,7 @@ if(file.exists("NOTATES/SCNA/broad.csv")) {
 
 # VI. Somatic Translocations
 
-## VI. a. Events from DNA
-
-Possible somatic translocations based on DNA are called using `DELLY`. Only gene-to-different-gene structural variants (where both ends of the structural variant are in the exonic/intronic regions of the two genes) are kept. Below is the circos plot displaying possible translocations.
-
-\begin{center}
-\includegraphics[width=400pt]{DELLY/TR_circos.pdf}
-\end{center}
-
-```{r translocation_table}
-transloc_df <- read.csv("DELLY/possible_translocations.csv")
-if(nrow(transloc_df) != 0) {
-  kable_styling(kable(transloc_df,
-                      format = "latex", 
-                      booktabs = TRUE,
-                      align = "c"),
-                latex_options = "hold_position",
-                position = "center")
-} else {
-  cat("No variation to report.")
-}
-```
-
-## VI. b. Events from RNA
-
-Possible somatic translocations based on RNA are called using `arriba`. Below is the circos plot displaying possible translocations.
+Possible somatic translocations based on RNA-sequencing are called using `arriba`. Below is the circos plot displaying possible translocations.
 
 \begin{center}
 \includegraphics[width=400pt]{RNAseq_results/fusions/`r paste0(params$rnaseq_sample_id, "_circos.pdf")`}

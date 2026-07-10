@@ -11,17 +11,7 @@ conda env create -f NOTATES_R_env.yml
 conda env create -f NOTATES_python_env.yml
 ```
 
-# 3. Activate NOTATES main environment and register GATK3
-
-GATK3 jar file can be found here: https://console.cloud.google.com/storage/browser/gatk-software/package-archive/gatk
-
-``` bash
-conda activate NOTATES_main
-gatk3-register /path/to/GenomeAnalysisTK.jar 
-conda deactivate
-```
-
-# 4. Activate NOTATES R environment and install non-conda R packages
+# 3. Activate NOTATES R environment and install non-conda R packages
 
 ``` bash
 conda activate NOTATES_R
@@ -34,7 +24,7 @@ install.packages("https://cran.r-project.org/src/contrib/Archive/ExomeCNV/ExomeC
 devtools::install_github("raerose01/deconstructSigs")
 ```
 
-# 5. Install THetA2
+# 4. Install THetA2
 
 Activate the NOTATES_python environment, obtain the most recent version and install:
 
@@ -46,7 +36,7 @@ cd THetA
 conda deactivate
 ```
 
-# 6. Install MSIpred
+# 5. Install MSIpred
 
 Activate the NOTATES_python environment, obtain the most recent version and install:
 
@@ -58,7 +48,7 @@ python setup.py install
 conda deactivate
 ```
 
-# 7. Download necessary resources
+# 6. Download necessary resources
 
 The pipeline utilizes the following resources (`path/to/resource` can be altered in the configuration file `notates.config`):
 
@@ -80,12 +70,12 @@ Additionally, the following files should be placed in the designated places:
 - The table of COSMIC SBS Signatures descriptions (to be placed under `Scripts/cosmic_sbs_details.csv`, required columns are: Signature, Proposed aetiology, Associated mutation classes and signatures, Comments) (can be obtained for non-commercial purposes on [https://cancer.sanger.ac.uk/cosmic/signatures/index.tt](https://cancer.sanger.ac.uk/cosmic/signatures/index.tt))
 - Tables of selected KEGG pathways (to be placed under  `Scripts/NOTATES/curated_dbs/important_KEGG_pws_glioma.csv` for glioma and `Scripts/NOTATES/curated_dbs/important_KEGG_pws_MB.csv` for medulloblastoma, with 2 columns: "Gene" and "pathway") (The R script in `Scripts/NOTATES/curated_dbs/kegg_db_prep.R` can be used to obtain the genes under selected KEGG pathways, only for non-commercial purposes)
 
-# 8. Update the configuration file
+# 7. Update the configuration file
 
 Update the configuration file `notates.config`
 
-# 9. Run run_me.sh
+# 8. Run run_me.sh
 
 ``` bash
-bash run_me.sh Analyis_ID Normal_ID Tumor_ID Capture_kit_name type_of_tumor["glioma" or "MB"] primary?["TRUE" or "FALSE"] tumor_sample_type["LiN2" or "FFPE"]
+bash run_me.sh Analyis_ID Normal_ID Tumor_ID Capture_kit_name type_of_tumor["glioma" or "MB"] primary?["TRUE" or "FALSE"] tumor_sample_type["LiN2" or "FFPE"] rnaseq_data_dir rnaseq_sample_id
 ```
