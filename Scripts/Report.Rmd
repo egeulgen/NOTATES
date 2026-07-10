@@ -86,22 +86,7 @@ kable_styling(kable(contam_df[, -1],
 
 \newpage
 
-# II. Glioblastoma Molecular Classification (Verhaak et al.)
-
-Glioblastoma can be stratified into four transcriptional subtypes based on RNA quantification results: Proneural, Neural, Classical, and Mesenchymal—based on gene expression profiling as described by Verhaak et al. [^3] These subtypes are associated with distinct genomic alterations and biological characteristics: the Proneural subtype is commonly linked to PDGFRA abnormalities and IDH1 mutations; the Classical subtype is characterized by EGFR amplification and chromosome 7 gain/10 loss; the Mesenchymal subtype is associated with NF1 loss and inflammatory signatures; and the Neural subtype reflects expression patterns of normal neuronal tissue. This classification captures the molecular heterogeneity of GBM and has been shown to correlate with differences in tumor biology and therapeutic response.
-
-[^3]: Verhaak, R. G., Hoadley, K. A., Purdom, E., Wang, V., Qi, Y., Wilkerson, M. D., Miller, C. R., Ding, L., Golub, T., Mesirov, J. P., Alexe, G., Lawrence, M., O’Kelly, M., Tamayo, P., Weir, B. A., Gabriel, S., Winckler, W., Gupta, S., Jakkula, L., ... Hayes, D. N. (2010). Integrated Genomic analysis identifies clinically relevant subtypes of glioblastoma characterized by abnormalities in PDGFRA, IDH1, EGFR, and NF1. Cancer Cell, 17(1), 98–110. https://doi.org/10.1016/j.ccr.2009.12.020
-
-Below are the calculated scores for each subtype for this tumor.
-
-\begin{center}
-\includegraphics[width=400pt]{RNAseq_results/verhaak_classification/`r paste0(params$rnaseq_sample_id, "_verhaak_scores.pdf")`}
-\end{center}
-
-
-\newpage
-
-# III. Germline Alterations
+# II. Germline Alterations
 
 Germline alterations are assessed from the WES sequencing of DNA extracted from blood. Alterations are called using GATK - HaplotypeCaller. Findings are filtered for germline single nucleotide variations (SNVs) and short (typically less than 20 bases-long) insertion-deletion events (indels) that:
 
@@ -112,7 +97,7 @@ Germline alterations are assessed from the WES sequencing of DNA extracted from 
 
 `r if(params$type == "glioma") {" (except for the subsection \"Common Variants\")"}`. The altered gene, the position of the SNV, the reference nucleotide as well as the altered nucleotide, the mutation type, the read depth of the variation, the estimated allelic frequency and clinical significance (as reported in ClinVar) are reported. The report follows a sequential order where an alteration reported in a subsection is not reported in the following subsections. This sequential order prioritizes variants from a "highly likely" to "less likely" clinical relevance.
 
-## III. a. ACMG Incidental Findings
+## II. a. ACMG Incidental Findings
 
 Filtered germline SNV/indels that affects any of the genes listed in ACMG SF V2.0[^2] - incidental findings are reported under this subsection.
 
@@ -141,7 +126,7 @@ if(file.exists("NOTATES/Germline/ACMG.csv")) {
 }
 ```
 
-## III. b. Variants in Cancer Gene Census Genes
+## II. b. Variants in Cancer Gene Census Genes
 
 Cancer Gene Census (CGC) from the Catalogue of Somatic Mutations in Cancer (COSMIC) database is a catalog of genes which contain mutations that have been causally linked to cancer [(https://cancer.sanger.ac.uk/census)](https://cancer.sanger.ac.uk/census). This subsection filters the germline SNV/indels for genes that are reported in CGC. 
 
@@ -168,7 +153,7 @@ if(file.exists("NOTATES/Germline/CGC.csv")) {
 }
 ```
 
-## III. c. Variants in Cancer Predisposition Genes
+## II. c. Variants in Cancer Predisposition Genes
 
 Genes in which germline mutations confer highly or moderately increased risks of cancer are called cancer predisposition genes. Filtered germline SNV/indels cataloged in the 2014 Nature publication by Rahman [^4], studying cancer predisposition genes, are reported in this subsection.
 
@@ -198,7 +183,7 @@ if(file.exists("NOTATES/Germline/CPG.csv")) {
 ```
 
 
-## III. d. Variants in DNA Damage Repair Genes
+## II. d. Variants in DNA Damage Repair Genes
 
 In this subsection, filtered germline variants in Human DNA Repair Genes [^5] are presented.
 
@@ -252,7 +237,7 @@ if (params$type == "glioma") {
 
 \newpage
 
-# IV. Somatic Single Nucleotide Variations (SNVs) and Small Insertion/Deletions (Indels)
+# III. Somatic Single Nucleotide Variations (SNVs) and Small Insertion/Deletions (Indels)
 
 In this section, Tumor Mutational Burden, Microsatellite Instability Status, and somatic mutations are reported.
 
@@ -260,7 +245,7 @@ Somatic mutations were called from the tumor-blood pair in the current analysis 
 
 The reporting of SNVs/indels follows a sequential order where an alteration reported in a subsection is not reported in the following subsections. This sequential order prioritizes variants from a "highly likely" to "less likely" clinical relevance.
 
-## IV. a. Tumor Mutational Burden (TMB)
+## III. a. Tumor Mutational Burden (TMB)
 
 TMB is defined as the number of somatic mutations in the coding region (more accurately the exome capture kit's intervals) per megabase, including SNVs and indels.
 
@@ -379,7 +364,7 @@ if (params$type == "glioma") {
 
 > TMB for the current tumor sample is: `r round(current_TMB, 2)` mutations/Mb (`r ifelse(current_TMB > 20, "High \\(>", "Normal \\(<=")` 20 mutations/Mb))
 
-## IV. b. Microsatellite Instability Status
+## III. b. Microsatellite Instability Status
 
 Microsatellite instability (MSI) is the result of impaired DNA mismatch repair and constitutes a cellular phenotype of clinical significance in many cancer types. The MSI status of the tumor was predicted using the tool MSIpred [^6]. MSIpred computes 22 somatic mutational features (predictors of MSI) and using these features, it predicts tumor MSI status as microsatellite instability high (MSI-H) or microsatellite stable (MSS) using a machine learning method, support vector machine. 
 
@@ -402,7 +387,7 @@ kable_styling(kable(class_tbl,
               position = "center")
 ```
 
-`r if(params$type == "glioma") {"## IV. c. Variants in Established Glioma Genes"} else {"## IV. c. Variants in Established Medulloblastoma Genes"}`
+`r if(params$type == "glioma") {"## III. c. Variants in Established Glioma Genes"} else {"## III. c. Variants in Established Medulloblastoma Genes"}`
 
 `r if(params$type == "glioma") {"This subsection contains somatic SNV/indels in genes that have been reported in the TCGA pan-glioma study of Ceccarelli et al. [^7] which analyzed 1122 WHO grade II-III and IV diffuse-gliomas."} else {"This is the intersection of somaticSNV/indels in this case with a list of genes manually curated because of their importance in medulloblastomas."}`
 
@@ -429,7 +414,7 @@ if(file.exists("NOTATES/Somatic_SNV/important_SNVs.csv")) {
 }
 ```
 
-## IV. d. Hotspot Variants in Cancer Gene Census Genes
+## III. d. Hotspot Variants in Cancer Gene Census Genes
 
 This subsection presents somatic SNV/indels which fulfill the following criteria:
 
@@ -456,7 +441,7 @@ if(file.exists("NOTATES/Somatic_SNV/COSMIC_hotspot.csv")) {
 }
 ```
 
-## IV. e. Other Variants in Cancer Gene Census Genes
+## III. e. Other Variants in Cancer Gene Census Genes
 
 This subsection lists somatic variants where the gene harboring the variants is listed in the COSMIC-CGC, which is a catalog of genes which contain mutations that have been causally linked to cancer [(https://cancer.sanger.ac.uk/census)](https://cancer.sanger.ac.uk/census).
 
@@ -481,7 +466,7 @@ if(file.exists("NOTATES/Somatic_SNV/CGC_genes.csv")) {
 }
 ```
 
-## IV. f. Other Possibly Important Somatic SNV/indels
+## III. f. Other Possibly Important Somatic SNV/indels
 
 Somatic SNV/indels in DNA damage repair genes that were presented on [https://www.mdanderson.org/documents/Labs/Wood-Laboratory/human-dna-repair-genes.html](https://www.mdanderson.org/documents/Labs/Wood-Laboratory/human-dna-repair-genes.html):
 
@@ -577,11 +562,11 @@ if(file.exists("NOTATES/Somatic_SNV/KEGG_selected.csv")) {
 
 \newpage
 
-# V. Somatic Copy Number Alterations (SCNAs)
+# IV. Somatic Copy Number Alterations (SCNAs)
 
 Only SCNAs with a $log_2(Tumor/Normal)$ ratio $\le$ -0.25 or $\ge$ 0.25 were used in analysis.
 
-## V. a. Chromosome-arm Analysis
+## IV. a. Chromosome-arm Analysis
 
 \begin{center} 
 \includegraphics[width=500pt]{chromosome_arm_scna/arm_copynumber_heatmap.png}
@@ -591,7 +576,7 @@ Only SCNAs with a $log_2(Tumor/Normal)$ ratio $\le$ -0.25 or $\ge$ 0.25 were use
 \includegraphics[width=500pt]{chromosome_arm_scna/arm_gain_loss_fraction_heatmap.png}
 \end{center}
 
-## V. b. SCNA Burden
+## IV. b. SCNA Burden
 
 Numerous studies have shown that SCNA burden is an important prognostic marker ^[^8],^[^9]^,^[^10]. Below are 4 metrics associated with SCNA Burden:
 
@@ -691,7 +676,7 @@ if(!params$ID %in% scna_burden_df$ID) {
 }
 ```
 
-`r if(params$type == "glioma") {"## V. c. Established SCNAs in Glioma"} else {"## V. c. Established SCNAs in Medulloblastoma"}`
+`r if(params$type == "glioma") {"## IV. c. Established SCNAs in Glioma"} else {"## IV. c. Established SCNAs in Medulloblastoma"}`
 
 `r if(params$type == "glioma") {"This is the intersection of SCNAs in this case with a list of SCNAs manually curated because of their importance in gliomas."} else {"This is the intersection of SCNAs in this case with a list of SCNAs manually curated because of their importance in medulloblastomas."}`
 
@@ -709,7 +694,7 @@ if(file.exists("NOTATES/SCNA/important_CNVs.csv")) {
 }
 ```
 
-## V. d. SCNAs in Cancer Gene Census Genes
+## IV. d. SCNAs in Cancer Gene Census Genes
 
 This subsection lists SCNAs where the gene subject to copy-number alteration is listed in CGC.
 
@@ -726,7 +711,7 @@ if(file.exists("NOTATES/SCNA/CGC_CNVs.csv")) {
 }
 ```
 
-## V. e. Broad SCNAs
+## IV. e. Broad SCNAs
 
 This subsection lists SCNA events that span over one or more cytobands.
 
@@ -750,7 +735,7 @@ if(file.exists("NOTATES/SCNA/broad.csv")) {
 
 \newpage
 
-# VI. Somatic Translocations
+# V. Somatic Translocations
 
 Possible somatic translocations based on RNA-sequencing are called using `arriba`. Below is the circos plot displaying possible translocations.
 
@@ -800,11 +785,11 @@ if(nrow(transloc_df) != 0) {
 
 \newpage
 
-# VII. Loss of Heterozygosity (LOH) Events
+# VI. Loss of Heterozygosity (LOH) Events
 
 Only LOH events for which absolute difference of B-allele frequencies ($|BAF_{Tumor}-BAF_{Normal}|$) is larger than 0.4 are reported.
 
-## VII. a. LOH Overview
+## VI. a. LOH Overview
 
 All LOH events that pass the filter are reported here.
 
@@ -822,7 +807,7 @@ if (nrow(loh) == 0) {
 }
 ```
 
-## VII. b. LOH + Somatic SNV/Indel
+## VI. b. LOH + Somatic SNV/Indel
 
 Here, alterations where a gene has LOH and a somatic SNV/indel are reported.
 
@@ -838,7 +823,7 @@ if(file.exists("NOTATES/LOH/d_hit_loh.csv"))
 }
 ```
 
-## VII. c. LOH Events in Cancer Gene Census Genes 
+## VI. c. LOH Events in Cancer Gene Census Genes 
 
 LOH events where the gene subject to LOH is listed in CGC are reported here.
 
@@ -860,7 +845,7 @@ if(file.exists("NOTATES/LOH/CGC_loh.csv"))
 
 \newpage
 
-# VIII. Genes with Double Hit
+# VII. Genes with Double Hit
 
 A double hit strongly suggests a relevant tumor-suppressor gene [^11]. In this section, the list of genes with somatic SNV/indel(s) as well as SCNA and/or LOH events are reported.
 
@@ -878,7 +863,7 @@ if(file.exists("NOTATES/double_hit.csv"))
 ```
 
 
-# IX. Tumor Heterogeneity Analysis 
+# VIII. Tumor Heterogeneity Analysis 
 
 ```{r n3_or_n2}
 if(!file.exists("THetA/output/CNV.BEST.results")){
@@ -900,7 +885,7 @@ THetA (Tumor Heterogeneity Analysis) is an algorithm that estimates the tumor pu
 
 \newpage
 
-# X. Tumor Immune Contexture
+# IX. Tumor Immune Contexture
 
 The immune composition of the tumor was inferred using quanTIseq [^13], a computational method for deconvoluting bulk RNA-seq data to estimate the relative fractions of ten immune cell types, including T cells, B cells, NK cells, and myeloid populations. This approach provides a quantitative view of the tumor immune microenvironment, which can inform on tumor-immune interactions and potential therapeutic vulnerabilities.
 
@@ -920,7 +905,7 @@ Additionally, single sample Gene Set Enrichment (GSEA) was performed using RNAse
 
 \newpage
 
-# XI. Mutational Signatures
+# X. Mutational Signatures
 
 Somatic mutations in cancer genomes are caused by multiple mutational processes each of which generates a characteristic mutational signature (i.e. a distinct pattern of substitution types in specific sequence contexts) [^12]. Importantly, recent studies show that mutational signatures could have significant clinical impact in certain tumor types [^14]^-^[^15].
 
@@ -947,6 +932,21 @@ k_tbl <- column_spec(k_tbl, 4, width = "10em")
 k_tbl <- column_spec(k_tbl, 5, width = "10em")
 kable_styling(k_tbl, latex_options = c("repeat_header"), position = "center")
 ```
+
+\newpage
+
+# XI. Glioblastoma Molecular Classification (Verhaak et al.)
+
+Glioblastoma can be stratified into four transcriptional subtypes based on RNA quantification results: Proneural, Neural, Classical, and Mesenchymal—based on gene expression profiling as described by Verhaak et al. [^3] These subtypes are associated with distinct genomic alterations and biological characteristics: the Proneural subtype is commonly linked to PDGFRA abnormalities and IDH1 mutations; the Classical subtype is characterized by EGFR amplification and chromosome 7 gain/10 loss; the Mesenchymal subtype is associated with NF1 loss and inflammatory signatures; and the Neural subtype reflects expression patterns of normal neuronal tissue. This classification captures the molecular heterogeneity of GBM and has been shown to correlate with differences in tumor biology and therapeutic response.
+
+[^3]: Verhaak, R. G., Hoadley, K. A., Purdom, E., Wang, V., Qi, Y., Wilkerson, M. D., Miller, C. R., Ding, L., Golub, T., Mesirov, J. P., Alexe, G., Lawrence, M., O’Kelly, M., Tamayo, P., Weir, B. A., Gabriel, S., Winckler, W., Gupta, S., Jakkula, L., ... Hayes, D. N. (2010). Integrated Genomic analysis identifies clinically relevant subtypes of glioblastoma characterized by abnormalities in PDGFRA, IDH1, EGFR, and NF1. Cancer Cell, 17(1), 98–110. https://doi.org/10.1016/j.ccr.2009.12.020
+
+Below are the calculated scores for each subtype for this tumor.
+
+\begin{center}
+\includegraphics[width=400pt]{RNAseq_results/verhaak_classification/`r paste0(params$rnaseq_sample_id, "_verhaak_scores.pdf")`}
+\end{center}
+
 
 \newpage
 
