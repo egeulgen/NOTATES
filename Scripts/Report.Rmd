@@ -413,14 +413,17 @@ if(file.exists("NOTATES/Somatic_SNV/important_SNVs.csv")) {
   imp_som_var <- read.csv("NOTATES/Somatic_SNV/important_SNVs.csv", colClasses = c("character"))
   imp_som_var <- imp_som_var[, setdiff(colnames(imp_som_var), 
                                c("COSMIC_total_alterations_in_gene", "DNA_repair", "selected_KEGG"))]
-  colnames(imp_som_var) <- c("Gene", "Variant Classification", "Protein", "Genomic Change", "VAF", "COS_n_ov",
+  colnames(imp_som_var) <- c("Gene", "Variant Classification", "Protein", "Genomic Change", "VAF", "COS_n",
                          "UniProt_Region", "Irino", "TMZ")
   
-  imp_som_var$COSMIC <- paste0("https://cancer.sanger.ac.uk/cosmic/gene/analysis?ln=", imp_som_var$Gene)
+  imp_som_var$COSMIC <- imp_som_var$Gene
+  cosmic_urls <- paste0("https://cancer.sanger.ac.uk/cosmic/gene/analysis?ln=", imp_som_var$Gene)
   
-  k_tbl <- kable(imp_som_var, format = "latex", booktabs = TRUE)
-  k_tbl <- column_spec(k_tbl, which(colnames(imp_som_var) == "UniProt_Region"), width = "10em")
-  kable_styling(k_tbl, latex_options = c("hold_position", "scale_down"), position = "center")
+  
+  k_tbl <- kable(imp_som_var, format = "latex", booktabs = TRUE, longtable = TRUE)
+  k_tbl <- column_spec(k_tbl, which(colnames(imp_som_var) == "UniProt_Region"), width = "6em")
+  k_tbl <- column_spec(k_tbl, which(colnames(imp_som_var) == "COSMIC"), link = cosmic_urls)
+  kable_styling(k_tbl, latex_options = c("hold_position", "repeat_header"), position = "center", font_size = 8)
 } else {
   cat("No variation to report.")
 }
@@ -438,14 +441,16 @@ if(file.exists("NOTATES/Somatic_SNV/COSMIC_hotspot.csv")) {
   hot_som <- read.csv("NOTATES/Somatic_SNV/COSMIC_hotspot.csv", colClasses = c("character"))
   hot_som <- hot_som[, setdiff(colnames(hot_som), 
                                c("COSMIC_total_alterations_in_gene", "DNA_repair", "selected_KEGG"))]
-  colnames(hot_som) <- c("Gene", "Variant Classification", "Protein", "Genomic Change", "VAF", "COS_n_ov",
+  colnames(hot_som) <- c("Gene", "Variant Classification", "Protein", "Genomic Change", "VAF", "COS_n",
                          "UniProt_Region","Irino", "TMZ")
   
-  hot_som$COSMIC <- paste0("https://cancer.sanger.ac.uk/cosmic/gene/analysis?ln=", hot_som$Gene)
+  hot_som$COSMIC <- hot_som$Gene
+  cosmic_urls <- paste0("https://cancer.sanger.ac.uk/cosmic/gene/analysis?ln=", hot_som$Gene)
   
-  k_tbl <- kable(hot_som, format = "latex", booktabs = TRUE)
-  k_tbl <- column_spec(k_tbl, which(colnames(hot_som) == "UniProt_Region"), width = "10em")
-  kable_styling(k_tbl, latex_options = c("hold_position", "scale_down"), position = "center")
+  k_tbl <- kable(hot_som, format = "latex", booktabs = TRUE, longtable = TRUE)
+  k_tbl <- column_spec(k_tbl, which(colnames(hot_som) == "UniProt_Region"), width = "6em")
+    k_tbl <- column_spec(k_tbl, which(colnames(hot_som) == "COSMIC"), link = cosmic_urls)
+  kable_styling(k_tbl, latex_options = c("hold_position", "repeat_header"), position = "center", font_size = 8)
 } else {
   cat("No variation to report.")
 }
@@ -460,14 +465,16 @@ if(file.exists("NOTATES/Somatic_SNV/CGC_genes.csv")) {
   cgc_som <- read.csv("NOTATES/Somatic_SNV/CGC_genes.csv", colClasses = c("character"))
   cgc_som <- cgc_som[, setdiff(colnames(cgc_som), 
                                c("COSMIC_total_alterations_in_gene", "DNA_repair", "selected_KEGG"))]
-  colnames(cgc_som) <- c("Gene", "Variant Classification", "Protein", "Genomic Change","VAF", "COS_n_ov",
+  colnames(cgc_som) <- c("Gene", "Variant Classification", "Protein", "Genomic Change","VAF", "COS_n",
                          "UniProt_Region", "Irino", "TMZ")
   
-  cgc_som$COSMIC <- paste0("https://cancer.sanger.ac.uk/cosmic/gene/analysis?ln=", cgc_som$Gene)
+  cgc_som$COSMIC <- cgc_som$Gene
+  cosmic_urls <- paste0("https://cancer.sanger.ac.uk/cosmic/gene/analysis?ln=", cgc_som$Gene)
   
   k_tbl <- kable(cgc_som, format = "latex", booktabs = TRUE)
-  k_tbl <- column_spec(k_tbl, which(colnames(cgc_som) == "UniProt_Region"), width = "10em")
-  kable_styling(k_tbl, latex_options = c("hold_position", "scale_down"), position = "center")
+  k_tbl <- column_spec(k_tbl, which(colnames(cgc_som) == "UniProt_Region"), width = "6em")
+  k_tbl <- column_spec(k_tbl, which(colnames(cgc_som) == "COSMIC"), link = cosmic_urls)
+  kable_styling(k_tbl, latex_options = c("hold_position", "scale_down"), position = "center", font_size = 8)
 } else
 {
   cat("No variation to report.")
@@ -484,14 +491,16 @@ if(file.exists("NOTATES/Somatic_SNV/DDR_related.csv")) {
 
   ddr_som_var <- ddr_som_var[, setdiff(colnames(ddr_som_var),
                                        c("COSMIC_total_alterations_in_gene", "selected_KEGG"))]
-  colnames(ddr_som_var) <- c("Gene", "Variant Classification", "Protein", "Genomic Change", "VAF", "COS_n_ov",
+  colnames(ddr_som_var) <- c("Gene", "Variant Classification", "Protein", "Genomic Change", "VAF", "COS_n",
                              "UniProt_Region", "DNA_repair", "Irino", "TMZ")
   
-  ddr_som_var$COSMIC <- paste0("https://cancer.sanger.ac.uk/cosmic/gene/analysis?ln=", ddr_som_var$Gene)
+  ddr_som_var$COSMIC <- ddr_som_var$Gene
+  cosmic_urls <- paste0("https://cancer.sanger.ac.uk/cosmic/gene/analysis?ln=", ddr_som_var$Gene)
   
-  k_tbl <- kable(ddr_som_var, format = "latex", booktabs = TRUE)
-  k_tbl <- column_spec(k_tbl, which(colnames(ddr_som_var) == "UniProt_Region"), width = "10em")
-  kable_styling(k_tbl, latex_options = c("hold_position", "scale_down"), position = "center")
+  k_tbl <- kable(ddr_som_var, format = "latex", booktabs = TRUE, longtable = TRUE)
+  k_tbl <- column_spec(k_tbl, which(colnames(ddr_som_var) == "UniProt_Region"), width = "6em")
+  k_tbl <- column_spec(k_tbl, which(colnames(ddr_som_var) == "COSMIC"), link = cosmic_urls)
+  kable_styling(k_tbl, latex_options = c("hold_position", "repeat_header"), position = "center", font_size = 8)
 } else {
   cat("No variation to report.")
 }
@@ -499,18 +508,68 @@ if(file.exists("NOTATES/Somatic_SNV/DDR_related.csv")) {
 
 Somatic SNVs/indels in important KEGG Pathway genes:
 
-```{r kegg}
+```{r kegg, results='asis'}
 if(file.exists("NOTATES/Somatic_SNV/KEGG_selected.csv")) {
   kegg_som_var <- read.csv("NOTATES/Somatic_SNV/KEGG_selected.csv", colClasses = c("character"))
   
-  colnames(kegg_som_var) <- c("Gene", "Variant Classification", "Protein", "Genomic Change", "VAF", "COS_n_ov",
+  colnames(kegg_som_var) <- c("Gene", "Variant Classification", "Protein", "Genomic Change", "VAF", "COS_n",
                               "COS_tot", "UniProt_Region", "DNA_repair", "Irino", "TMZ", "KEGG")
   
-  kegg_som_var$COSMIC <- paste0("https://cancer.sanger.ac.uk/cosmic/gene/analysis?ln=", kegg_som_var$Gene)
+  kegg_som_var$COSMIC <- kegg_som_var$Gene
+  cosmic_urls <- paste0("https://cancer.sanger.ac.uk/cosmic/gene/analysis?ln=", kegg_som_var$Gene)
 
-  k_tbl <- kable(kegg_som_var, format = "latex", booktabs = TRUE)
-  k_tbl <- column_spec(k_tbl, which(colnames(kegg_som_var) == "UniProt_Region"), width = "10em")
-  kable_styling(k_tbl, latex_options = c("hold_position", "scale_down"), position = "center")
+  make_table <- function(df) {
+    k_tbl <- kable(
+      df,
+      format = "latex",
+      booktabs = TRUE,
+      longtable = TRUE
+    )
+  
+    if ("UniProt_Region" %in% names(df)) {
+      k_tbl <- column_spec(
+        k_tbl,
+        which(names(df) == "UniProt_Region"),
+        width = "6em"
+      )
+    }
+  
+    if ("COSMIC" %in% names(df)) {
+      k_tbl <- column_spec(
+        k_tbl,
+        which(names(df) == "COSMIC"),
+        link = cosmic_urls
+      )
+    }
+  
+    kable_styling(
+      k_tbl,
+      latex_options = c("repeat_header", "hold_position"),
+      position = "center",
+      font_size = 8
+    )
+  }
+  
+  common_cols <- c(
+    "Gene", "Variant Classification", "Protein",
+    "Genomic Change", "VAF"
+  )
+  
+  tbl1 <- make_table(kegg_som_var[, c(
+    common_cols,
+    "COS_n", "COS_tot", "COSMIC", "Irino", "TMZ"
+  )])
+  
+  tbl2 <- make_table(kegg_som_var[, c(
+    common_cols,
+    "UniProt_Region", "DNA_repair",
+    "KEGG"
+  )])
+  
+  cat(as.character(tbl1))
+  cat("\n\n")
+  cat(as.character(tbl2))
+  
 } else {
   cat("No variation to report.")
 }
@@ -722,11 +781,31 @@ if(nrow(transloc_df) != 0) {
   selected_cols <- c("gene1", "gene2", "type", "confidence")
   transloc_df <- transloc_df[, selected_cols]
   
-  kable_styling(kable(transloc_df,
-                      format = "latex", 
-                      booktabs = TRUE,
-                      align = "c"),
-                latex_options = c("hold_position", "scale_down"),
+  escape_latex <- function(x) {
+    x <- gsub("\\\\", "\\\\textbackslash{}", x)
+    x <- gsub("([{}#$%&_])", "\\\\\\1", x)
+    x <- gsub("~", "\\\\textasciitilde{}", x)
+    x <- gsub("\\^", "\\\\textasciicircum{}", x)
+    x
+  }
+  
+  transloc_df <- data.frame(
+    lapply(transloc_df, function(x) {
+      x <- escape_latex(x)
+      x <- gsub(",", ",\\\\allowbreak ", x)
+      x
+    })
+  )
+  k_tbl <- kable(transloc_df,
+                format = "latex", 
+                booktabs = TRUE,
+                align = "c",
+                longtable = TRUE,
+                escape = FALSE)
+  k_tbl <- column_spec(k_tbl, 1:4, width = "10em")
+  
+  kable_styling(k_tbl,
+                latex_options = c("repeat_header"),
                 position = "center")
 } else {
   cat("No variation to report.")
@@ -752,8 +831,8 @@ if (nrow(loh) == 0) {
   loh <- loh[,c("Genes", "Position", "N_BAF", "T_BAF", "Absolute_Diff")]
   
   kable_styling(kable(loh,
-                      format = "latex", booktabs = TRUE), 
-                latex_options = c("hold_position", "scale_down"), position = "center")
+                      format = "latex", booktabs = TRUE, longtable = TRUE), 
+                latex_options = c("hold_position", "repeat_header"), position = "center")
 }
 ```
 
@@ -765,8 +844,8 @@ Here, alterations where a gene has LOH and a somatic SNV/indel are reported.
 if(file.exists("NOTATES/LOH/d_hit_loh.csv"))
 {
   loh_dhit <- read.csv("NOTATES/LOH/d_hit_loh.csv")
-  k_tbl <- kable(loh_dhit, format = "latex", booktabs = TRUE, align = "c")
-  kable_styling(k_tbl, latex_options = c("hold_position", "scale_down"), position = "center")
+  k_tbl <- kable(loh_dhit, format = "latex", booktabs = TRUE, align = "c", longtable = TRUE)
+  kable_styling(k_tbl, latex_options = c("hold_position", "repeat_header"), position = "center")
 }else
 {
   cat("No event to report.")
@@ -805,8 +884,8 @@ A double hit strongly suggests a relevant tumor-suppressor gene [^11]. In this s
 if(file.exists("NOTATES/double_hit.csv"))
 {
   dhit_tbl <- read.csv("NOTATES/double_hit.csv")
-  k_tbl <- kable(dhit_tbl, format = "latex", booktabs = TRUE, align = "c")
-  kable_styling(k_tbl, latex_options = c("hold_position", "scale_down"), position = "center")
+  k_tbl <- kable(dhit_tbl, format = "latex", booktabs = TRUE, align = "c", longtable = TRUE)
+  kable_styling(k_tbl, latex_options = c("hold_position", "repeat_header"), position = "center")
 } else {
   cat("No event to report.")
 }
@@ -875,11 +954,12 @@ Using DeConstructSigs, the weights of Mutational Signatures v3 (May 2019) from C
 
 ```{r mut_sigs}
 mut_sigs <- read.csv("mut_signatures.csv", row.names = 1)
-k_tbl <- kable(mut_sigs, format = "latex", booktabs = TRUE)
-k_tbl <- column_spec(k_tbl, 3, width = "30em")
-k_tbl <- column_spec(k_tbl, 4, width = "30em")
-k_tbl <- column_spec(k_tbl, 5, width = "30em")
-kable_styling(k_tbl, latex_options = c("hold_position", "scale_down"), position = "center")
+colnames(mut_sigs) <- c("Freq", "Aetiology", "Associated", "Comments")
+k_tbl <- kable(mut_sigs, format = "latex", booktabs = TRUE, longtable=TRUE)
+k_tbl <- column_spec(k_tbl, 3, width = "10em")
+k_tbl <- column_spec(k_tbl, 4, width = "10em")
+k_tbl <- column_spec(k_tbl, 5, width = "10em")
+kable_styling(k_tbl, latex_options = c("repeat_header"), position = "center")
 ```
 
 \newpage
@@ -940,8 +1020,8 @@ if (is.data.frame(enr_res)) {
   colnames(enr_res) <- c("Pathway", "Somatic SNV/indel")
 
   kable_styling(kable(enr_res,
-                      format = "latex", booktabs = TRUE), 
-                latex_options = c("hold_position", "scale_down"),
+                      format = "latex", booktabs = TRUE, longtable = TRUE), 
+                latex_options = c("hold_position", "repeat_header"),
                 position = "center")
 } else {
   cat("There are no enriched KEGG pathways.")
@@ -979,8 +1059,8 @@ if (is.data.frame(enr_res)) {
   colnames(enr_res) <- c("Pathway", "Amplification", "Deletion")
   
   kable_styling(kable(enr_res,
-                      format = "latex", booktabs = TRUE), 
-                latex_options = c("hold_position", "scale_down"),
+                      format = "latex", booktabs = TRUE, longtable = TRUE), 
+                latex_options = c("hold_position", "repeat_header"),
                 position = "center")
 } else {
   cat("There are no enriched KEGG pathways.")
