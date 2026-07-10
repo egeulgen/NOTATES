@@ -280,6 +280,9 @@ $RNASEQ_DIR/run_notates_rnaseq.py \
 source $CONDA_BASE/etc/profile.d/conda.sh
 conda activate NOTATES_R
 
+echo "######################## Analyzing Chromosome Arm Interval SCNAs " $(date)
+Rscript "$scripts_dir"/chromosome_arm_scna.R ExomeCNV/CNV.cnv.txt $ARM_INTERVALS_BED
+
 echo "######################## Creating Report                         " $(date)
 Rscript "$scripts_dir"/create_report.R $patientID $scripts_dir \
 	$exome_length $Target_Intervals $tumor_type $primary_cond $tumor_sample \
