@@ -566,10 +566,10 @@ if(file.exists("NOTATES/Somatic_SNV/KEGG_selected.csv")) {
 
 Only SCNAs with a $log_2(Tumor/Normal)$ ratio $\le$ -0.25 or $\ge$ 0.25 were used in analysis.
 
-## IV. a. Chromosome-arm Analysis
+## IV. a. Chromosome Arm-level SCNA Analysis
 
 \begin{center} 
-\includegraphics[width=500pt]{chromosome_arm_scna/arm_copynumber_heatmap.png}
+\includegraphics[width=500pt]{chromosome_arm_scna/arm_log2ratio_heatmap.png}
 \end{center}
 
 \begin{center} 
