@@ -935,8 +935,10 @@ enr_res_file <- "pathfindR_results/HQ_mutations/mut_enrichment_results.csv"
 enr_res <- read_result(enr_res_file)
 
 if (is.data.frame(enr_res)) {
-  enr_res$Down_regulated <- NULL
-  colnames(enr_res)[7] <- "Somatic SNV/indel"
+  selected_col_idx <- c(2, 8)
+  enr_res <- enr_res[, selected_col_idx]
+  colnames(enr_res) <- c("Pathway", "Somatic SNV/indel")
+
   kable_styling(kable(enr_res,
                       format = "latex", booktabs = TRUE), 
                 latex_options = c("hold_position", "scale_down"),
@@ -972,7 +974,10 @@ enr_res_file <- "pathfindR_results/HQ_SCNA/SCNA_enrichment_results.csv"
 enr_res <- read_result(enr_res_file)
 
 if (is.data.frame(enr_res)) {
-  colnames(enr_res)[7:8] <- c("Amplification", "Deletion")
+  selected_col_idx <- c(2, 8, 9)
+  enr_res <- enr_res[, selected_col_idx]
+  colnames(enr_res) <- c("Pathway", "Amplification", "Deletion")
+  
   kable_styling(kable(enr_res,
                       format = "latex", booktabs = TRUE), 
                 latex_options = c("hold_position", "scale_down"),
