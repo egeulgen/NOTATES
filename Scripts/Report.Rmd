@@ -681,16 +681,6 @@ if(file.exists("NOTATES/SCNA/broad.csv")) {
 
 \newpage
 
-## V. e. Plots of SCNA Segments by Chromosome
-
-This subsection displays SCNA plots (log2(Tumor/Normal) ratio vs. position) per all chromosomes.
-
-\begin{center}
-  \makebox[\textwidth]{\includegraphics[width=\paperwidth]{ExomeCNV/{CNV.cnv}.png}}
-\end{center}
-
-\newpage
-
 # VI. Somatic Translocations
 
 ## VI. a. Events from DNA
