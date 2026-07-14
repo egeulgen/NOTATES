@@ -29,7 +29,7 @@ create_QC_table <- function(sample_name, type, r_type = "Paired-End") {
 
   ### Coverage metrics
   fname <- paste0(type, ".coverage.sample_summary")
-  coverage_metrics <- read.delim(file.path("./ExomeCNV/DepthOfCoverage", fname))
+  coverage_metrics <- read.csv(file.path("./ExomeCNV/DepthOfCoverage", fname))
   
   cov_keep <- c("mean", "X._bases_above_1", "X._bases_above_5", "X._bases_above_10", 
                 "X._bases_above_25", "X._bases_above_50", "X._bases_above_100")

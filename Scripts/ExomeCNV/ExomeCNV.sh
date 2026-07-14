@@ -14,25 +14,35 @@ tumor_name=$2
 ####### Coverage files
 echo "########################## Prep for ExomeCNV - Coverage files     " $(date)
 mkdir -p ./ExomeCNV/DepthOfCoverage
+
 echo "############################### Normal: Creating coverage file    " $(date)
-gatk3 "$java_options"\
-	-T DepthOfCoverage \
-	-omitBaseOutput -omitLocusTable \
+gatk --java-options "$java_options" DepthOfCoverage \
+	--omit-depth-output-at-each-base --omit-locus-table \
 	-R "$genome" \
 	-I normal.final.bam \
 	--intervals "$Target_Intervals" \
-	-ct 1 -ct 5 -ct 10 -ct 25 -ct 50 -ct 100 \
-	-o ./ExomeCNV/DepthOfCoverage/normal.coverage
+	--summary-coverage-threshold 1 \
+	--summary-coverage-threshold 5 \
+	--summary-coverage-threshold 10 \
+	--summary-coverage-threshold 25 \
+	--summary-coverage-threshold 50 \
+	--summary-coverage-threshold 100 \
+	-O ./ExomeCNV/DepthOfCoverage/normal.coverage
 
 echo "############################### Tumor: Creating coverage file     " $(date)
-gatk3 "$java_options"\
-	-T DepthOfCoverage \
-	-omitBaseOutput -omitLocusTable \
+gatk --java-options "$java_options" DepthOfCoverage \
+	--omit-depth-output-at-each-base --omit-locus-table \
 	-R "$genome" \
 	-I tumor.final.bam \
 	--intervals "$Target_Intervals" \
-	-ct 1 -ct 5 -ct 10 -ct 25 -ct 50 -ct 100 \
-	-o ./ExomeCNV/DepthOfCoverage/tumor.coverage
+	--summary-coverage-threshold 1 \
+	--summary-coverage-threshold 5 \
+	--summary-coverage-threshold 10 \
+	--summary-coverage-threshold 25 \
+	--summary-coverage-threshold 50 \
+	--summary-coverage-threshold 100 \
+	-O ./ExomeCNV/DepthOfCoverage/tumor.coverage
+
 
 ####### BAF files
 echo "############################### Prep for ExomeCNV - BAF files    " $(date)
@@ -48,9 +58,9 @@ gatk SelectVariants \
 	-R "$genome" \
 	-V ./Germline/filtered_germline_variants.vcf.gz \
 	-select-type SNP \
-	--selectExpressions "$expr1" \
-	--selectExpressions "$expr2" \
-	--selectExpressions "$expr3" \
+	-select "$expr1" \
+	-select "$expr2" \
+	-select "$expr3" \
 	--exclude-filtered \
 	--restrict-alleles-to BIALLELIC \
 	-O ./ExomeCNV/baf/normal_HQ_SNPs.vcf
@@ -89,8 +99,8 @@ gatk SelectVariants \
 	-R $genome \
 	-V ./ExomeCNV/baf/filtered_tumor_HC.vcf.gz \
 	-select-type SNP \
-	--selectExpressions "$expr1" \
-	--selectExpressions "$expr2" \
+	-select "$expr1" \
+	-select "$expr2" \
 	--exclude-filtered \
 	--restrict-alleles-to BIALLELIC \
 	-O ./ExomeCNV/baf/tumor_HQ_SNPs.vcf

@@ -62,13 +62,11 @@ rm raw_indels.vcf.gz
 rm raw_indels.vcf.gz.tbi
 
 echo "########### Merging Germline SNP and InDels into a single VCF    " $(date)
-gatk3 "$java_options"\
-	-T CombineVariants \
-	-R "$genome" \
-	--variant germline_snps.vcf.gz \
-	--variant germline_indels.vcf.gz \
-	-o combined_germline_variants.vcf.gz \
-	--genotypemergeoption UNSORTED
+picard MergeVcfs \
+    I=germline_snps.vcf.gz \
+    I=germline_indels.vcf.gz \
+    O=combined_germline_variants.vcf.gz \
+    D="$resources_dir/Genomes/broad_hg38/Homo_sapiens_assembly38.dict"
 
 rm germline_snps.vcf.gz* germline_indels.vcf.gz*
 

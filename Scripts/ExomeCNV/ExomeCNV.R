@@ -55,7 +55,7 @@ write.csv(LOH.regions, file = "LOH_regions.csv", row.names = FALSE)
 # CNV Calling -------------------------------------------------------------
 ###### Load in coverage files
 read.coverage.gatk.fix <- function(file){
-  gatk = read.table(file, header = TRUE)
+  gatk = read.csv(file)
   gatk <- gatk[grep("-", gatk$Target), ]
   
   chrpos = matrix(unlist(strsplit(as.character(gatk$Target), 

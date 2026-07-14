@@ -4,7 +4,6 @@ channels:
   - conda-forge
   - bioconda
 dependencies:
-  - gatk
   - gatk4
   - sambamba
   - picard
