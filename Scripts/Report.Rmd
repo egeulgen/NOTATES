@@ -744,7 +744,8 @@ Possible somatic translocations based on RNA-sequencing are called using `arriba
 \end{center}
 
 ```{r translocation_table_rna}
-transloc_df <- read.delim("RNAseq_results/fusions/NOT-0123-Tumor.fusions.tsv")
+fl_name <- file.path("RNAseq_results", "fusions", paste0(params$rnaseq_sample_id, ".fusions.tsv"))
+transloc_df <- read.delim(fl_name)
 
 if(nrow(transloc_df) != 0) {
   colnames(transloc_df)[1] <- "gene1"
